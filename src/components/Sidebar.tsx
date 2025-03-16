@@ -8,6 +8,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
   const menuItems = [
     { icon: Users, label: 'Customers', path: '/' },
     { icon: BarChart2, label: 'Dashboard', path: '/dashboard' },
@@ -37,8 +38,10 @@ const Sidebar = () => {
 
       const data = await response.json();
       console.log(data);
-      console.log(data["imagen_aliado"]);
+       // Asignamos la imagen del aliado
       setImage(data["imagen_aliado"]);
+      // Asignamos el nombre de la empresa
+      setBusinessName(data["empresa"]);
     } catch (error) {
       setError('Error al cargar los datos');
       console.error('Error:', error);
@@ -62,7 +65,7 @@ const Sidebar = () => {
         )}
       </div>
       <div className="flex flex-col items-center p-6">
-        <h1 className="text-2xl font-bold text-white">React CRM</h1>
+        <h1 className="text-2xl font-bold text-white">{businessName}</h1>
         {user && (
           <div className="mt-2 text-sm text-gray-600">
             <p className="text-white">{user.name}</p>
@@ -77,7 +80,7 @@ const Sidebar = () => {
             to={item.path}
             className={({ isActive }) =>
               `flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
-                isActive ? 'bg-gray-100 text-slate-900 font-bold border-l-4 border-blue-500' : ''
+                isActive ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
               }`
             }
           >
@@ -85,14 +88,16 @@ const Sidebar = () => {
             {item.label}
           </NavLink>
         ))}
-        <button
+      </nav>
+      <div>
+      <button
           onClick={handleLogout}
           className="flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 w-full"
         >
           <LogOut className="w-5 h-5 mr-3" />
           Logout
         </button>
-      </nav>
+      </div>
     </div>
   );
 };
