@@ -12,14 +12,43 @@ declare module '@tanstack/table-core' {
 
 const columnHelper = createColumnHelper<Customer>();
 
+// Función auxiliar para formatear la fecha
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  
+  return `${day}/${month}/${year}`;
+};
+
 export const columns = [
+  columnHelper.accessor('created_at', {
+    header: ({ column }) => {
+      return (
+        <div
+          className="cursor-pointer flex items-center space-x-1"
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          <span>Fecha</span>
+          {column.getIsSorted() === 'asc' ? ' ↑' : column.getIsSorted() === 'desc' ? ' ↓' : ''}
+        </div>
+      );
+    },
+    cell: (info) => formatDate(info.getValue() || ''),
+    sortingFn: 'datetime',
+    enableSorting: true,
+  }),
+  
   columnHelper.accessor('nombre', {
     header: 'Nombre',
     cell: (info) => <span className="font-medium">{info.getValue()}</span>,
+    enableColumnFilter: true,
   }),
   columnHelper.accessor('numero_documento', {
     header: 'Número Documento',
     cell: (info) => info.getValue(),
+    enableColumnFilter: true,
   }),
   columnHelper.accessor('correo', {
     header: 'Correo',
@@ -115,4 +144,5 @@ export const columns = [
       );
     },
   }),
+
 ];
