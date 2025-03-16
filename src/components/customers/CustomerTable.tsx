@@ -33,9 +33,16 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [sorting, setSorting] = useState([
+    {
+      id: 'created_at',
+      desc: true
+    }
+  ]);
 
   const filteredData = useMemo(() => {
-    return customers.filter(customer => {
+    // Primero filtramos los datos
+    const filtered = customers.filter(customer => {
       // Filtro por fecha
       if (dateRange.start && dateRange.end) {
         const customerDate = new Date(customer.created_at);
@@ -56,6 +63,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
 
       return true;
     });
+
+    // Ordenamos los datos por fecha de creación (más reciente primero)
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA; // Orden descendente (más reciente primero)
+    });
   }, [customers, dateRange, globalFilter]);
 
   const paginatedData = useMemo(() => {
@@ -73,7 +87,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     state: {
       columnFilters,
       globalFilter,
-      sorting: [],
+      sorting,
       pagination: {
         pageIndex,
         pageSize,
@@ -81,6 +95,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
+    onSortingChange: setSorting,
     pageCount: Math.ceil(filteredData.length / pageSize),
     manualPagination: true,
   });

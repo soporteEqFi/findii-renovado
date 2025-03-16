@@ -24,7 +24,7 @@ const Sidebar = () => {
       const user_document_obj = userData.cedula;
 
       console.log(user_document_obj);
-
+      localStorage.setItem('cedula', user_document_obj)
       const response = await fetch(`http://127.0.0.1:5000/get-user-info/${user_document_obj}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`

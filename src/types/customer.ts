@@ -41,4 +41,9 @@ export interface Customer {
     archivos?: string;
     created_at?: string;
     updated_at?: string;
+    nombre_completo: string;
+    correo_electronico: string;
+    direccion_residencia: string;
+    tipo_credito: string;
+    asesor_usuario: string;
 }
