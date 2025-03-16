@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Download } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
@@ -7,6 +7,7 @@ import { CustomerForm } from '../components/customers/CustomerForm';
 import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
+import { usePermissions } from '../utils/permissions';
 
 const Customers = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -21,6 +22,7 @@ const Customers = () => {
     updateStatus,
     setCustomers
   } = useCustomers();
+  const { canCreateCustomer } = usePermissions();
 
   // Estados locales
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -36,9 +38,10 @@ const Customers = () => {
     }
   }, [isAuthenticated]);
 
-  // Funciones de permisos
+  // Definir los permisos para cada usuario.
   const canEdit = () => user && ['admin', 'manager'].includes(user.role);
   const canDelete = () => user && user.role === 'admin';
+  const canDownloadSales = () => user && ['admin'].includes(user.role);
 
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
@@ -119,6 +122,42 @@ const Customers = () => {
     }
   };
 
+  const handleDownloadSales = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/descargar-ventas/', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al descargar ventas');
+      }
+
+      // Obtener el blob de la respuesta
+      const blob = await response.blob();
+      
+      // Crear URL del blob
+      const url = window.URL.createObjectURL(blob);
+      
+      // Crear elemento anchor temporal
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ventas_realizadas.csv'; // Nombre del archivo a descargar
+      
+      // Añadir al DOM, hacer clic y remover
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      // Liberar el objeto URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al descargar ventas:', error);
+      // Aquí podrías mostrar un mensaje de error al usuario
+    }
+  };
+
   // Renderizado condicional para estados de carga y autenticación
   if (authLoading || (isLoading && !isModalOpen)) {
     return (
@@ -128,6 +167,7 @@ const Customers = () => {
     );
   }
 
+  // Veriificar si el usuario ha iniciado sesión.
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -143,7 +183,18 @@ const Customers = () => {
         {/* Header */}
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
-          <div className="flex items-center">
+          <div className="flex items-center space-x-4">
+            {/* Botón de descargar ventas*/}
+            {canDownloadSales() && (
+              <button
+                onClick={handleDownloadSales}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Descargar Ventas
+            </button>
+            )}
+            
             {user && (
               <span className="text-sm text-gray-600">
                 Logged in as: <span className="font-medium">{user.name}</span>
@@ -158,11 +209,11 @@ const Customers = () => {
         </div>
 
         {/* Botón Nuevo Cliente */}
-        <div className="p-4 bg-gray-50 border-b">
-          {canEdit() && (
+        <div className="flex justify-end p-4 bg-gray-50 border-b">
+          {canCreateCustomer() && (
             <button
               onClick={() => setIsNewCustomerModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo Cliente
