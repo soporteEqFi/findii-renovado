@@ -6,6 +6,7 @@ interface User {
   id: string;
   name: string;
   role: 'admin' | 'manager' | 'user';
+  cedula: string;
   email?: string;
   access_token?: string;
 }
@@ -83,12 +84,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       
       // Extract user data from the response
       const userData = data.usuario[0];
+
+      console.log(userData);
       
       // Map API response to our User type
       const userObj: User = {
         id: (userData.id || String(userData.id_usuario) || '1'),
         name: (userData.nombre || userData.username || email),
         role: (data.rol.toLowerCase() as 'admin' | 'manager' | 'user'),
+        cedula: (userData.cedula || userData.numero_documento || '1'),
         email: email,
         access_token: data.access_token
       };

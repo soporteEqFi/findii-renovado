@@ -1,72 +1,142 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
   getPaginationRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
   flexRender,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
 import { Customer } from '../../types/customer';
 import { columns } from './CustomerColumns';
+import { Search, Calendar } from 'lucide-react';
 
 interface CustomerTableProps {
   customers: Customer[];
   onRowClick: (customer: Customer) => void;
   onStatusChange: (customer: Customer, newStatus: string) => void;
   totalRecords: number;
-  key?: string; // Añadimos esta prop para forzar el re-render
 }
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
   onRowClick,
   onStatusChange,
-  totalRecords,
-  key
+  totalRecords
 }) => {
-  console.log('CustomerTable customers:', customers); // Para debugging
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
+  const [dateRange, setDateRange] = useState({
+    start: '',
+    end: ''
+  });
+  const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [tableData, setTableData] = useState(customers);
 
-  // Actualizamos tableData cuando customers cambia
-  useEffect(() => {
-    setTableData(customers);
-  }, [customers]);
+  const filteredData = useMemo(() => {
+    return customers.filter(customer => {
+      // Filtro por fecha
+      if (dateRange.start && dateRange.end) {
+        const customerDate = new Date(customer.created_at);
+        const startDate = new Date(dateRange.start);
+        const endDate = new Date(dateRange.end);
+        if (customerDate < startDate || customerDate > endDate) {
+          return false;
+        }
+      }
+
+      // Filtro global
+      if (globalFilter) {
+        const searchTerm = globalFilter.toLowerCase();
+        return Object.values(customer).some(value => 
+          String(value).toLowerCase().includes(searchTerm)
+        );
+      }
+
+      return true;
+    });
+  }, [customers, dateRange, globalFilter]);
+
+  const paginatedData = useMemo(() => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    return filteredData.slice(start, end);
+  }, [filteredData, pageIndex, pageSize]);
 
   const table = useReactTable({
-    data: tableData,
+    data: paginatedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: {
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      columnFilters,
+      globalFilter,
+      sorting: [],
       pagination: {
-        pageSize: pageSize,
+        pageIndex,
+        pageSize,
       },
     },
-    meta: {
-      updateStatus: async (customer: Customer, newStatus: string) => {
-        await onStatusChange(customer, newStatus);
-        // Actualizamos el estado local de la tabla
-        setTableData(prev => 
-          prev.map(c => 
-            c.id_solicitante === customer.id_solicitante 
-              ? { ...c, estado: newStatus }
-              : c
-          )
-        );
-      },
-    },
+    onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    pageCount: Math.ceil(filteredData.length / pageSize),
+    manualPagination: true,
   });
 
-  if (!customers.length) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No hay clientes para mostrar
-      </div>
-    );
-  }
+  const handlePreviousPage = () => {
+    setPageIndex(old => Math.max(0, old - 1));
+  };
+
+  const handleNextPage = () => {
+    setPageIndex(old => Math.min(Math.ceil(filteredData.length / pageSize) - 1, old + 1));
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setPageIndex(0);
+  };
 
   return (
     <div>
+      {/* Filtros */}
+      <div className="p-4 bg-white border-b">
+        <div className="flex flex-wrap gap-4">
+          {/* Búsqueda global */}
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={globalFilter}
+                onChange={e => setGlobalFilter(e.target.value)}
+                placeholder="Buscar..."
+                className="w-full pl-8 pr-3 py-2 border rounded"
+              />
+            </div>
+          </div>
+
+          {/* Filtro de fecha */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              className="border rounded px-2 py-1"
+            />
+            <span>-</span>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              className="border rounded px-2 py-1"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Tabla */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -106,69 +176,56 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           </tbody>
         </table>
       </div>
-      
-      {/* Controles de paginación */}
-      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
-        <div className="flex items-center">
-          <span className="text-sm text-gray-700 mr-2">
-            Filas por página:
-          </span>
+
+      {/* Controles de paginación simplificados */}
+      <div className="px-6 py-4 flex items-center justify-between border-t">
+        <div className="flex items-center gap-4">
           <select
             value={pageSize}
-            onChange={e => {
-              setPageSize(Number(e.target.value));
-              table.setPageSize(Number(e.target.value));
-            }}
-            className="border rounded px-2 py-1 text-sm"
+            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+            className="border rounded px-2 py-1"
           >
-            {[10, 20, 30, 50, 100].map(size => (
+            {[10, 20, 30, 50].map(size => (
               <option key={size} value={size}>
-                {size}
+                {size} por página
               </option>
             ))}
           </select>
-        </div>
-        
-        <div className="flex items-center space-x-2">
+
           <span className="text-sm text-gray-700">
-            Página{' '}
-            <span className="font-medium">{table.getState().pagination.pageIndex + 1}</span> de{' '}
-            <span className="font-medium">{table.getPageCount()}</span>
+            Página {pageIndex + 1} de {Math.ceil(filteredData.length / pageSize)}
           </span>
-          <div className="flex space-x-1">
-            <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-              onClick={() => table.setPageIndex(0)}
-              disabled={!table.getCanPreviousPage()}
-            >
-              {'<<'}
-            </button>
-            <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-              onClick={() => table.previousPage()}
-              disabled={!table.getCanPreviousPage()}
-            >
-              {'<'}
-            </button>
-            <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-              onClick={() => table.nextPage()}
-              disabled={!table.getCanNextPage()}
-            >
-              {'>'}
-            </button>
-            <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-              onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-              disabled={!table.getCanNextPage()}
-            >
-              {'>>'}
-            </button>
-          </div>
         </div>
-        
-        <div className="text-sm text-gray-700">
-          Mostrando {table.getRowModel().rows.length} de {totalRecords} registros
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPageIndex(0)}
+            disabled={pageIndex === 0}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            {'<<'}
+          </button>
+          <button
+            onClick={handlePreviousPage}
+            disabled={pageIndex === 0}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            {'<'}
+          </button>
+          <button
+            onClick={handleNextPage}
+            disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            {'>'}
+          </button>
+          <button
+            onClick={() => setPageIndex(Math.ceil(filteredData.length / pageSize) - 1)}
+            disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            {'>>'}
+          </button>
         </div>
       </div>
     </div>

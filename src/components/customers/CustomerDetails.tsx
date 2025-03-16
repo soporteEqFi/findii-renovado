@@ -1,6 +1,7 @@
 import React from 'react';
 import { Customer } from '../../types/customer';
 import { Mail, Phone, Save, Loader2, Trash2 } from 'lucide-react';
+import { usePermissions } from '../../utils/permissions';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -29,6 +30,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   onDelete,
   onInputChange
 }) => {
+  const { canEditCustomer, canDeleteCustomer } = usePermissions();
+
   // Group fields into categories for better organization
   const personalInfo = ['nombre_completo', 'tipo_documento', 'numero_documento', 'fecha_nacimiento', 'correo_electronico', 'numero_celular'];
   const locationInfo = ['direccion_residencia', 'tipo_vivienda', 'barrio', 'departamento', 'estrato', 'ciudad_gestion'];
@@ -47,10 +50,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
-        {isEditing ? (
+        {isEditing && canEditCustomer() ? (
           <input
             type={key.includes('date') || key.includes('fecha') ? 'date' : 'text'}
-            value={editedCustomer[key as keyof Customer] as string || ''}
+            value={editedCustomer[key as keyof Customer] || ''}
             onChange={(e) => onInputChange(key as keyof Customer, e.target.value)}
             className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             disabled={isLoading}
@@ -154,7 +157,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         {isEditing ? (
           <button
             onClick={onSave}
-            disabled={isLoading}
+            disabled={isLoading || !canEditCustomer()}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
@@ -166,7 +169,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           </button>
         ) : (
           <>
-            {canEdit() && (
+            {canEditCustomer() && (
               <button
                 onClick={onEdit}
                 disabled={isLoading}
@@ -175,7 +178,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 Editar
               </button>
             )}
-            {canDelete() && (
+            {canDeleteCustomer() && (
               <button
                 onClick={onDelete}
                 disabled={isLoading}
