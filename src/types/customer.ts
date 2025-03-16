@@ -40,4 +40,5 @@ export interface Customer {
     estado?: string;
     archivos?: string;
     created_at?: string;
+    updated_at?: string;
 }
