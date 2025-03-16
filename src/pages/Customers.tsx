@@ -198,7 +198,6 @@ const Customers = () => {
           </div>
         </div>
 
-        {/* Botón Nuevo Cliente */}
         <div className="flex justify-end p-4 bg-gray-50 border-b gap-4">
             {/* Botón de descargar ventas*/}
             {canDownloadSales() && (
@@ -210,6 +209,7 @@ const Customers = () => {
               Descargar Ventas
             </button>
             )}
+          {/* Botón Nuevo Cliente */}
           {canCreateCustomer() && (
             <button
               onClick={() => setIsNewCustomerModalOpen(true)}
