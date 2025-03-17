@@ -1,50 +1,62 @@
 export interface Customer {
-    id: number;
-    id_solicitante: number;
-    nombre: string;
-    tipo_documento?: string;
-    numero_documento: string;
-    fecha_nacimiento?: string;
-    numero_celular: string;
-    correo: string;
-    nivel_estudio?: string;
-    profesion?: string;
-    estado_civil?: string;
-    personas_a_cargo?: number;
-    direccion?: string;
-    tipo_vivienda?: string;
-    barrio?: string;
-    departamento?: string;
-    estrato?: number;
-    ciudad_gestion?: string;
-    actividad_economica?: string;
-    empresa_labora?: string;
-    fecha_vinculacion?: string;
-    direccion_empresa?: string;
-    telefono_empresa?: string;
-    tipo_de_contrato?: string;
-    cargo_actual?: string;
-    ingresos?: number;
-    valor_inmueble?: number;
-    cuota_inicial?: number;
-    porcentaje_financiar?: number;
-    total_egresos?: number;
-    total_activos?: number;
-    total_pasivos?: number;
-    producto_solicitado?: string;
-    plazo_meses?: number;
-    segundo_titular?: boolean;
-    observacion?: string;
-    asesor_id?: number;
-    banco: string;
-    estado: string;
-    archivos?: string;
-    created_at?: string;
-    updated_at?: string;
-    nombre_completo: string;
-    correo_electronico: string;
-    direccion_residencia: string;
-    tipo_credito: string;
-    asesor_usuario: string;
-    solicitante_id: number;
+  id?: number;
+  id_solicitante?: number;
+  solicitante_id?: number;
+  
+  // Campos con nombres alternativos
+  nombre?: string;
+  nombre_completo: string;
+  correo?: string;
+  correo_electronico: string;
+  direccion?: string;
+  direccion_residencia: string;
+  tipo_de_contrato?: string;
+  tipo_contrato: string;
+
+  // Información Personal
+  tipo_documento: string;
+  numero_documento: string;
+  fecha_nacimiento: string;
+  numero_celular: string;
+  estado_civil: string;
+  personas_a_cargo: string;
+  nivel_estudio: string;
+  profesion: string;
+
+  // Información de Ubicación
+  tipo_vivienda: string;
+  barrio: string;
+  departamento: string;
+  estrato: number | string;
+  ciudad_gestion: string;
+
+  // Información Financiera
+  banco: string;
+  tipo_de_credito: string;
+  valor_inmueble: number | string;
+  cuota_inicial: number | string;
+  porcentaje_financiar: number | string;
+  total_egresos: number | string;
+  total_activos: number | string;
+  total_pasivos: number | string;
+  plazo_meses: number | string;
+  ingresos: number | string;
+
+  // Información Laboral
+  actividad_economica: string;
+  empresa_labora: string;
+  fecha_vinculacion: string;
+  direccion_empresa: string;
+  telefono_empresa: string;
+  cargo_actual: string;
+
+  // Información Adicional
+  segundo_titular: string;
+  observacion: string;
+
+  // Meta Información
+  created_at?: string;
+  archivos?: string;
+  asesor_usuario?: string;
+  estado?: string;
 }
