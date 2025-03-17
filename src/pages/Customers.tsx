@@ -85,40 +85,26 @@ const Customers = () => {
 
   const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
-      const updateData = {
-        estado: newStatus,
-        solicitante_id: customer.id_solicitante,
-        numero_documento: customer.numero_documento
-      };
-
       const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify({
+          estado: newStatus.toLowerCase(),
+          solicitante_id: customer.id_solicitante,
+          numero_documento: customer.numero_documento
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar el estado');
+        throw new Error('Error en la respuesta del servidor');
       }
 
-      // Actualiza el estado global de customers
-      setCustomers(prevCustomers => 
-        prevCustomers.map(c => 
-          c.id_solicitante === customer.id_solicitante 
-            ? { ...c, estado: newStatus }
-            : c
-        )
-      );
-
-      // Fuerza un re-render de la tabla
-      setTableKey(prev => prev + 1);
-
+      // No necesitamos hacer nada más aquí, el estado visual ya se actualizó en la tabla
     } catch (error) {
-      console.error('Error al actualizar el estado:', error);
+      console.error('Error al actualizar estado:', error);
+      throw error; // Propagar el error para que la tabla pueda revertir el cambio visual
     }
   };
 
@@ -198,6 +184,7 @@ const Customers = () => {
           </div>
         </div>
 
+        {/* Botón Nuevo Cliente */}
         <div className="flex justify-end p-4 bg-gray-50 border-b gap-4">
             {/* Botón de descargar ventas*/}
             {canDownloadSales() && (
@@ -209,7 +196,6 @@ const Customers = () => {
               Descargar Ventas
             </button>
             )}
-          {/* Botón Nuevo Cliente */}
           {canCreateCustomer() && (
             <button
               onClick={() => setIsNewCustomerModalOpen(true)}

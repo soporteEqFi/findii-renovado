@@ -1,6 +1,6 @@
 export interface Customer {
-    id?: string;
-    id_solicitante?: number;
+    id: number;
+    id_solicitante: number;
     nombre: string;
     tipo_documento?: string;
     numero_documento: string;
@@ -37,7 +37,7 @@ export interface Customer {
     observacion?: string;
     asesor_id?: number;
     banco: string;
-    estado?: string;
+    estado: string;
     archivos?: string;
     created_at?: string;
     updated_at?: string;
@@ -46,4 +46,5 @@ export interface Customer {
     direccion_residencia: string;
     tipo_credito: string;
     asesor_usuario: string;
+    solicitante_id: number;
 }

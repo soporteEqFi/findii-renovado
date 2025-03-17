@@ -2,11 +2,12 @@ import { createColumnHelper } from '@tanstack/react-table';
 import { Mail, Phone, ChevronDown } from 'lucide-react';
 import { Customer } from '../../types/customer';
 import { usePermissions } from '../../utils/permissions';
+import { useState } from 'react';
 
 // Definimos el tipo para meta
 declare module '@tanstack/table-core' {
   interface TableMeta<TData> {
-    updateStatus: (customer: Customer, newStatus: string) => void;
+    updateStatus: (customer: Customer, newStatus: string) => Promise<void>;
   }
 }
 
@@ -83,7 +84,7 @@ export const columns = [
   columnHelper.accessor('estado', {
     header: 'Estado',
     cell: (info) => {
-      const { canChangeStatus } = usePermissions();
+      const [isOpen, setIsOpen] = useState(false);
       const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Radicado'];
       const colorClasses = {
         pendiente: 'bg-yellow-100 text-yellow-800',
@@ -92,30 +93,38 @@ export const columns = [
         radicado: 'bg-blue-100 text-blue-800'
       };
 
-      const currentState = info.getValue()?.toLowerCase() || '';
+      const currentState = info.getValue()?.toLowerCase() || 'pendiente';
       const customer = info.row.original;
 
+      const handleStatusChange = async (newStatus: string) => {
+        try {
+          console.log('Iniciando cambio de estado:', { 
+            id_solicitante: customer.id_solicitante,
+            numero_documento: customer.numero_documento,
+            newStatus 
+          });
+          await info.table.options.meta?.updateStatus(customer, newStatus);
+          setIsOpen(false);
+        } catch (error) {
+          console.error('Error en columna al cambiar estado:', error);
+        }
+      };
+
       return (
-        <div className="relative group">
+        <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
             className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
               colorClasses[currentState as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800'
             }`}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (canChangeStatus()) {
-                const dropdown = e.currentTarget.nextElementSibling;
-                if (dropdown) {
-                  dropdown.classList.toggle('hidden');
-                }
-              }
-            }}
+            onClick={() => setIsOpen(!isOpen)}
           >
-            {info.getValue()}
-            {canChangeStatus() && <ChevronDown className="w-4 h-4 ml-1" />}
+            {info.getValue() || 'Pendiente'}
+            <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${
+              isOpen ? 'transform rotate-180' : ''
+            }`} />
           </button>
-          {canChangeStatus() && (
-            <div className="hidden absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+          {isOpen && (
+            <div className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
               <div className="py-1">
                 {estados.map((estado) => (
                   <button
@@ -123,16 +132,7 @@ export const columns = [
                     className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
                       estado.toLowerCase() === currentState ? 'bg-gray-50' : ''
                     }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const updateData = {
-                        estado: estado,
-                        solicitante_id: customer.id_solicitante,
-                        numero_documento: customer.numero_documento
-                      };
-                      info.table.options.meta?.updateStatus(customer, estado);
-                      e.currentTarget.parentElement?.parentElement?.classList.add('hidden');
-                    }}
+                    onClick={() => handleStatusChange(estado)}
                   >
                     {estado}
                   </button>
@@ -144,5 +144,4 @@ export const columns = [
       );
     },
   }),
-
 ];

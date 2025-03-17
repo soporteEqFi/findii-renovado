@@ -15,7 +15,7 @@ import { Search, Calendar } from 'lucide-react';
 interface CustomerTableProps {
   customers: Customer[];
   onRowClick: (customer: Customer) => void;
-  onStatusChange: (customer: Customer, newStatus: string) => void;
+  onStatusChange: (customer: Customer, newStatus: string) => Promise<void>;
   totalRecords: number;
 }
 
@@ -33,16 +33,11 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [sorting, setSorting] = useState([
-    {
-      id: 'created_at',
-      desc: true
-    }
-  ]);
+  const [localStatuses, setLocalStatuses] = useState<Record<number, string>>({});
+  const [modifiedStatuses, setModifiedStatuses] = useState<Record<string, string>>({});
 
   const filteredData = useMemo(() => {
-    // Primero filtramos los datos
-    const filtered = customers.filter(customer => {
+    return customers.filter(customer => {
       // Filtro por fecha
       if (dateRange.start && dateRange.end) {
         const customerDate = new Date(customer.created_at);
@@ -63,13 +58,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
 
       return true;
     });
-
-    // Ordenamos los datos por fecha de creación (más reciente primero)
-    return filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at).getTime();
-      const dateB = new Date(b.created_at).getTime();
-      return dateB - dateA; // Orden descendente (más reciente primero)
-    });
   }, [customers, dateRange, globalFilter]);
 
   const paginatedData = useMemo(() => {
@@ -78,16 +66,24 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     return filteredData.slice(start, end);
   }, [filteredData, pageIndex, pageSize]);
 
+  const tableData = useMemo(() => {
+    return paginatedData.map(customer => ({
+      ...customer,
+      estado: modifiedStatuses[customer.id_solicitante] || customer.estado
+    }));
+  }, [paginatedData, modifiedStatuses]);
+
   const table = useReactTable({
-    data: paginatedData,
+    data: tableData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       columnFilters,
       globalFilter,
-      sorting,
+      sorting: [],
       pagination: {
         pageIndex,
         pageSize,
@@ -95,9 +91,34 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     },
     onColumnFiltersChange: setColumnFilters,
     onGlobalFilterChange: setGlobalFilter,
-    onSortingChange: setSorting,
     pageCount: Math.ceil(filteredData.length / pageSize),
     manualPagination: true,
+    meta: {
+      updateStatus: async (customer: Customer, newStatus: string) => {
+        try {
+          console.log('Actualizando estado en tabla:', { 
+            id_solicitante: customer.id_solicitante,
+            numero_documento: customer.numero_documento,
+            newStatus 
+          });
+          
+          setModifiedStatuses(prev => ({
+            ...prev,
+            [customer.id_solicitante]: newStatus.toLowerCase()
+          }));
+          
+          await onStatusChange(customer, newStatus);
+        } catch (error) {
+          setModifiedStatuses(prev => {
+            const updated = { ...prev };
+            delete updated[customer.id_solicitante];
+            return updated;
+          });
+          console.error('Error en tabla al actualizar estado:', error);
+          throw error;
+        }
+      },
+    },
   });
 
   const handlePreviousPage = () => {
