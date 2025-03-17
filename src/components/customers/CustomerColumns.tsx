@@ -36,8 +36,19 @@ export const columns = [
         </div>
       );
     },
-    cell: (info) => formatDate(info.getValue() || ''),
-    sortingFn: 'datetime',
+    cell: (info) => info.getValue() || '',
+    sortingFn: (rowA, rowB, columnId) => {
+      // Función para parsear fechas en formato dd/mm/yyyy
+      const parseFecha = (fechaStr: string) => {
+        if (!fechaStr) return 0;
+        const [dia, mes, anio] = fechaStr.split('/').map(Number);
+        return new Date(anio, mes - 1, dia).getTime();
+      };
+      
+      const fechaA = parseFecha(rowA.getValue(columnId));
+      const fechaB = parseFecha(rowB.getValue(columnId));
+      return fechaA < fechaB ? -1 : fechaA > fechaB ? 1 : 0;
+    },
     enableSorting: true,
   }),
   

@@ -34,15 +34,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [localStatuses, setLocalStatuses] = useState<Record<number, string>>({});
-  const [modifiedStatuses, setModifiedStatuses] = useState<Record<string, string>>({});
+  const [modifiedStatuses, setModifiedStatuses] = useState<Record<number, string>>({});
+
+  const parseFecha = (fechaStr: string) => {
+    if (!fechaStr) return 0;
+    const [dia, mes, anio] = fechaStr.split('/').map(Number);
+    return new Date(anio, mes - 1, dia).getTime();
+  };
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
       // Filtro por fecha
       if (dateRange.start && dateRange.end) {
-        const customerDate = new Date(customer.created_at);
-        const startDate = new Date(dateRange.start);
-        const endDate = new Date(dateRange.end);
+        const customerDate = parseFecha(customer.created_at);
+        const startDate = new Date(dateRange.start).getTime();
+        const endDate = new Date(dateRange.end).getTime();
         if (customerDate < startDate || customerDate > endDate) {
           return false;
         }
@@ -60,21 +66,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     });
   }, [customers, dateRange, globalFilter]);
 
-  const paginatedData = useMemo(() => {
-    const start = pageIndex * pageSize;
-    const end = start + pageSize;
-    return filteredData.slice(start, end);
-  }, [filteredData, pageIndex, pageSize]);
-
-  const tableData = useMemo(() => {
-    return paginatedData.map(customer => ({
+  const dataWithModifiedStatus = useMemo(() => {
+    return filteredData.map(customer => ({
       ...customer,
       estado: modifiedStatuses[customer.id_solicitante] || customer.estado
     }));
-  }, [paginatedData, modifiedStatuses]);
+  }, [filteredData, modifiedStatuses]);
+
+  const paginatedData = useMemo(() => {
+    const start = pageIndex * pageSize;
+    const end = start + pageSize;
+    return dataWithModifiedStatus.slice(start, end);
+  }, [dataWithModifiedStatus, pageIndex, pageSize]);
 
   const table = useReactTable({
-    data: tableData,
+    data: paginatedData,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -83,7 +89,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     state: {
       columnFilters,
       globalFilter,
-      sorting: [],
+      sorting: [{ id: 'created_at', desc: true }],
       pagination: {
         pageIndex,
         pageSize,
@@ -104,7 +110,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           
           setModifiedStatuses(prev => ({
             ...prev,
-            [customer.id_solicitante]: newStatus.toLowerCase()
+            [customer.id_solicitante]: newStatus
           }));
           
           await onStatusChange(customer, newStatus);
