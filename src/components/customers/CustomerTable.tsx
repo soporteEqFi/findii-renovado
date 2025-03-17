@@ -73,11 +73,19 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     }));
   }, [filteredData, modifiedStatuses]);
 
+  const sortedData = useMemo(() => {
+    return [...dataWithModifiedStatus].sort((a, b) => {
+      const fechaA = parseFecha(a.created_at || '');
+      const fechaB = parseFecha(b.created_at || '');
+      return fechaB - fechaA; // Orden descendente (más recientes primero)
+    });
+  }, [dataWithModifiedStatus]);
+
   const paginatedData = useMemo(() => {
     const start = pageIndex * pageSize;
     const end = start + pageSize;
-    return dataWithModifiedStatus.slice(start, end);
-  }, [dataWithModifiedStatus, pageIndex, pageSize]);
+    return sortedData.slice(start, end);
+  }, [sortedData, pageIndex, pageSize]);
 
   const table = useReactTable({
     data: paginatedData,
@@ -102,12 +110,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     meta: {
       updateStatus: async (customer: Customer, newStatus: string) => {
         try {
-          console.log('Actualizando estado en tabla:', { 
-            id_solicitante: customer.id_solicitante,
-            numero_documento: customer.numero_documento,
-            newStatus 
-          });
-          
           setModifiedStatuses(prev => ({
             ...prev,
             [customer.id_solicitante]: newStatus

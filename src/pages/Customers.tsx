@@ -91,7 +91,7 @@ const Customers = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          estado: newStatus.toLowerCase(),
+          estado: newStatus,
           solicitante_id: customer.id_solicitante,
           numero_documento: customer.numero_documento
         }),
@@ -104,7 +104,7 @@ const Customers = () => {
       // No necesitamos hacer nada más aquí, el estado visual ya se actualizó en la tabla
     } catch (error) {
       console.error('Error al actualizar estado:', error);
-      throw error; // Propagar el error para que la tabla pueda revertir el cambio visual
+      throw error;
     }
   };
 

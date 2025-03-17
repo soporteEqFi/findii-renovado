@@ -98,13 +98,13 @@ export const columns = [
       const [isOpen, setIsOpen] = useState(false);
       const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Radicado'];
       const colorClasses = {
-        pendiente: 'bg-yellow-100 text-yellow-800',
-        aprobado: 'bg-green-100 text-green-800',
-        rechazado: 'bg-red-100 text-red-800',
-        radicado: 'bg-blue-100 text-blue-800'
+        Pendiente: 'bg-yellow-100 text-yellow-800',
+        Aprobado: 'bg-green-100 text-green-800',
+        Rechazado: 'bg-red-100 text-red-800',
+        Radicado: 'bg-blue-100 text-blue-800'
       };
 
-      const currentState = info.getValue()?.toLowerCase() || 'pendiente';
+      const currentState = info.getValue() || 'Pendiente';
       const customer = info.row.original;
 
       const handleStatusChange = async (newStatus: string) => {
