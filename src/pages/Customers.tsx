@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Download } from 'lucide-react';
+import { Loader2, Plus, Download, UserCog } from 'lucide-react';
 import Modal from '../components/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
@@ -8,6 +8,7 @@ import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
+import { Link } from 'react-router-dom';
 
 const Customers = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -170,6 +171,15 @@ const Customers = () => {
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
           <div className="flex items-center space-x-4">
+            {canEdit() && (
+              <Link 
+                to="/users"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <UserCog className="w-4 h-4 mr-2" />
+                Gestionar Usuarios
+              </Link>
+            )}
             
             {user && (
               <span className="text-sm text-gray-600">
