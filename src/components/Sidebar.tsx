@@ -1,18 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { Users, BarChart2, Settings, LogOut } from 'lucide-react';
+import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
+import { Users, BarChart2, Settings, LogOut, Home, UserCog } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [error, setError] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
+
+  const isAdmin = user && user.role === 'admin';
+
   const menuItems = [
     { icon: Users, label: 'Customers', path: '/' },
-    { icon: BarChart2, label: 'Dashboard', path: '/dashboard' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: BarChart2, label: 'Settings', path: '/settings' },
   ];
 
   const loadStats = async () => {
@@ -75,19 +78,31 @@ const Sidebar = () => {
       </div>
       <nav className="mt-6">
         {menuItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
-                isActive ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
-              }`
-            }
-          >
-            <item.icon className="w-5 h-5 mr-3" />
-            {item.label}
-          </NavLink>
+          <li key={item.path}>
+            <Link
+              to={item.path}
+              className={`flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
+                location.pathname === item.path ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
+              }`}
+            >
+              <item.icon className="w-5 h-5 mr-3" />
+              {item.label}
+            </Link>
+          </li>
         ))}
+        {isAdmin && (
+          <li>
+            <Link
+              to="/users"
+              className={`flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
+                location.pathname === '/users' ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
+              }`}
+            >
+              <UserCog className="w-5 h-5 mr-3" />
+              Usuarios
+            </Link>
+          </li>
+        )}
       </nav>
       <div>
       <button
