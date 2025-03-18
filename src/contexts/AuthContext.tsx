@@ -3,33 +3,26 @@ import { loginUser, validateToken } from '../services/api';
 
 // Define User type locally to avoid import issues
 interface User {
-  id: string;
+  id: number;
   name: string;
-  role: 'admin' | 'manager' | 'user';
+  role: string;
   cedula: string;
   email?: string;
   access_token?: string;
 }
 
 // Define context type
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   token: string | null;
-};
+}
 
 // Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => {},
-  logout: () => {},
-  token: null,
-});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 // Auth provider props
 type AuthProviderProps = {
@@ -37,7 +30,7 @@ type AuthProviderProps = {
 };
 
 // Auth provider component
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
@@ -91,7 +84,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const userObj: User = {
         id: (userData.id || String(userData.id_usuario) || '1'),
         name: (userData.nombre || userData.username || email),
-        role: (data.rol.toLowerCase() as 'admin' | 'manager' | 'user'),
+        role: (data.rol.toLowerCase() as string),
         cedula: (userData.cedula || userData.numero_documento || '1'),
         email: email,
         access_token: data.access_token
@@ -126,20 +119,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('user');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user && !!token,
-        isLoading,
-        login,
-        logout,
-        token,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  // Valor del contexto
+  const value = {
+    user,
+    isAuthenticated: !!user && !!token,
+    isLoading,
+    login,
+    logout,
+    token,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use auth context
