@@ -235,7 +235,7 @@ const Customers = () => {
           setIsEditing(false);
         }}
         title="Customer Details"
-        maxWidth="max-w-4xl"
+        maxWidth="max-w-7xl"
       >
         <CustomerDetails
           customer={selectedCustomer!}
@@ -247,7 +247,12 @@ const Customers = () => {
           canDelete={canDelete}
           onEdit={handleEdit}
           onSave={handleSave}
-          onDelete={handleDelete}
+          // onDelete={handleDelete}
+          onCustomerDelete={(solicitanteId) => {
+            // La eliminación ya fue manejada en CustomerDetails
+            loadCustomers(); // Recargar la lista de clientes
+            setIsModalOpen(false); // Cerrar el modal
+          }}
           onInputChange={handleInputChange}
         />
       </Modal>
