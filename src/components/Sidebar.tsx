@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, BarChart2, Settings, LogOut, Home, UserCog } from 'lucide-react';
+import { Users, BarChart2, Settings, LogOut, Home, UserCog, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
@@ -15,6 +15,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: Users, label: 'Customers', path: '/' },
+    { icon: User, label: 'Perfil', path: '/profile' },
     { icon: BarChart2, label: 'Settings', path: '/settings' },
   ];
 
@@ -81,8 +82,10 @@ const Sidebar = () => {
           <li key={item.path}>
             <Link
               to={item.path}
-              className={`flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
-                location.pathname === item.path ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
+              className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
+                location.pathname === item.path 
+                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500' 
+                  : 'text-gray-300'
               }`}
             >
               <item.icon className="w-5 h-5 mr-3" />
@@ -94,8 +97,10 @@ const Sidebar = () => {
           <li>
             <Link
               to="/users"
-              className={`flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 ${
-                location.pathname === '/users' ? 'bg-gray-100 text-black font-bold border-l-4 border-blue-500' : ''
+              className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
+                location.pathname === '/users' 
+                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500' 
+                  : 'text-gray-300'
               }`}
             >
               <UserCog className="w-5 h-5 mr-3" />

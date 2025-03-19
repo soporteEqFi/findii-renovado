@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Customers from './pages/Customers';
 import Users from './pages/Users';
+import Profile from './pages/Profile';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 
@@ -77,7 +78,7 @@ function App() {
               {/* Rutas accesibles para todos los usuarios autenticados */}
               {/* <Route path="customers" element={<Customers />} /> */}
               <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
-              
+              <Route path="profile" element={<Profile />} />
 
               
             </Route>
