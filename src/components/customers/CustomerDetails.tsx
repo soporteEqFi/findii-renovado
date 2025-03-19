@@ -63,20 +63,25 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     setLoading(true);
     setApiError(null);
 
+    console.log('Eliminando cliente:', customer.id_solicitante);
+    console.log('Customer:', customer);
+
     try {
-      const response = await fetch('http://127.0.0.1:5000/delete-record/', {
+      const response = await fetch('http://127.0.0.1:5000/delete-record', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ solicitante_id: customer.solicitante_id }),
+        body: JSON.stringify({ solicitante_id: customer.id_solicitante }),
       });
+
+      console.log('Respuesta de eliminación:', response);
 
       if (!response.ok) {
         throw new Error('Error al eliminar el registro');
       }
 
-      onCustomerDelete(customer.solicitante_id);
+      onCustomerDelete(customer.id_solicitante);
     } catch (error: any) {
       setApiError(error.message);
     } finally {
@@ -326,7 +331,7 @@ const Section: React.FC<{
 }> = ({ title, keys, customer, renderField }) => (
   <div className="md:col-span-2">
     <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
       {keys.map((key) => renderField(key as keyof Customer, customer[key as keyof Customer]))}
     </div>
   </div>
