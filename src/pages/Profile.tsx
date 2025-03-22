@@ -1,8 +1,6 @@
-import { Container, Paper, Box, CircularProgress, Button, Snackbar, Alert } from '@mui/material';
+import { useState, useEffect } from 'react';
 import ProfileDetails from '../components/profile/ProfileDetails';
 import { useAuth } from '../contexts/AuthContext';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
 
 interface UserInfo {
   id: string;
@@ -19,7 +17,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null); // <-- NUEVO
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
   const { user } = useAuth();
 
@@ -85,9 +84,15 @@ const Profile = () => {
         throw new Error('Error al actualizar la información');
       }
 
-      await fetchUserInfo(); // Refresca
+      await fetchUserInfo();
       setIsModalOpen(false);
-      setSuccessMessage('Perfil actualizado correctamente'); // <-- NUEVO MENSAJE
+      setSuccessMessage('Perfil actualizado correctamente');
+      setShowSuccessAlert(true);
+      
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => {
+        setShowSuccessAlert(false);
+      }, 3000);
     } catch (err) {
       setError('Error al actualizar la información del usuario');
       console.error('Error updating user info:', err);
@@ -96,69 +101,64 @@ const Profile = () => {
     }
   };
 
-  const handleCloseSnackbar = () => {
-    setSuccessMessage(null);
-  };
-
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[80vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
     );
   }
 
   if (error || !userInfo) {
     return (
-      <Container>
-        <Paper sx={{ p: 3, mt: 3 }}>
-          <Box textAlign="center">
+      <div className="container mx-auto px-4">
+        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
+          <div className="text-center">
             {error || 'No se pudo cargar la información del usuario'}
-          </Box>
-        </Paper>
-      </Container>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <Box py={4}>
-        <Paper sx={{ p: 4 }}>
-          <Box display="flex" flexDirection="column" alignItems="center">
+    <div className="container mx-auto px-4">
+      <div className="py-8">
+        <div className="bg-white rounded-lg shadow-md p-8">
+          <div className="flex flex-col items-center">
             <img 
               src={userInfo.imagen_aliado || '/default-avatar.png'} 
               alt={userInfo.nombre}
-              style={{ width: '120px', height: '120px', borderRadius: '50%', marginBottom: '20px', objectFit: 'cover' }}
+              className="w-32 h-32 rounded-full mb-5 object-cover"
             />
             <h2 className="text-2xl font-bold mb-2">{userInfo.nombre}</h2>
             <p className="text-gray-600 mb-4">{userInfo.rol}</p>
             <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-6">
               <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm text-gray-500">Correo</p>
-                <p className="font-medium">{userInfo.correo}</p>
+                <p className="text-sm font-medium text-gray-500">Correo</p>
+                <p className="">{userInfo.correo}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm text-gray-500">Cédula</p>
-                <p className="font-medium">{userInfo.cedula}</p>
+                <p className="text-sm font-medium text-gray-500">Cédula</p>
+                <p className="">{userInfo.cedula}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm text-gray-500">Empresa</p>
-                <p className="font-medium">{userInfo.empresa}</p>
+                <p className="text-sm font-medium text-gray-500">Empresa</p>
+                <p className="">{userInfo.empresa}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm text-gray-500">Rol</p>
-                <p className="font-medium">{userInfo.rol}</p>
+                <p className="text-sm font-medium text-gray-500">Rol</p>
+                <p className="">{userInfo.rol}</p>
               </div>
             </div>
-            <Button 
-              variant="contained" 
-              color="primary"
+            <button 
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               onClick={() => setIsModalOpen(true)}
             >
               Editar Perfil
-            </Button>
-          </Box>
-        </Paper>
+            </button>
+          </div>
+        </div>
 
         <ProfileDetails 
           userInfo={userInfo}
@@ -167,19 +167,19 @@ const Profile = () => {
           onSave={handleSaveProfile}
         />
 
-        {/* Snackbar para mensaje de éxito */}
-        <Snackbar 
-          open={!!successMessage} 
-          autoHideDuration={3000} 
-          onClose={handleCloseSnackbar}
-          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        >
-          <Alert severity="success" onClose={handleCloseSnackbar} variant="filled">
-            {successMessage}
-          </Alert>
-        </Snackbar>
-      </Box>
-    </Container>
+        {/* Success Alert */}
+        {showSuccessAlert && (
+          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-md">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              {successMessage}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
