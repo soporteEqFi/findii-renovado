@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, BarChart2, Settings, LogOut, Home, UserCog, User } from 'lucide-react';
+import { Users, BarChart2, Settings, LogOut, Home, UserCog, User, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = () => {
@@ -13,10 +13,17 @@ const Sidebar = () => {
 
   const isAdmin = user && user.role === 'admin';
 
+  // Definir elementos de menú basados en el rol
   const menuItems = [
     { icon: Users, label: 'Customers', path: '/' },
     { icon: User, label: 'Perfil', path: '/profile' },
-    { icon: BarChart2, label: 'Settings', path: '/settings' },
+    { icon: Settings, label: 'Settings', path: '/settings' },
+  ];
+
+  // Agregar elementos solo para administradores
+  const adminMenuItems = [
+    { icon: CreditCard, label: 'Tipos de Crédito', path: '/credit-types' },
+    { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];
 
   const loadStats = async () => {
@@ -78,6 +85,7 @@ const Sidebar = () => {
         )}
       </div>
       <nav className="mt-6">
+        {/* Elementos de menú comunes */}
         {menuItems.map((item) => (
           <li key={item.path}>
             <Link
@@ -93,21 +101,23 @@ const Sidebar = () => {
             </Link>
           </li>
         ))}
-        {isAdmin && (
-          <li>
+        
+        {/* Elementos de menú solo para administradores */}
+        {isAdmin && adminMenuItems.map((item) => (
+          <li key={item.path}>
             <Link
-              to="/users"
+              to={item.path}
               className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
-                location.pathname === '/users' 
+                location.pathname === item.path 
                   ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500' 
                   : 'text-gray-300'
               }`}
             >
-              <UserCog className="w-5 h-5 mr-3" />
-              Usuarios
+              <item.icon className="w-5 h-5 mr-3" />
+              {item.label}
             </Link>
           </li>
-        )}
+        ))}
       </nav>
       <div>
       <button
