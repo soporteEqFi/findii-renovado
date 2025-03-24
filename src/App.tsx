@@ -7,6 +7,7 @@ import Users from './pages/Users';
 import Profile from './pages/Profile';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
+import CreditTypeAdmin from './pages/CreditTypeAdmin';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -80,7 +81,13 @@ function App() {
               <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
               <Route path="profile" element={<Profile />} />
 
-              
+              {/* Ruta para la administración de tipos de crédito (solo admin) */}
+              <Route path="credit-types" element={
+                <AdminRoute>
+                  <CreditTypeAdmin />
+                </AdminRoute>
+              } />
+
             </Route>
             
             {/* Ruta para manejar URLs no encontradas */}
