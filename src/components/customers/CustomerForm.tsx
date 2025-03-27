@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Customer } from '../../types/customer';
 import { Upload, File, X as XIcon, Save, Loader2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -23,6 +23,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Agregar nuevos estados para los campos dinámicos
+  const [creditTypeFields, setCreditTypeFields] = useState<any[]>([]);
+  const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
+
   const handleInputChange = (field: string, value: any) => {
     setNewCustomer(prev => ({ ...prev, [field]: value }));
   };
@@ -44,21 +48,62 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     }
   };
 
+  // Función para obtener los tipos de crédito y sus campos
+  const fetchCreditTypeFields = async (creditType: string) => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/get-all-credit-types/');
+      const data = await response.json();
+      
+      // Modificar la comparación para que coincida con los valores del select
+      const selectedCreditType = data.find((type: any) => 
+        type.name === `credito_${creditType}`
+      );
+      
+      console.log('Tipo de crédito seleccionado:', creditType);
+      console.log('Tipo de crédito encontrado:', selectedCreditType);
+      
+      if (selectedCreditType) {
+        setCreditTypeFields(selectedCreditType.fields);
+        // Inicializar los valores de los campos dinámicos
+        const initialValues = selectedCreditType.fields.reduce((acc: any, field: any) => {
+          acc[field.name] = '';
+          return acc;
+        }, {});
+        setDynamicFieldValues(initialValues);
+      } else {
+        setCreditTypeFields([]); // Limpiar los campos si no se encuentra el tipo
+        setDynamicFieldValues({});
+      }
+    } catch (error) {
+      console.error('Error al obtener los campos del tipo de crédito:', error);
+      toast.error('Error al cargar los campos del tipo de crédito');
+    }
+  };
+
+  // Modificar el handleInputChange existente para manejar campos dinámicos
+  const handleDynamicFieldChange = (fieldName: string, value: any) => {
+    setDynamicFieldValues(prev => ({ ...prev, [fieldName]: value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
       const formData = new FormData();
+      // Incluir los campos dinámicos en un JSON bajo "informacion_producto"
+      const informacionProducto = { ...dynamicFieldValues };
       
-      // Asegurarnos de que el asesor_usuario esté actualizado
+      // Incluir los campos dinámicos en los datos del cliente
       const customerData = {
         ...newCustomer,
+        informacion_producto: JSON.stringify(informacionProducto),
         asesor_usuario: localStorage.getItem('cedula') || ''
       };
       
       // Debug: verificar los datos antes de enviar
       console.log('Datos del cliente:', customerData);
       console.log('Tipo documento:', customerData.tipo_documento);
+      console.log('Información del producto (JSON):', informacionProducto);
       
       // Agregar todos los campos al FormData
       Object.entries(customerData).forEach(([key, value]) => {
@@ -95,6 +140,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       toast.error('Error al registrar el cliente');
     }
   };
+
+  // Agregar un efecto para cargar los campos cuando cambia el tipo de crédito
+  useEffect(() => {
+    if (newCustomer.tipo_credito) {
+      fetchCreditTypeFields(newCustomer.tipo_credito);
+    }
+  }, [newCustomer.tipo_credito]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -567,6 +619,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </select>
         </div>
 
+     
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Banco *
@@ -581,7 +635,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             <option value="bancolombia">Bancolombia</option>
             <option value="davivienda">Davivienda</option>
             <option value="bbva">BBVA</option>
-            {/* Agregar más bancos según sea necesario */}
           </select>
         </div>
 
@@ -597,6 +650,44 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             required
           />
         </div>
+          {/* Campos dinámicos del tipo de crédito */}
+          {creditTypeFields.length > 0 && (
+          <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {creditTypeFields.map((field) => (
+              <div key={field.id} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {field.displayName} {field.isRequired && '*'}
+                </label>
+                {field.fieldType === 'select' ? (
+                  <select
+                    value={dynamicFieldValues[field.name] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.name, e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required={field.isRequired}
+                  >
+                    <option value="">Seleccionar...</option>
+                    {field.options.map((option: string) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type={field.fieldType}
+                    value={dynamicFieldValues[field.name] || ''}
+                    onChange={(e) => handleDynamicFieldChange(field.name, e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required={field.isRequired}
+                    min={field.validation?.minValue}
+                    max={field.validation?.maxValue}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -621,7 +712,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             rows={3}
           />
         </div>
-
+         
         {/* File Upload Section */}
         <div className="md:col-span-3">
           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos Adjuntos</h3>
