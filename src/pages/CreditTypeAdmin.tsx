@@ -19,6 +19,7 @@ export const CreditTypeAdmin: React.FC = () => {
     try {
       const data = await getCreditTypes();
       setCreditTypes(data);
+      console.log(data);
     } catch (error) {
       toast.error('Error al cargar los tipos de crédito');
       console.error(error);
@@ -96,12 +97,13 @@ export const CreditTypeAdmin: React.FC = () => {
   }
 
   return (
+
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Tipos de Crédito</h1>
         <button
           onClick={handleCreateNew}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600"
         >
           Crear Nuevo
         </button>
@@ -144,9 +146,9 @@ export const CreditTypeAdmin: React.FC = () => {
                   </td>
                   <td className="px-6 py-4">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      creditType.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      creditType.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {creditType.isActive ? 'Activo' : 'Inactivo'}
+                      {creditType.is_active ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right text-sm font-medium">
