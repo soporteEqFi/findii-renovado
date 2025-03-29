@@ -164,7 +164,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.nombre_completo || ''}
             onChange={(e) => handleInputChange('nombre_completo', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -176,7 +176,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.tipo_documento || ''}
             onChange={(e) => handleInputChange('tipo_documento', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -195,7 +195,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.numero_documento || ''}
             onChange={(e) => handleInputChange('numero_documento', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -209,7 +209,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               type="date"
               value={newCustomer.fecha_nacimiento || ''}
               onChange={(e) => handleInputChange('fecha_nacimiento', e.target.value)}
-              className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />
             <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -223,7 +223,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.estado_civil || ''}
             onChange={(e) => handleInputChange('estado_civil', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -243,7 +243,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.personas_a_cargo || ''}
             onChange={(e) => handleInputChange('personas_a_cargo', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -257,7 +257,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="tel"
             value={newCustomer.numero_celular || ''}
             onChange={(e) => handleInputChange('numero_celular', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -270,7 +270,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="email"
             value={newCustomer.correo_electronico || ''}
             onChange={(e) => handleInputChange('correo_electronico', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -283,7 +283,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.nivel_estudio || ''}
             onChange={(e) => handleInputChange('nivel_estudio', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
           >
             <option value="">Seleccionar...</option>
             <option value="primaria">Primaria</option>
@@ -303,7 +303,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.profesion || ''}
             onChange={(e) => handleInputChange('profesion', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
           />
         </div>
 
@@ -322,7 +322,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.direccion_residencia || ''}
             onChange={(e) => handleInputChange('direccion_residencia', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -334,7 +334,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.tipo_vivienda || ''}
             onChange={(e) => handleInputChange('tipo_vivienda', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -352,7 +352,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.barrio || ''}
             onChange={(e) => handleInputChange('barrio', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -365,7 +365,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.departamento || ''}
             onChange={(e) => handleInputChange('departamento', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -378,7 +378,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.estrato || ''}
             onChange={(e) => handleInputChange('estrato', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -391,7 +391,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.ciudad_gestion || ''}
             onChange={(e) => handleInputChange('ciudad_gestion', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -409,7 +409,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.actividad_economica || ''}
             onChange={(e) => handleInputChange('actividad_economica', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -422,7 +422,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.direccion_empresa || ''}
             onChange={(e) => handleInputChange('direccion_empresa', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -435,7 +435,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="tel"
             value={newCustomer.telefono_empresa || ''}
             onChange={(e) => handleInputChange('telefono_empresa', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -447,7 +447,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.tipo_contrato || ''}
             onChange={(e) => handleInputChange('tipo_contrato', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -466,7 +466,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.cargo_actual || ''}
             onChange={(e) => handleInputChange('cargo_actual', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -479,7 +479,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.empresa_labora || ''}
             onChange={(e) => handleInputChange('empresa_labora', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -492,7 +492,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="date"
             value={newCustomer.fecha_vinculacion || ''}
             onChange={(e) => handleInputChange('fecha_vinculacion', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -512,7 +512,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.ingresos || ''}
             onChange={(e) => handleInputChange('ingresos', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -525,7 +525,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.valor_inmueble || ''}
             onChange={(e) => handleInputChange('valor_inmueble', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -538,7 +538,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.cuota_inicial || ''}
             onChange={(e) => handleInputChange('cuota_inicial', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -551,7 +551,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.porcentaje_financiar || ''}
             onChange={(e) => handleInputChange('porcentaje_financiar', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -564,7 +564,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_activos || ''}
             onChange={(e) => handleInputChange('total_activos', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -577,7 +577,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_pasivos || ''}
             onChange={(e) => handleInputChange('total_pasivos', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -590,7 +590,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_egresos || ''}
             onChange={(e) => handleInputChange('total_egresos', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -609,7 +609,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.tipo_credito || ''}
             onChange={(e) => handleInputChange('tipo_credito', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -628,7 +628,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <select
             value={newCustomer.banco || ''}
             onChange={(e) => handleInputChange('banco', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
@@ -646,7 +646,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.plazo_meses || ''}
             onChange={(e) => handleInputChange('plazo_meses', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           />
         </div>
@@ -662,7 +662,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                   <select
                     value={dynamicFieldValues[field.name] || ''}
                     onChange={(e) => handleDynamicFieldChange(field.name, e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
                     required={field.isRequired}
                   >
                     <option value="">Seleccionar...</option>
@@ -677,7 +677,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                     type={field.fieldType}
                     value={dynamicFieldValues[field.name] || ''}
                     onChange={(e) => handleDynamicFieldChange(field.name, e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
                     required={field.isRequired}
                     min={field.validation?.minValue}
                     max={field.validation?.maxValue}
@@ -697,7 +697,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="text"
             value={newCustomer.segundo_titular || ''}
             onChange={(e) => handleInputChange('segundo_titular', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
           />
         </div>
 
@@ -708,7 +708,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <textarea
             value={newCustomer.observacion || ''}
             onChange={(e) => handleInputChange('observacion', e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             rows={3}
           />
         </div>
