@@ -3,7 +3,7 @@ import { CreditType } from '../types/creditTypes';
 const API_URL = 'http://127.0.0.1:5000';
 
 export const getCreditTypes = async (): Promise<CreditType[]> => {
-  const response = await fetch(`${API_URL}/credit-types/`);
+  const response = await fetch(`${API_URL}/get-all-credit-types/`);
   
   if (!response.ok) {
     const errorData = await response.json().catch(() => null);
