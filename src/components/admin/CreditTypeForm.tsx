@@ -15,7 +15,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
       displayName: '',
       description: '',
       fields: [],
-      isActive: true,
+      is_active: true,
     }
   );
 
@@ -114,7 +114,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               type="text"
               value={creditType.name}
               onChange={(e) => handleCreditTypeChange('name', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />
             <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
@@ -126,7 +126,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               type="text"
               value={creditType.displayName}
               onChange={(e) => handleCreditTypeChange('displayName', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />
           </div>
@@ -136,7 +136,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             <textarea
               value={creditType.description || ''}
               onChange={(e) => handleCreditTypeChange('description', e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               rows={2}
             />
           </div>
@@ -145,8 +145,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={creditType.isActive}
-                onChange={(e) => handleCreditTypeChange('isActive', e.target.checked)}
+                checked={creditType.is_active}
+                onChange={(e) => handleCreditTypeChange('is_active', e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
               />
               <span className="ml-2 text-sm text-gray-700">Activo</span>
@@ -213,7 +213,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 type="text"
                 value={newField.name || ''}
                 onChange={(e) => handleNewFieldChange('name', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               />
               <p className="text-xs text-gray-500 mt-1">Sin espacios ni caracteres especiales</p>
             </div>
@@ -224,7 +224,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 type="text"
                 value={newField.displayName || ''}
                 onChange={(e) => handleNewFieldChange('displayName', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               />
             </div>
             
@@ -233,7 +233,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               <select
                 value={newField.fieldType as string}
                 onChange={(e) => handleNewFieldChange('fieldType', e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               >
                 <option value="text">Texto</option>
                 <option value="number">Número</option>
@@ -250,7 +250,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                   type="text"
                   value={newField.options?.join(', ') || ''}
                   onChange={(e) => handleNewFieldChange('options', e.target.value.split(', '))}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
                   placeholder="Opción1, Opción2, Opción3"
                 />
               </div>
