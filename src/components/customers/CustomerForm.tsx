@@ -632,9 +632,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             required
           >
             <option value="">Seleccionar...</option>
-            <option value="bancolombia">Bancolombia</option>
-            <option value="davivienda">Davivienda</option>
-            <option value="bbva">BBVA</option>
+            <option value="Bancolombia">Bancolombia</option>
+            <option value="Davivienda">Davivienda</option>
+            <option value="BBVA">BBVA</option>
           </select>
         </div>
 

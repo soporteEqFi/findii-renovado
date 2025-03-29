@@ -208,7 +208,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             type={key.includes('date') || key.includes('fecha') ? 'date' : 'text'}
             value={editedCustomer[key] || ''}
             onChange={(e) => handleInputChange(key, e.target.value)}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             disabled={loading}
           />
         ) : (
