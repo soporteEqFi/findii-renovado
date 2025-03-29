@@ -26,5 +26,5 @@ export interface CreditType {
   displayName: string; // Nombre para mostrar
   description?: string;
   fields: CreditTypeField[];
-  isActive: boolean;
+  is_active: boolean;
 } 
