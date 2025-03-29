@@ -89,33 +89,35 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
                 name="empresa"
                 value={formData.empresa}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                disabled
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed"
               />
             </div>
             
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen</label>
               <input
                 type="text"
                 name="imagen_aliado"
                 value={formData.imagen_aliado}
                 onChange={handleChange}
+                disabled
                 placeholder="URL de la imagen de perfil"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed"
               />
-            </div>
+            </div> */}
             
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
               <input
                 type="text"
                 name="rol"
-                value={formData.rol}
+                value={formData.rol}  
                 onChange={handleChange}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
               />
-            </div>
+            </div> */}
           </div>
         </div>
         
