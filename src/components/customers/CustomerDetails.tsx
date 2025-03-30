@@ -23,6 +23,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [editedCustomer, setEditedCustomer] = useState<Customer>(customer);
   const [loading, setLoading] = useState(isLoading);
   const [apiError, setApiError] = useState<string | null>(error);
+  const [productInfo, setProductInfo] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // Mapear los campos del customer al formato correcto cuando se recibe
@@ -35,6 +36,18 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       tipo_contrato: customer.tipo_contrato || '',
       tipo_de_credito: customer.tipo_de_credito || '',
     };
+
+    // Parsear información_producto si existe
+    try {
+      const productInfoData = typeof customer.informacion_producto === 'string' 
+        ? JSON.parse(customer.informacion_producto)
+        : customer.informacion_producto || {};
+      setProductInfo(productInfoData);
+      mappedCustomer.informacion_producto = productInfoData;
+    } catch (error) {
+      console.error('Error al parsear información_producto:', error);
+      setProductInfo({});
+    }
    
     setEditedCustomer(mappedCustomer);
   }, [customer]);
@@ -44,6 +57,17 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       const newCustomer = { ...prev, [field]: value };
       // console.log('Campo actualizado:', field, 'Nuevo valor:', value);
       return newCustomer;
+    });
+  };
+
+  const handleProductInfoChange = (field: string, value: string) => {
+    setProductInfo(prev => {
+      const newInfo = { ...prev, [field]: value };
+      setEditedCustomer(prev => ({
+        ...prev,
+        informacion_producto: newInfo
+      }));
+      return newInfo;
     });
   };
 
@@ -151,7 +175,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             ? (editedCustomer.segundo_titular ? 'si' : 'no')
             : (editedCustomer.segundo_titular || 'no'),
           observacion: editedCustomer.observacion,
-          estado: editedCustomer.estado
+          estado: editedCustomer.estado,
+          informacion_producto: editedCustomer.informacion_producto
         },
         SOLICITUDES: {
           banco: editedCustomer.banco
@@ -189,6 +214,35 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   const renderField = (key: keyof Customer, value: any) => {
     if (key === 'id' || key === 'created_at' || key === 'archivos' || key === 'asesor_usuario') return null;
+
+    if (key === 'informacion_producto') {
+      return (
+        <div key={key} className="col-span-full">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Object.entries(productInfo).map(([field, value]) => (
+              <div key={field} className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ')}
+                </label>
+                {isEditing && canEditCustomer ? (
+                  <input
+                    type="text"
+                    value={value || ''}
+                    onChange={(e) => handleProductInfoChange(field, e.target.value)}
+                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+                    <span>{value || '-'}</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
 
     // Mostrar el valor actual en consola para depuración
     // console.log(`Renderizando campo ${key}:`, value);
@@ -268,7 +322,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
       {/* Producto Solicitado */}
       <Section title="Producto Solicitado" keys={[
-        'tipo_de_credito', 'plazo_meses', 'segundo_titular', 'observacion', 'estado'
+        'tipo_de_credito', 'plazo_meses','segundo_titular', 'informacion_producto',  'observacion', 'estado',
       ]} customer={editedCustomer} renderField={renderField} />
 
       {/* Solicitudes */}

@@ -59,4 +59,5 @@ export interface Customer {
   archivos?: string;
   asesor_usuario?: string;
   estado?: string;
+  informacion_producto?: string;
 }

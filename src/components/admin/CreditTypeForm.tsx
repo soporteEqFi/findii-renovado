@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CreditType, CreditTypeField, FieldValidation } from '../../types/creditTypes';
-// import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
 
 interface CreditTypeFormProps {
   initialCreditType?: CreditType;
@@ -8,6 +8,9 @@ interface CreditTypeFormProps {
 }
 
 export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditType, onSave }) => {
+  
+  console.log(initialCreditType);
+
   const [creditType, setCreditType] = useState<CreditType>(
     initialCreditType || {
     //   id: uuidv4(),
@@ -43,7 +46,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
     if (!newField.name || !newField.displayName) return;
 
     const newFieldComplete: CreditTypeField = {
-    //   id: uuidv4(),
+      id: uuidv4(),
       name: newField.name || '',
       displayName: newField.displayName || '',
       fieldType: newField.fieldType as any || 'text',
@@ -162,8 +165,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2">Campos Configurados</h3>
             <ul className="divide-y divide-gray-200">
-              {creditType.fields.map((field) => (
-                <li key={field.id} className="py-4 flex flex-wrap justify-between items-center">
+              {creditType.fields.map((field, index) => (
+                <li key={field.id || index} className="py-4 flex flex-wrap justify-between items-center">
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{field.displayName}</p>
                     <p className="text-sm text-gray-500">

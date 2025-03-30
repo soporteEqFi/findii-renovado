@@ -17,7 +17,8 @@ export const CreditTypeAdmin: React.FC = () => {
   const loadCreditTypes = async () => {
     setIsLoading(true);
     try {
-      const data = await getCreditTypes();
+      const cedula = localStorage.getItem('cedula');
+      const data = await getCreditTypes(cedula);
       setCreditTypes(data);
       console.log(data);
     } catch (error) {
@@ -52,12 +53,15 @@ export const CreditTypeAdmin: React.FC = () => {
   };
 
   const handleSave = async (creditType: CreditType) => {
+    const cedula = localStorage.getItem('cedula');
     try {
       if (selectedCreditType) {
+        console.log('Actualizando tipo de crédito:', creditType);
         await updateCreditType(creditType);
         toast.success('Tipo de crédito actualizado con éxito');
       } else {
-        await createCreditType(creditType);
+        console.log('Creando nuevo tipo de crédito:', creditType, 'con cédula:', cedula);
+        await createCreditType(creditType, cedula);
         toast.success('Tipo de crédito creado con éxito');
       }
       await loadCreditTypes();
