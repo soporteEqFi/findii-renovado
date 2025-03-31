@@ -51,7 +51,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   // Función para obtener los tipos de crédito y sus campos
   const fetchCreditTypeFields = async (creditType: string) => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/get-all-credit-types/');
+      const response = await fetch('http://127.0.0.1:5000/get-all-credit-types/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          cedula: localStorage.getItem('cedula')
+        })
+      });
+
       const data = await response.json();
       
       // Modificar la comparación para que coincida con los valores del select
