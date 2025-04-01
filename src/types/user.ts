@@ -5,6 +5,8 @@ export interface User {
   email: string;
   cedula: string;
   empresa: string;
-  password: string;
-  imagen_aliado: string | null;
+  password?: string;
+  imagen_aliado?: string | null;
+  apellido?: string;
+  usuario?: string;
 } 

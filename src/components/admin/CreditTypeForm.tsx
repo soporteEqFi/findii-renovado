@@ -127,8 +127,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             <label className="block text-sm font-medium text-gray-700">Nombre para Mostrar *</label>
             <input
               type="text"
-              value={creditType.displayName}
-              onChange={(e) => handleCreditTypeChange('displayName', e.target.value)}
+              value={creditType.display_name}
+              onChange={(e) => handleCreditTypeChange('display_name', e.target.value)}
               className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />

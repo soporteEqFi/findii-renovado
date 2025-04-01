@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useUsers } from '../hooks/useUsers';
 import { UserTable } from '../components/users/UserTable';
 import { UserDetails } from '../components/users/UserDetails';
+import { NewUserForm } from '../components/users/NewUserForm';
 import { User } from '../types/user';
 
 const Users = () => {
@@ -15,7 +16,8 @@ const Users = () => {
     error,
     loadUsers,
     updateUser,
-    deleteUser
+    deleteUser,
+    createUser
   } = useUsers();
 
   // Estados locales
@@ -23,6 +25,7 @@ const Users = () => {
   const [editedUser, setEditedUser] = useState<User | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -31,8 +34,8 @@ const Users = () => {
   }, [isAuthenticated, loadUsers]);
 
   // Definir los permisos para cada usuario
-  const canEdit = () => user && ['admin'].includes(user.role);
-  const canDelete = () => user && user.role === 'admin';
+  const canEdit = (): boolean => user?.role === 'admin';
+  const canDelete = (): boolean => user?.role === 'admin';
 
   // Manejadores de eventos
   const handleRowClick = (user: User) => {
@@ -72,6 +75,22 @@ const Users = () => {
   const handleInputChange = (field: keyof User, value: string) => {
     if (!editedUser) return;
     setEditedUser({ ...editedUser, [field]: value });
+  };
+
+  const handleCreateUser = async (userData: {
+    email: string;
+    password: string;
+    nombre: string;
+    rol: string;
+    cedula: string;
+    empresa: string;
+  }) => {
+    try {
+      await createUser(userData);
+      setIsNewUserModalOpen(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
+    }
   };
 
   // Renderizado condicional para estados de carga y autenticación
@@ -117,7 +136,7 @@ const Users = () => {
         {canEdit() && (
           <div className="flex justify-end p-4 bg-gray-50 border-b">
             <button
-              onClick={() => {/* TODO: implementar creación de usuario */}}
+              onClick={() => setIsNewUserModalOpen(true)}
               className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
             >
               <UserPlus className="w-4 h-4 mr-2" />
@@ -159,6 +178,20 @@ const Users = () => {
             onInputChange={handleInputChange}
           />
         )}
+      </Modal>
+
+      {/* Modal de Nuevo Usuario */}
+      <Modal
+        isOpen={isNewUserModalOpen}
+        onClose={() => setIsNewUserModalOpen(false)}
+        title="Crear Nuevo Usuario"
+        maxWidth="max-w-2xl"
+      >
+        <NewUserForm
+          onSubmit={handleCreateUser}
+          onCancel={() => setIsNewUserModalOpen(false)}
+          isLoading={isLoading}
+        />
       </Modal>
     </>
   );

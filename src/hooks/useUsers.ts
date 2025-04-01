@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { User } from '../types/user';
-import { fetchUsers, updateUser, deleteUser } from '../services/userService';
+import { fetchUsers, updateUser, deleteUser, createUser } from '../services/userService';
 
 export const useUsers = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -16,6 +16,29 @@ export const useUsers = () => {
     } catch (error) {
       setError('Error loading users');
       console.error('Error loading users:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const createNewUser = useCallback(async (userData: {
+    email: string;
+    password: string;
+    nombre: string;
+    rol: string;
+    cedula: string;
+    empresa: string;
+  }) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const newUser = await createUser(userData);
+      setUsers(prev => [...prev, newUser]);
+      return newUser;
+    } catch (error) {
+      setError('Error creating user');
+      console.error('Error creating user:', error);
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -57,6 +80,7 @@ export const useUsers = () => {
     isLoading,
     error,
     loadUsers,
+    createUser: createNewUser,
     updateUser: updateUserData,
     deleteUser: deleteUserData,
     setUsers
