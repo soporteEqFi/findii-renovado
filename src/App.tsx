@@ -8,6 +8,7 @@ import Profile from './pages/Profile';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import CreditTypeAdmin from './pages/CreditTypeAdmin';
+import { CreditTracking } from './components/tracking/CreditTracking';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -67,6 +68,9 @@ function App() {
           <Routes>
             {/* Ruta pública de login */}
             <Route path="/login" element={<Login />} />
+            
+            {/* Ruta pública de seguimiento */}
+            <Route path="/seguimiento" element={<CreditTracking />} />
             
             {/* Rutas protegidas dentro del Layout */}
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
