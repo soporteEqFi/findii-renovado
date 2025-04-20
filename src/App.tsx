@@ -78,7 +78,7 @@ function App() {
                             
               {/* Rutas accesibles para todos los usuarios autenticados */}
               {/* <Route path="customers" element={<Customers />} /> */}
-              <Route path="settings" element={<div>Settings (Coming Soon)</div>} />
+              {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
               <Route path="profile" element={<Profile />} />
 
               {/* Ruta para la administración de tipos de crédito (solo admin) */}

@@ -17,7 +17,7 @@ const Sidebar = () => {
   const menuItems = [
     { icon: Users, label: 'Customers', path: '/' },
     { icon: User, label: 'Perfil', path: '/profile' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+    // { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
   // Agregar elementos solo para administradores
