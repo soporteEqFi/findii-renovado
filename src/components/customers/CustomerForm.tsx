@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Customer } from '../../types/customer';
 import { Upload, File, X as XIcon, Save, Loader2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getCreditTypes, clearCreditTypesCache } from '../../services/creditTypeService';
 
 interface CustomerFormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -26,6 +27,64 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   // Agregar nuevos estados para los campos dinámicos
   const [creditTypeFields, setCreditTypeFields] = useState<any[]>([]);
   const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
+  const [availableCreditTypes, setAvailableCreditTypes] = useState<any[]>([]);
+
+  // Función unificada para cargar y procesar los tipos de crédito
+  const loadCreditTypes = async (selectedType?: string) => {
+    try {
+      const cedula = localStorage.getItem('cedula') || '';
+      const data = await getCreditTypes(cedula);
+      console.log('Datos de los tipos de crédito:', data);
+      
+      // Guardar los tipos de crédito disponibles
+      setAvailableCreditTypes(data);
+
+      // Si hay un tipo seleccionado, procesar sus campos
+      if (selectedType) {
+        const selectedCreditType = data.find((type: any) => 
+          type.name === `credito_${selectedType}`
+        );
+        
+        if (selectedCreditType) {
+          setCreditTypeFields(selectedCreditType.fields);
+          const initialValues = selectedCreditType.fields.reduce((acc: any, field: any) => {
+            acc[field.name] = '';
+            return acc;
+          }, {});
+          setDynamicFieldValues(initialValues);
+        } else {
+          setCreditTypeFields([]);
+          setDynamicFieldValues({});
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar los tipos de crédito:', error);
+      toast.error('Error al cargar los tipos de crédito');
+    }
+  };
+
+  // Efecto para cargar los tipos de crédito inicialmente
+  useEffect(() => {
+    loadCreditTypes();
+  }, []);
+
+  // Efecto para manejar cambios en el tipo de crédito seleccionado
+  useEffect(() => {
+    if (newCustomer.tipo_de_credito) {
+      const selectedType = availableCreditTypes.find(
+        (type: any) => type.name === `credito_${newCustomer.tipo_de_credito}`
+      );
+      
+      if (selectedType) {
+        setCreditTypeFields(selectedType.fields);
+        const initialValues = selectedType.fields.reduce((acc: any, field: any) => {
+          acc[field.name] = '';
+          return acc;
+        }, {});
+        setDynamicFieldValues(initialValues);
+      }
+    }
+  }, [newCustomer.tipo_de_credito, availableCreditTypes]);
 
   const handleInputChange = (field: string, value: any) => {
     setNewCustomer(prev => ({ ...prev, [field]: value }));
@@ -45,47 +104,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
-    }
-  };
-
-  // Función para obtener los tipos de crédito y sus campos
-  const fetchCreditTypeFields = async (creditType: string) => {
-    try {
-      const response = await fetch('http://127.0.0.1:5000/get-all-credit-types/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          cedula: localStorage.getItem('cedula')
-        })
-      });
-
-      const data = await response.json();
-      
-      // Modificar la comparación para que coincida con los valores del select
-      const selectedCreditType = data.find((type: any) => 
-        type.name === `credito_${creditType}`
-      );
-      
-      console.log('Tipo de crédito seleccionado:', creditType);
-      console.log('Tipo de crédito encontrado:', selectedCreditType);
-      
-      if (selectedCreditType) {
-        setCreditTypeFields(selectedCreditType.fields);
-        // Inicializar los valores de los campos dinámicos
-        const initialValues = selectedCreditType.fields.reduce((acc: any, field: any) => {
-          acc[field.name] = '';
-          return acc;
-        }, {});
-        setDynamicFieldValues(initialValues);
-      } else {
-        setCreditTypeFields([]); // Limpiar los campos si no se encuentra el tipo
-        setDynamicFieldValues({});
-      }
-    } catch (error) {
-      console.error('Error al obtener los campos del tipo de crédito:', error);
-      toast.error('Error al cargar los campos del tipo de crédito');
     }
   };
 
@@ -121,13 +139,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
       // Modificar cómo se envían los archivos
       selectedFiles.forEach((file) => {
-        formData.append('archivos', file); // Cambiar a 'archivos' según la interfaz
+        formData.append('archivos', file);
       });
-
-      // Debug: verificar el FormData
-      for (let pair of formData.entries()) {
-        console.log(pair[0] + ': ' + pair[1]);
-      }
 
       // Realizar la petición a la API
       const response = await fetch('http://127.0.0.1:5000/add-record/', {
@@ -141,6 +154,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         throw new Error(errorData?.message || 'Error al enviar el formulario');
       }
 
+      // Limpiar el caché después de un registro exitoso
+      const cedula = localStorage.getItem('cedula') || '';
+      clearCreditTypesCache(cedula);
+      
       toast.success('Cliente registrado exitosamente');
       await onSubmit(e);
       
@@ -149,13 +166,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       toast.error('Error al registrar el cliente');
     }
   };
-
-  // Agregar un efecto para cargar los campos cuando cambia el tipo de crédito
-  useEffect(() => {
-    if (newCustomer.tipo_credito) {
-      fetchCreditTypeFields(newCustomer.tipo_credito);
-    }
-  }, [newCustomer.tipo_credito]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -616,15 +626,21 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             Tipo de Crédito *
           </label>
           <select
-            value={newCustomer.tipo_credito || ''}
-            onChange={(e) => handleInputChange('tipo_credito', e.target.value)}
+            value={newCustomer.tipo_de_credito || ''}
+            onChange={(e) => handleInputChange('tipo_de_credito', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >
             <option value="">Seleccionar...</option>
-            <option value="hipotecario">Hipotecario</option>
-            <option value="consumo">Consumo</option>
-            <option value="vehiculo">Vehículo</option>
+            {Array.isArray(availableCreditTypes) && availableCreditTypes.map((type) => {
+              // Extraer el nombre sin el prefijo 'credito_'
+              const creditType = type.name.replace('credito_', '');
+              return (
+                <option key={type.id} value={creditType}>
+                  {type.display_name}
+                </option>
+              );
+            })}
           </select>
         </div>
 
