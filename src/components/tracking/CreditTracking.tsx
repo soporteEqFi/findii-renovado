@@ -53,6 +53,8 @@ export const CreditTracking: React.FC = () => {
   const [seguimiento, setSeguimiento] = useState<SeguimientoResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false); // Estado para controlar el rol
 
   const handleSearch = async () => {
     if (!trackingId.trim()) {
@@ -75,6 +77,72 @@ export const CreditTracking: React.FC = () => {
       setSeguimiento(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFiles || selectedFiles.length === 0) {
+      setError('Por favor seleccione al menos un archivo');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('id_radicado', trackingId);
+    Array.from(selectedFiles).forEach(file => {
+      formData.append('archivos', file);
+    });
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/api/seguimiento/actualizar-documentos`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al subir los archivos');
+      }
+
+      // Actualizar el seguimiento después de subir los archivos
+      await handleSearch();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error al subir los archivos');
+    } finally {
+      setLoading(false);
+      setSelectedFiles(null);
+    }
+  };
+
+  const handleEstadoChange = async (etapaIndex: number, nuevoEstado: string) => {
+    if (!seguimiento || !isAdmin) return;
+
+    const etapasActualizadas = [...seguimiento.etapas];
+    etapasActualizadas[etapaIndex] = {
+      ...etapasActualizadas[etapaIndex],
+      estado: nuevoEstado,
+      fecha_actualizacion: new Date().toISOString(),
+    };
+
+    try {
+      const response = await fetch(`${API_URL}/api/seguimiento/actualizar-estado`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id_radicado: seguimiento.id_radicado,
+          etapas: etapasActualizadas,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al actualizar el estado');
+      }
+
+      await handleSearch();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Error al actualizar el estado');
     }
   };
 
@@ -197,23 +265,50 @@ export const CreditTracking: React.FC = () => {
                         <h4 className="text-lg font-medium text-gray-900 capitalize">
                           {etapa.etapa}
                         </h4>
-                        <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}>
-                          {etapa.estado}
-                        </span>
+                        {isAdmin ? (
+                          <select
+                            value={etapa.estado}
+                            onChange={(e) => handleEstadoChange(index, e.target.value)}
+                            className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}
+                          >
+                            <option value="pendiente">Pendiente</option>
+                            <option value="en revisión">En revisión</option>
+                            <option value="aprobado">Aprobado</option>
+                            <option value="rechazado">Rechazado</option>
+                          </select>
+                        ) : (
+                          <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}>
+                            {etapa.estado}
+                          </span>
+                        )}
                       </div>
                       
                       {etapa.comentarios && (
                         <p className="text-gray-600 mt-2">{etapa.comentarios}</p>
                       )}
 
-                      {etapa.requisitos_pendientes && etapa.requisitos_pendientes.length > 0 && (
-                        <div className="mt-2">
-                          <p className="text-sm font-medium text-gray-700">Requisitos pendientes:</p>
-                          <ul className="list-disc list-inside text-sm text-gray-600 mt-1">
-                            {etapa.requisitos_pendientes.map((req, idx) => (
-                              <li key={idx}>{req}</li>
-                            ))}
-                          </ul>
+                      {etapa.etapa === 'documentos' && (
+                        <div className="mt-4">
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">Subir documentos:</h5>
+                          <input
+                            type="file"
+                            multiple
+                            onChange={(e) => setSelectedFiles(e.target.files)}
+                            className="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-full file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-blue-50 file:text-blue-700
+                              hover:file:bg-blue-100"
+                          />
+                          {selectedFiles && selectedFiles.length > 0 && (
+                            <button
+                              onClick={handleFileUpload}
+                              className="mt-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                            >
+                              Subir archivos
+                            </button>
+                          )}
                         </div>
                       )}
 
