@@ -15,11 +15,16 @@ const columnHelper = createColumnHelper<Customer>();
 
 // Función auxiliar para formatear la fecha
 const formatDate = (dateString: string) => {
+  if (!dateString) return '';
+  // Si ya está en formato dd/mm/yyyy, devolverlo tal como está
+  const ddmmyyyyRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  if (ddmmyyyyRegex.test(dateString)) return dateString;
+  // Si es una fecha ISO o en otro formato, convertirla
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // Si no es una fecha válida, devolver el string original
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
-  
   return `${day}/${month}/${year}`;
 };
 
@@ -36,15 +41,22 @@ export const columns = [
         </div>
       );
     },
-    cell: (info) => info.getValue() || '',
+    cell: (info) => formatDate(info.getValue() || ''),
     sortingFn: (rowA, rowB, columnId) => {
-      // Función para parsear fechas en formato dd/mm/yyyy
+      // Función para parsear fechas en formato dd/mm/yyyy o ISO
       const parseFecha = (fechaStr: string) => {
         if (!fechaStr) return 0;
-        const [dia, mes, anio] = fechaStr.split('/').map(Number);
-        return new Date(anio, mes - 1, dia).getTime();
+        // Si ya está en formato dd/mm/yyyy
+        const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+        const match = fechaStr.match(dateRegex);
+        if (match) {
+          const [, day, month, year] = match;
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
+        }
+        // Si es una fecha ISO
+        const date = new Date(fechaStr);
+        return isNaN(date.getTime()) ? 0 : date.getTime();
       };
-      
       const fechaA = parseFecha(rowA.getValue(columnId));
       const fechaB = parseFecha(rowB.getValue(columnId));
       return fechaA < fechaB ? -1 : fechaA > fechaB ? 1 : 0;

@@ -15,9 +15,32 @@ import { Search, Calendar } from 'lucide-react';
 interface CustomerTableProps {
   customers: Customer[];
   onRowClick: (customer: Customer) => void;
-  onStatusChange: (customer: Customer, newStatus: string) => Promise<void>;
+  onStatusChange: (customer: Customer, newStatus: string) => void;
   totalRecords: number;
 }
+
+// Función para convertir fecha dd/mm/yyyy a Date
+const parseDateFromDDMMYYYY = (dateString: string): Date | null => {
+  if (!dateString) return null;
+  
+  // Verificar si la fecha está en formato dd/mm/yyyy
+  const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+  const match = dateString.match(dateRegex);
+  
+  if (match) {
+    const [, day, month, year] = match;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+  
+  // Si no coincide con el formato esperado, intentar parsear como fecha ISO
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+// Función para normalizar una fecha a solo año, mes y día (sin hora)
+const normalizeDate = (date: Date) => {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+};
 
 export const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
@@ -33,22 +56,21 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
-  const [localStatuses, setLocalStatuses] = useState<Record<number, string>>({});
-  const [modifiedStatuses, setModifiedStatuses] = useState<Record<number, string>>({});
-
-  const parseFecha = (fechaStr: string) => {
-    if (!fechaStr) return 0;
-    const [dia, mes, anio] = fechaStr.split('/').map(Number);
-    return new Date(anio, mes - 1, dia).getTime();
-  };
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
       // Filtro por fecha
       if (dateRange.start && dateRange.end) {
-        const customerDate = parseFecha(customer.created_at);
-        const startDate = new Date(dateRange.start).getTime();
-        const endDate = new Date(dateRange.end).getTime();
+        const customerDateObj = parseDateFromDDMMYYYY(customer.created_at || '');
+        const startDateObj = new Date(dateRange.start);
+        const endDateObj = new Date(dateRange.end);
+
+        if (!customerDateObj) return false;
+
+        const customerDate = normalizeDate(customerDateObj);
+        const startDate = normalizeDate(startDateObj);
+        const endDate = normalizeDate(endDateObj);
+
         if (customerDate < startDate || customerDate > endDate) {
           return false;
         }
@@ -66,26 +88,11 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     });
   }, [customers, dateRange, globalFilter]);
 
-  const dataWithModifiedStatus = useMemo(() => {
-    return filteredData.map(customer => ({
-      ...customer,
-      estado: modifiedStatuses[customer.id_solicitante] || customer.estado
-    }));
-  }, [filteredData, modifiedStatuses]);
-
-  const sortedData = useMemo(() => {
-    return [...dataWithModifiedStatus].sort((a, b) => {
-      const fechaA = parseFecha(a.created_at || '');
-      const fechaB = parseFecha(b.created_at || '');
-      return fechaB - fechaA; // Orden descendente (más recientes primero)
-    });
-  }, [dataWithModifiedStatus]);
-
   const paginatedData = useMemo(() => {
     const start = pageIndex * pageSize;
     const end = start + pageSize;
-    return sortedData.slice(start, end);
-  }, [sortedData, pageIndex, pageSize]);
+    return filteredData.slice(start, end);
+  }, [filteredData, pageIndex, pageSize]);
 
   const table = useReactTable({
     data: paginatedData,
@@ -93,11 +100,10 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     state: {
       columnFilters,
       globalFilter,
-      sorting: [{ id: 'created_at', desc: true }],
+      sorting: [],
       pagination: {
         pageIndex,
         pageSize,
@@ -107,26 +113,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     onGlobalFilterChange: setGlobalFilter,
     pageCount: Math.ceil(filteredData.length / pageSize),
     manualPagination: true,
-    meta: {
-      updateStatus: async (customer: Customer, newStatus: string) => {
-        try {
-          setModifiedStatuses(prev => ({
-            ...prev,
-            [customer.id_solicitante]: newStatus
-          }));
-          
-          await onStatusChange(customer, newStatus);
-        } catch (error) {
-          setModifiedStatuses(prev => {
-            const updated = { ...prev };
-            delete updated[customer.id_solicitante];
-            return updated;
-          });
-          console.error('Error en tabla al actualizar estado:', error);
-          throw error;
-        }
-      },
-    },
   });
 
   const handlePreviousPage = () => {
