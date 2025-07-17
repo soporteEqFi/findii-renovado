@@ -32,7 +32,7 @@ export interface Customer {
 
   // Información Financiera
   banco: string;
-  tipo_de_credito: string;
+  tipo_credito: string;
   valor_inmueble: number | string;
   cuota_inicial: number | string;
   porcentaje_financiar: number | string;

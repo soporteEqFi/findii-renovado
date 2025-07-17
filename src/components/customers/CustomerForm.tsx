@@ -70,9 +70,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
   // Efecto para manejar cambios en el tipo de crédito seleccionado
   useEffect(() => {
-    if (newCustomer.tipo_de_credito) {
+    if (newCustomer.tipo_credito) {
       const selectedType = availableCreditTypes.find(
-        (type: any) => type.name === `credito_${newCustomer.tipo_de_credito}`
+        (type: any) => type.name === `credito_${newCustomer.tipo_credito}`
       );
       
       if (selectedType) {
@@ -84,7 +84,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         setDynamicFieldValues(initialValues);
       }
     }
-  }, [newCustomer.tipo_de_credito, availableCreditTypes]);
+  }, [newCustomer.tipo_credito, availableCreditTypes]);
 
   const handleInputChange = (field: string, value: any) => {
     setNewCustomer(prev => ({ ...prev, [field]: value }));
@@ -626,8 +626,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             Tipo de Crédito *
           </label>
           <select
-            value={newCustomer.tipo_de_credito || ''}
-            onChange={(e) => handleInputChange('tipo_de_credito', e.target.value)}
+            value={newCustomer.tipo_credito || ''}
+            onChange={(e) => handleInputChange('tipo_credito', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
           >

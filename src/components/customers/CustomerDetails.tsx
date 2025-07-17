@@ -37,7 +37,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       correo_electronico: customer.correo_electronico || '',
       direccion_residencia: customer.direccion_residencia || '',
       tipo_contrato: customer.tipo_contrato || '',
-      tipo_de_credito: customer.tipo_de_credito || '',
+      tipo_credito: customer.tipo_credito || '',
     };
 
     // Parsear información_producto si existe
@@ -230,7 +230,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           total_pasivos: Number(editedCustomer.total_pasivos) || 0
         },
         PRODUCTO_SOLICITADO: {
-          tipo_credito: editedCustomer.tipo_de_credito,
+          tipo_credito: editedCustomer.tipo_credito,
           plazo_meses: Number(editedCustomer.plazo_meses) || 0,
           segundo_titular: typeof editedCustomer.segundo_titular === 'boolean' 
             ? (editedCustomer.segundo_titular ? 'si' : 'no')
@@ -486,7 +486,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
       {/* Producto Solicitado */}
       <Section title="Producto Solicitado" keys={[
-        'tipo_de_credito', 'plazo_meses','segundo_titular', 'informacion_producto',  'observacion', 'estado',
+        'tipo_credito', 'plazo_meses','segundo_titular', 'informacion_producto',  'observacion', 'estado',
       ]} customer={editedCustomer} renderField={renderField} />
 
       {/* Archivos */}
