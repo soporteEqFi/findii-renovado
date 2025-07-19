@@ -37,7 +37,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       correo_electronico: customer.correo_electronico || '',
       direccion_residencia: customer.direccion_residencia || '',
       tipo_contrato: customer.tipo_contrato || '',
-      tipo_credito: customer.tipo_credito || '',
+      tipo_credito: customer.tipo_de_credito || '',
     };
 
     // Parsear información_producto si existe

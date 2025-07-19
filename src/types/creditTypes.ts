@@ -9,7 +9,7 @@ export interface FieldValidation {
 }
 
 export interface CreditTypeField {
-//   id: string;
+  id: string;
   name: string;
   displayName: string;
   fieldType: 'text' | 'number' | 'date' | 'select' | 'checkbox';
@@ -21,10 +21,10 @@ export interface CreditTypeField {
 }
 
 export interface CreditType {
-//   id: string;
+  id: string;
   name: string; // Nombre interno
   displayName: string; // Nombre para mostrar
   description?: string;
   fields: CreditTypeField[];
-  is_active: boolean;
+  isActive: boolean;
 } 

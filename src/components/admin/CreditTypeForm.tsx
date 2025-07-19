@@ -9,18 +9,35 @@ interface CreditTypeFormProps {
 
 export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditType, onSave }) => {
   
-  console.log(initialCreditType);
+  console.log('=== INICIO CreditTypeForm ===');
+  console.log('initialCreditType recibido:', initialCreditType);
 
   const [creditType, setCreditType] = useState<CreditType>(
     initialCreditType || {
-    //   id: uuidv4(),
+      id: '',
       name: '',
       displayName: '',
       description: '',
       fields: [],
-      is_active: true,
+      isActive: true,
     }
   );
+
+  console.log('Estado inicial del creditType:', creditType);
+  console.log('Campos iniciales:', creditType.fields);
+  
+  // Verificar cada campo individualmente
+  creditType.fields.forEach((field, index) => {
+    console.log(`Campo ${index}:`, {
+      id: field.id,
+      name: field.name,
+      displayName: field.displayName,
+      fieldType: field.fieldType,
+      isRequired: field.isRequired
+    });
+  });
+  
+  console.log('=== FIN INICIO CreditTypeForm ===');
 
   const [newField, setNewField] = useState<Partial<CreditTypeField>>({
     fieldType: 'text',
@@ -71,9 +88,16 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
   };
 
   const removeField = (fieldId: string) => {
+    console.log('=== ELIMINANDO CAMPO ===');
+    console.log('ID del campo a eliminar:', fieldId);
+    console.log('Campos antes de eliminar:', creditType.fields);
+    
+    const updatedFields = creditType.fields.filter(field => field.id !== fieldId);
+    console.log('Campos después de eliminar:', updatedFields);
+    
     setCreditType({
       ...creditType,
-      fields: creditType.fields.filter(field => field.id !== fieldId),
+      fields: updatedFields,
     });
   };
 
@@ -102,6 +126,9 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('=== GUARDANDO TIPO DE CRÉDITO ===');
+    console.log('Datos a guardar:', creditType);
+    console.log('Campos a guardar:', creditType.fields);
     await onSave(creditType);
   };
 
@@ -127,8 +154,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             <label className="block text-sm font-medium text-gray-700">Nombre para Mostrar *</label>
             <input
               type="text"
-              value={creditType.display_name}
-              onChange={(e) => handleCreditTypeChange('display_name', e.target.value)}
+              value={creditType.displayName}
+              onChange={(e) => handleCreditTypeChange('displayName', e.target.value)}
               className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />
@@ -148,8 +175,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={creditType.is_active}
-                onChange={(e) => handleCreditTypeChange('is_active', e.target.checked)}
+                checked={creditType.isActive}
+                onChange={(e) => handleCreditTypeChange('isActive', e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
               />
               <span className="ml-2 text-sm text-gray-700">Activo</span>

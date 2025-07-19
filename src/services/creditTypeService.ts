@@ -8,6 +8,49 @@ const camelToSnakeCase = (str: string): string => {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 };
 
+// Función para convertir todas las claves de un objeto de snake_case a camelCase
+const convertKeysToCamelCase = (obj: any): any => {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map(item => convertKeysToCamelCase(item));
+  }
+
+  return Object.keys(obj).reduce((acc, key) => {
+    // Convertir snake_case a camelCase
+    const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    
+    // Convertir valores específicos que sabemos que vienen del backend
+    let value = obj[key];
+    
+    // Si es un campo con display_name, convertirlo a displayName
+    if (key === 'display_name') {
+      acc['displayName'] = value;
+    }
+    // Si es un campo con field_type, convertirlo a fieldType
+    else if (key === 'field_type') {
+      acc['fieldType'] = value;
+    }
+    // Si es un campo con is_required, convertirlo a isRequired
+    else if (key === 'is_required') {
+      acc['isRequired'] = value;
+    }
+    // Si es un campo con is_active, convertirlo a isActive
+    else if (key === 'is_active') {
+      acc['isActive'] = value;
+      console.log(`Convirtiendo is_active (${value}) a isActive`);
+    }
+    // Para el resto, usar la conversión general
+    else {
+      acc[camelKey] = convertKeysToCamelCase(value);
+    }
+    
+    return acc;
+  }, {} as any);
+};
+
 // Función para convertir todas las claves de un objeto de camelCase a snake_case
 const convertKeysToSnakeCase = (obj: any): any => {
   if (obj === null || typeof obj !== 'object') {
@@ -24,6 +67,30 @@ const convertKeysToSnakeCase = (obj: any): any => {
     return acc;
   }, {} as any);
 };
+
+// Función de test para verificar la conversión
+const testConversion = () => {
+  const testField = {
+    id: 'test-id',
+    name: 'testName',
+    displayName: 'Test Display Name',
+    fieldType: 'text',
+    order: 1,
+    isRequired: true,
+    validation: { required: true },
+    options: ['option1', 'option2'],
+    defaultValue: 'default'
+  };
+  
+  const converted = convertKeysToSnakeCase(testField);
+  console.log('=== TEST CONVERSIÓN ===');
+  console.log('Original:', testField);
+  console.log('Convertido:', converted);
+  console.log('=== FIN TEST ===');
+};
+
+// Ejecutar test una vez al cargar el módulo
+testConversion();
 
 const CREDIT_TYPES_CACHE_KEY = 'credit_types';
 
@@ -53,14 +120,38 @@ export const getCreditTypes = async (cedula: string): Promise<CreditType[]> => {
   }
   
   const responseData = await response.json();
-  const creditTypes = responseData.data || [];
+  const creditTypesRaw = responseData.data || [];
+  
+  console.log('=== DATOS RAW DEL BACKEND ===');
+  console.log('Tipos de crédito raw:', creditTypesRaw);
+  
+  // Mostrar un ejemplo de campos raw
+  if (creditTypesRaw.length > 0 && creditTypesRaw[0].fields) {
+    console.log('Ejemplo de campos raw del primer tipo:', creditTypesRaw[0].fields);
+  }
+  
+  // Convertir los datos de snake_case a camelCase
+  const creditTypes = Array.isArray(creditTypesRaw) 
+    ? creditTypesRaw.map(creditType => {
+        const converted = convertKeysToCamelCase(creditType);
+        console.log('Tipo convertido:', converted);
+        console.log(`Estado isActive: ${converted.isActive} (tipo: ${typeof converted.isActive})`);
+        if (converted.fields) {
+          console.log('Campos convertidos:', converted.fields);
+        }
+        return converted;
+      })
+    : [];
+  
+  console.log('=== DATOS CONVERTIDOS ===');
+  console.log('Tipos de crédito convertidos:', creditTypes);
   
   // Guardar los datos en el caché
   if (Array.isArray(creditTypes)) {
     cacheService.set(`${CREDIT_TYPES_CACHE_KEY}_${cedula}`, creditTypes);
   }
   
-  return Array.isArray(creditTypes) ? creditTypes : [];
+  return creditTypes;
 };
 
 // Función para limpiar el caché de tipos de crédito
@@ -80,7 +171,16 @@ export const getCreditTypeById = async (id: string): Promise<CreditType> => {
 };
 
 export const createCreditType = async (creditType: CreditType, cedula: string): Promise<CreditType> => {
-  const snakeCaseCreditType = convertKeysToSnakeCase(creditType);
+  // Asegurarse de que cada campo tenga un id
+  const creditTypeWithIds = {
+    ...creditType,
+    id: creditType.id || '',
+    fields: creditType.fields.map(field => ({
+      ...field,
+      id: field.id || '',
+    })),
+  };
+  const snakeCaseCreditType = convertKeysToSnakeCase(creditTypeWithIds);
   
   const response = await fetch(`${API_URL}/add-credit-type/`, {
     method: 'POST',
@@ -102,11 +202,29 @@ export const createCreditType = async (creditType: CreditType, cedula: string): 
 };
 
 export const updateCreditType = async (creditType: CreditType): Promise<CreditType> => {
-  console.log('Original:', creditType);
+  console.log('=== INICIO updateCreditType ===');
+  console.log('CreditType recibido:', creditType);
+  console.log('Campos antes del procesamiento:', creditType.fields);
+  
+  // Asegurarse de que cada campo tenga un id
+  const creditTypeWithIds = {
+    ...creditType,
+    id: creditType.id || '',
+    fields: creditType.fields.map(field => ({
+      ...field,
+      id: field.id || '',
+    })),
+  };
+  
+  console.log('CreditType con IDs:', creditTypeWithIds);
+  console.log('Campos con IDs:', creditTypeWithIds.fields);
   
   // Convertir todas las propiedades de camelCase a snake_case
-  const snakeCaseCreditType = convertKeysToSnakeCase(creditType);
-  console.log('Convertido a snake_case:', snakeCaseCreditType);
+  const snakeCaseCreditType = convertKeysToSnakeCase(creditTypeWithIds);
+  console.log('=== DATOS ENVIADOS AL BACKEND ===');
+  console.log('Payload completo:', JSON.stringify(snakeCaseCreditType, null, 2));
+  console.log('Campos en snake_case:', snakeCaseCreditType.fields);
+  console.log('=== FIN updateCreditType ===');
   
   const response = await fetch(`${API_URL}/edit-credit-type/`, {
     method: 'POST',
@@ -125,12 +243,53 @@ export const updateCreditType = async (creditType: CreditType): Promise<CreditTy
 };
 
 export const deleteCreditType = async (id: string): Promise<void> => {
-  const response = await fetch(`${API_URL}/credit-types/${id}`, {
-    method: 'DELETE',
-  });
+  console.log('=== ELIMINANDO TIPO DE CRÉDITO ===');
+  console.log('ID a eliminar:', id);
+  console.log('URL del endpoint:', `${API_URL}/delete-credit-type/`);
   
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || 'Error al eliminar tipo de crédito');
+  const requestBody = { id };
+  console.log('Body de la petición:', requestBody);
+  
+  try {
+    const response = await fetch(`${API_URL}/delete-credit-type/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
+    
+    console.log('Status de la respuesta:', response.status);
+    console.log('Status text:', response.statusText);
+    console.log('Headers de la respuesta:', response.headers);
+    
+    // Intentar leer el cuerpo de la respuesta
+    const responseText = await response.text();
+    console.log('Respuesta completa del servidor:', responseText);
+    
+    if (!response.ok) {
+      let errorMessage = `Error al eliminar tipo de crédito: ${response.status}`;
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorData.error || errorMessage;
+      } catch (e) {
+        console.log('No se pudo parsear la respuesta como JSON');
+      }
+      throw new Error(errorMessage);
+    }
+    
+    // Intentar parsear la respuesta como JSON si es exitosa
+    let responseData = null;
+    try {
+      responseData = JSON.parse(responseText);
+      console.log('Respuesta exitosa parseada:', responseData);
+    } catch (e) {
+      console.log('Respuesta exitosa pero no es JSON válido');
+    }
+    
+    console.log('Tipo de crédito eliminado exitosamente');
+  } catch (error) {
+    console.error('Error en la petición:', error);
+    throw error;
   }
 };

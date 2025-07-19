@@ -34,7 +34,18 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     try {
       const cedula = localStorage.getItem('cedula') || '';
       const data = await getCreditTypes(cedula);
+      console.log('=== DATOS DE TIPOS DE CRÉDITO EN CUSTOMER FORM ===');
       console.log('Datos de los tipos de crédito:', data);
+      
+      // Verificar cada tipo de crédito
+      data.forEach((type, index) => {
+        console.log(`Tipo ${index}:`, {
+          id: type.id,
+          name: type.name,
+          displayName: type.displayName,
+          isActive: type.isActive
+        });
+      });
       
       // Guardar los tipos de crédito disponibles
       setAvailableCreditTypes(data);
@@ -637,7 +648,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               const creditType = type.name.replace('credito_', '');
               return (
                 <option key={type.id} value={creditType}>
-                  {type.display_name}
+                  {type.displayName}
                 </option>
               );
             })}
