@@ -55,7 +55,7 @@ export const useCustomers = () => {
         }
       });
 
-      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
+      const response = await fetch('/api/edit-record/', {
         method: 'PUT',
         body: formData,
       });
@@ -90,7 +90,7 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`http://127.0.0.1:5000/delete-customer/${id}`, {
+      const response = await fetch(`/api/delete-customer/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -117,7 +117,7 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
+      const response = await fetch('/api/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

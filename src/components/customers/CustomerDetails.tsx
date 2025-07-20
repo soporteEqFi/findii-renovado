@@ -5,22 +5,34 @@ import { usePermissions } from '../../utils/permissions';
 
 interface CustomerDetailsProps {
   customer: Customer;
+  editedCustomer: Customer;
+  isEditing: boolean;
   isLoading: boolean;
   error: string | null;
-  onCustomerUpdate: (updatedCustomer: Customer) => void;
+  canEdit: () => boolean;
+  canDelete: () => boolean;
+  onEdit: () => void;
+  onSave: () => void;
   onCustomerDelete: (solicitanteId: string) => void;
+  onInputChange: (field: keyof Customer, value: string) => void;
 }
 
 export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   customer,
+  editedCustomer: initialEditedCustomer,
+  isEditing: initialIsEditing,
   isLoading,
   error,
-  onCustomerUpdate,
+  canEdit,
+  canDelete,
+  onEdit,
+  onSave,
   onCustomerDelete,
+  onInputChange,
 }) => {
   const { canEditCustomer, canDeleteCustomer } = usePermissions();
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedCustomer, setEditedCustomer] = useState<Customer>(customer);
+  const [isEditing, setIsEditing] = useState(initialIsEditing);
+  const [editedCustomer, setEditedCustomer] = useState<Customer>(initialEditedCustomer);
   const [loading, setLoading] = useState(isLoading);
   const [apiError, setApiError] = useState<string | null>(error);
   const [productInfo, setProductInfo] = useState<Record<string, string>>({});
@@ -29,15 +41,28 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    console.log('Customer data received:', customer);
+    console.log('Estado civil:', customer.estado_civil);
+    console.log('Tipo crédito:', customer.tipo_credito);
+    console.log('All customer keys:', Object.keys(customer));
     // Mapear los campos del customer al formato correcto cuando se recibe
     const mappedCustomer = {
       ...customer,
       id_solicitante: customer.id_solicitante || customer.solicitante_id || customer.id,
-      nombre_completo: customer.nombre_completo || '',
-      correo_electronico: customer.correo_electronico || '',
-      direccion_residencia: customer.direccion_residencia || '',
-      tipo_contrato: customer.tipo_contrato || '',
-      tipo_credito: customer.tipo_de_credito || '',
+      // Mapear nombres alternativos para compatibilidad
+      nombre: customer.nombre || customer.nombre_completo || '',
+      nombre_completo: customer.nombre_completo || customer.nombre || '',
+      correo: customer.correo || customer.correo_electronico || '',
+      correo_electronico: customer.correo_electronico || customer.correo || '',
+      direccion: customer.direccion || customer.direccion_residencia || '',
+      direccion_residencia: customer.direccion_residencia || customer.direccion || '',
+      tipo_de_contrato: customer.tipo_de_contrato || customer.tipo_contrato || '',
+      tipo_contrato: customer.tipo_contrato || customer.tipo_de_contrato || '',
+      tipo_credito: customer.tipo_credito || customer.tipo_de_credito || '',
+      estado_civil: customer.estado_civil || '',
+      // Mapear campos financieros
+      total_egresos: customer.total_egresos || customer.egresos || '',
+      egresos: customer.egresos || customer.total_egresos || '',
     };
 
     // Parsear información_producto si existe
@@ -68,7 +93,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       const newInfo = { ...prev, [field]: value };
       setEditedCustomer(prev => ({
         ...prev,
-        informacion_producto: newInfo
+        informacion_producto: JSON.stringify(newInfo)
       }));
       return newInfo;
     });
@@ -85,7 +110,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!canDeleteCustomer) return;
+    if (!canDeleteCustomer()) return;
 
     setLoading(true);
     setApiError(null);
@@ -108,7 +133,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('Error al eliminar el registro');
       }
 
-      onCustomerDelete(customer.id_solicitante);
+      onCustomerDelete(customer.id_solicitante?.toString() || '');
     } catch (error: any) {
       setApiError(error.message);
     } finally {
@@ -138,7 +163,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleSave = async () => {
-    if (!canEditCustomer) return;
+    if (!canEditCustomer()) return;
 
     setLoading(true);
     setApiError(null);
@@ -230,7 +255,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           total_pasivos: Number(editedCustomer.total_pasivos) || 0
         },
         PRODUCTO_SOLICITADO: {
-          tipo_credito: editedCustomer.tipo_credito,
+          tipo_de_credito: editedCustomer.tipo_credito,
           plazo_meses: Number(editedCustomer.plazo_meses) || 0,
           segundo_titular: typeof editedCustomer.segundo_titular === 'boolean' 
             ? (editedCustomer.segundo_titular ? 'si' : 'no')
@@ -261,9 +286,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       const updatedCustomer = await response.json();
       console.log('Respuesta exitosa:', updatedCustomer);
       
-      if (typeof onCustomerUpdate === 'function') {
-        onCustomerUpdate(updatedCustomer);
-      }
+      onSave();
       
       setIsEditing(false);
       setSelectedFiles([]);
@@ -278,6 +301,11 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   const renderField = (key: keyof Customer, value: any) => {
     if (key === 'id' || key === 'created_at' || key === 'asesor_usuario') return null;
+    
+    // Log específico para los campos que nos interesan
+    if (key === 'estado_civil' || key === 'tipo_credito') {
+      console.log(`Rendering ${key}:`, value, 'from editedCustomer:', editedCustomer[key]);
+    }
 
     if (key === 'archivos') {
       // Combinar archivos existentes (excluyendo los marcados para eliminar) con los nuevos
@@ -316,7 +344,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                       >
                         <Download className="w-4 h-4" />
                       </a>
-                      {isEditing && canEditCustomer && (
+                      {isEditing && canEditCustomer() && (
                         <button
                           onClick={() => handleDeleteExistingFile(fileUrl)}
                           className="text-red-500 hover:text-red-700"
@@ -355,7 +383,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             ))}
           </div>
           
-          {isEditing && canEditCustomer && (
+          {isEditing && canEditCustomer() && (
             <div className="mt-4">
               <input
                 type="file"
@@ -388,7 +416,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ')}
                 </label>
-                {isEditing && canEditCustomer ? (
+                {isEditing && canEditCustomer() ? (
                   <input
                     type="text"
                     value={value || ''}
@@ -409,7 +437,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
 
     // Mostrar el valor actual en consola para depuración
-    // console.log(`Renderizando campo ${key}:`, value);
+    console.log(`Renderizando campo ${key}:`, value);
 
     const label = key
       .charAt(0)
@@ -421,14 +449,43 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
-        {isEditing && canEditCustomer ? (
-          <input
-            type={key.includes('date') || key.includes('fecha') ? 'date' : 'text'}
-            value={editedCustomer[key] || ''}
-            onChange={(e) => handleInputChange(key, e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            disabled={loading}
-          />
+        {isEditing && canEditCustomer() ? (
+          key === 'estado_civil' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              <option value="soltero">Soltero(a)</option>
+              <option value="casado">Casado(a)</option>
+              <option value="divorciado">Divorciado(a)</option>
+              <option value="viudo">Viudo(a)</option>
+              <option value="union_libre">Unión Libre</option>
+            </select>
+          ) : key === 'tipo_credito' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              <option value="hipotecario">Hipotecario</option>
+              <option value="consumo">Consumo</option>
+              <option value="libre_inversion">Libre Inversión</option>
+              <option value="vehiculo">Vehículo</option>
+            </select>
+          ) : (
+            <input
+              type={key.includes('date') || key.includes('fecha') ? 'date' : 'text'}
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            />
+          )
         ) : (
           <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
             {key.includes('correo') ? (
@@ -516,7 +573,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           </>
         ) : (
           <>
-            {canEditCustomer && (
+            {canEditCustomer() && (
               <button
                 onClick={handleEdit}
                 className="flex items-center bg-blue-500 text-white px-3 py-2 rounded-md shadow hover:bg-blue-600"
@@ -525,7 +582,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 Editar
               </button>
             )}
-            {canDeleteCustomer && (
+            {canDeleteCustomer() && (
               <button
                 onClick={handleDelete}
                 className="flex items-center bg-red-500 text-white px-3 py-2 rounded-md shadow hover:bg-red-600"

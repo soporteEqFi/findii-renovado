@@ -12,6 +12,7 @@ export interface Customer {
   direccion_residencia: string;
   tipo_de_contrato?: string;
   tipo_contrato: string;
+  tipo_de_credito?: string;
 
   // Información Personal
   tipo_documento: string;
@@ -37,6 +38,7 @@ export interface Customer {
   cuota_inicial: number | string;
   porcentaje_financiar: number | string;
   total_egresos: number | string;
+  egresos?: number | string;
   total_activos: number | string;
   total_pasivos: number | string;
   plazo_meses: number | string;
