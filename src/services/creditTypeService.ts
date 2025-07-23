@@ -3,6 +3,9 @@ import { cacheService } from './cacheService';
 
 const API_URL = 'http://127.0.0.1:5000';
 
+// Variable para rastrear requests en progreso
+let pendingRequests: Map<string, Promise<CreditType[]>> = new Map();
+
 // Función auxiliar para convertir una cadena de camelCase a snake_case
 const camelToSnakeCase = (str: string): string => {
   return str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
@@ -95,6 +98,15 @@ testConversion();
 const CREDIT_TYPES_CACHE_KEY = 'credit_types';
 
 export const getCreditTypes = async (cedula: string): Promise<CreditType[]> => {
+  // Crear una clave única para este request
+  const requestKey = `credit_types_${cedula}`;
+  
+  // Si ya hay un request en progreso para esta cédula, retornar la promesa existente
+  if (pendingRequests.has(requestKey)) {
+    console.log('Request en progreso detectado, reutilizando promesa existente');
+    return pendingRequests.get(requestKey)!;
+  }
+
   // Intentar obtener los datos del caché
   const cachedData = cacheService.get<CreditType[]>(`${CREDIT_TYPES_CACHE_KEY}_${cedula}`);
   if (cachedData) {
@@ -102,61 +114,83 @@ export const getCreditTypes = async (cedula: string): Promise<CreditType[]> => {
     return cachedData;
   }
 
-  // Si no hay caché, hacer la petición a la API
-  console.log('Obteniendo tipos de crédito desde la API');
-  const response = await fetch(`${API_URL}/get-all-credit-types/`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      cedula
-    }),
-  });
+  // Crear la nueva promesa para el request
+  const requestPromise = (async () => {
+    try {
+      // Si no hay caché, hacer la petición a la API
+      console.log('Obteniendo tipos de crédito desde la API');
+      const response = await fetch(`${API_URL}/get-all-credit-types/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cedula
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Error al obtener tipos de crédito');
+      }
+      
+      const responseData = await response.json();
+      const creditTypesRaw = responseData.data || [];
+      
+      console.log('=== DATOS RAW DEL BACKEND ===');
+      console.log('Tipos de crédito raw:', creditTypesRaw);
+      
+      // Mostrar un ejemplo de campos raw
+      if (creditTypesRaw.length > 0 && creditTypesRaw[0].fields) {
+        console.log('Ejemplo de campos raw del primer tipo:', creditTypesRaw[0].fields);
+      }
+      
+      // Convertir los datos de snake_case a camelCase
+      const creditTypes = Array.isArray(creditTypesRaw) 
+        ? creditTypesRaw.map(creditType => {
+            const converted = convertKeysToCamelCase(creditType);
+            console.log('Tipo convertido:', converted);
+            console.log(`Estado isActive: ${converted.isActive} (tipo: ${typeof converted.isActive})`);
+            if (converted.fields) {
+              console.log('Campos convertidos:', converted.fields);
+            }
+            return converted;
+          })
+        : [];
+      
+      console.log('=== DATOS CONVERTIDOS ===');
+      console.log('Tipos de crédito convertidos:', creditTypes);
+      
+      // Guardar los datos en el caché
+      if (Array.isArray(creditTypes)) {
+        cacheService.set(`${CREDIT_TYPES_CACHE_KEY}_${cedula}`, creditTypes);
+      }
+      
+      return creditTypes;
+    } finally {
+      // Limpiar la promesa del mapa cuando termine
+      pendingRequests.delete(requestKey);
+    }
+  })();
+
+  // Guardar la promesa en el mapa
+  pendingRequests.set(requestKey, requestPromise);
   
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    throw new Error(errorData?.message || 'Error al obtener tipos de crédito');
-  }
-  
-  const responseData = await response.json();
-  const creditTypesRaw = responseData.data || [];
-  
-  console.log('=== DATOS RAW DEL BACKEND ===');
-  console.log('Tipos de crédito raw:', creditTypesRaw);
-  
-  // Mostrar un ejemplo de campos raw
-  if (creditTypesRaw.length > 0 && creditTypesRaw[0].fields) {
-    console.log('Ejemplo de campos raw del primer tipo:', creditTypesRaw[0].fields);
-  }
-  
-  // Convertir los datos de snake_case a camelCase
-  const creditTypes = Array.isArray(creditTypesRaw) 
-    ? creditTypesRaw.map(creditType => {
-        const converted = convertKeysToCamelCase(creditType);
-        console.log('Tipo convertido:', converted);
-        console.log(`Estado isActive: ${converted.isActive} (tipo: ${typeof converted.isActive})`);
-        if (converted.fields) {
-          console.log('Campos convertidos:', converted.fields);
-        }
-        return converted;
-      })
-    : [];
-  
-  console.log('=== DATOS CONVERTIDOS ===');
-  console.log('Tipos de crédito convertidos:', creditTypes);
-  
-  // Guardar los datos en el caché
-  if (Array.isArray(creditTypes)) {
-    cacheService.set(`${CREDIT_TYPES_CACHE_KEY}_${cedula}`, creditTypes);
-  }
-  
-  return creditTypes;
+  return requestPromise;
 };
 
 // Función para limpiar el caché de tipos de crédito
 export const clearCreditTypesCache = (cedula: string): void => {
   cacheService.clear(`${CREDIT_TYPES_CACHE_KEY}_${cedula}`);
+  // También limpiar cualquier request pendiente para esta cédula
+  const requestKey = `credit_types_${cedula}`;
+  pendingRequests.delete(requestKey);
+};
+
+// Función para limpiar todos los requests pendientes (útil para debugging)
+export const clearAllPendingRequests = (): void => {
+  pendingRequests.clear();
+  console.log('Todos los requests pendientes han sido limpiados');
 };
 
 export const getCreditTypeById = async (id: string): Promise<CreditType> => {
