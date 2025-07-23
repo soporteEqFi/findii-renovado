@@ -257,9 +257,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         PRODUCTO_SOLICITADO: {
           tipo_de_credito: editedCustomer.tipo_credito,
           plazo_meses: Number(editedCustomer.plazo_meses) || 0,
-          segundo_titular: typeof editedCustomer.segundo_titular === 'boolean' 
-            ? (editedCustomer.segundo_titular ? 'si' : 'no')
-            : (editedCustomer.segundo_titular || 'no'),
+          segundo_titular: editedCustomer.segundo_titular || 'no',
           observacion: editedCustomer.observacion,
           estado: editedCustomer.estado,
           informacion_producto: editedCustomer.informacion_producto
