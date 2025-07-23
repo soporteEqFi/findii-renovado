@@ -76,11 +76,17 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
   // Efecto para cargar los tipos de crédito inicialmente
   useEffect(() => {
+    console.log('=== CUSTOMER FORM: useEffect ejecutado ===');
+    console.log('Componente montado, cargando tipos de crédito...');
     loadCreditTypes();
   }, []);
 
   // Efecto para manejar cambios en el tipo de crédito seleccionado
   useEffect(() => {
+    console.log('=== CUSTOMER FORM: useEffect para tipo_credito ejecutado ===');
+    console.log('tipo_credito:', newCustomer.tipo_credito);
+    console.log('availableCreditTypes length:', availableCreditTypes.length);
+    
     if (newCustomer.tipo_credito) {
       const selectedType = availableCreditTypes.find(
         (type: any) => type.name === `credito_${newCustomer.tipo_credito}`
