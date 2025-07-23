@@ -11,6 +11,8 @@ export const CreditTypeAdmin: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('=== CREDIT TYPE ADMIN: useEffect ejecutado ===');
+    console.log('Componente montado, cargando tipos de crédito...');
     loadCreditTypes();
   }, []);
 
