@@ -11,7 +11,7 @@ const Sidebar = () => {
   const [image, setImage] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
 
-  const isAdmin = user && user.role === 'admin';
+  const isAdmin = user && user.rol === 'admin';
 
   // Definir elementos de menú basados en el rol
   const menuItems = [
@@ -34,7 +34,9 @@ const Sidebar = () => {
       const userData = JSON.parse(user_document || '{}');
       const user_document_obj = userData.cedula;
 
-      console.log(user_document_obj);
+      console.log("Objeto de usuario es:")
+      console.log(userData)
+      console.log("Claves del objeto userData:", Object.keys(userData))
       localStorage.setItem('cedula', user_document_obj)
       const response = await fetch(`http://127.0.0.1:5000/get-user-info/${user_document_obj}`, {
         headers: {
@@ -48,6 +50,7 @@ const Sidebar = () => {
       }
 
       const data = await response.json();
+      console.log("La data que llega es:")
       console.log(data);
        // Asignamos la imagen del aliado
       setImage(data["imagen_aliado"]);
@@ -79,8 +82,8 @@ const Sidebar = () => {
         <h1 className="text-2xl font-bold text-white">{businessName}</h1>
         {user && (
           <div className="mt-2 text-sm text-gray-600">
-            <p className="text-white">{user.name}</p>
-            <p className="text-xs bg-white text-slate-900 inline-block px-4 py-1 rounded-full mt-1">{user.role}</p>
+            <p className="text-red">{user.nombre}</p>
+            <p className="text-xs bg-white text-slate-900 inline-block px-4 py-1 rounded-full mt-1">{user.rol}</p>
           </div>
         )}
       </div>

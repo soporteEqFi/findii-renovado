@@ -1,103 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ProfileDetails from '../components/profile/ProfileDetails';
-import { useAuth } from '../contexts/AuthContext';
-
-interface UserInfo {
-  id: string;
-  nombre: string;
-  correo: string;
-  rol: string;
-  cedula: string;
-  empresa: string;
-  imagen_aliado: string;
-}
+import { useProfile } from '../hooks/useProfile';
+import { PageWrapper } from '../components/PageWrapper';
+import toast from 'react-hot-toast';
 
 const Profile = () => {
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { userInfo, loading, error, updateProfile } = useProfile();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
 
-  const { user } = useAuth();
-
-  const fetchUserInfo = async () => {
+  const handleSaveProfile = async (updatedInfo: any) => {
     try {
-      setLoading(true);
-      const user_document = localStorage.getItem('user');
-      const userData = JSON.parse(user_document || '{}');
-      const user_document_obj = userData.cedula;
-
-      const response = await fetch(`http://127.0.0.1:5000/get-user-info/${user_document_obj}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar la información del usuario');
-      }
-
-      const data = await response.json();
-      setUserInfo(data);
-      setError(null);
-    } catch (err) {
-      setError('Error al cargar la información del usuario');
-      console.error('Error fetching user info:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, []);
-
-  const handleSaveProfile = async (updatedInfo: Partial<UserInfo>) => {
-    try {
-      setLoading(true);
-      const user_document = localStorage.getItem('user');
-      const userData = JSON.parse(user_document || '{}');
-      const user_document_obj = userData.cedula;
-
-      const payload = {
-        id: updatedInfo.id,
-        nombre: updatedInfo.nombre,
-        cedula: updatedInfo.cedula,
-        rol: updatedInfo.rol,
-        empresa: updatedInfo.empresa,
-      };
-
-      console.log("Actualizando con payload:", payload);
-
-      const response = await fetch(`http://127.0.0.1:5000/update-user/`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al actualizar la información');
-      }
-
-      await fetchUserInfo();
+      await updateProfile(updatedInfo);
       setIsModalOpen(false);
-      setSuccessMessage('Perfil actualizado correctamente');
-      setShowSuccessAlert(true);
-      
-      // Auto-hide success message after 3 seconds
-      setTimeout(() => {
-        setShowSuccessAlert(false);
-      }, 3000);
+      toast.success('Perfil actualizado correctamente');
     } catch (err) {
-      setError('Error al actualizar la información del usuario');
-      console.error('Error updating user info:', err);
-    } finally {
-      setLoading(false);
+      toast.error('Error al actualizar la información del usuario');
     }
   };
 
@@ -167,17 +84,7 @@ const Profile = () => {
           onSave={handleSaveProfile}
         />
 
-        {/* Success Alert */}
-        {showSuccessAlert && (
-          <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-md">
-            <div className="flex items-center">
-              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              {successMessage}
-            </div>
-          </div>
-        )}
+        {/* Success messages are now handled by toast */}
       </div>
     </div>
   );

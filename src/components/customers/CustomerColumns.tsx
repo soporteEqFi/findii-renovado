@@ -96,7 +96,7 @@ export const columns = [
     header: 'Ciudad Gestión',
     cell: (info) => info.getValue(),
   }),
-  columnHelper.accessor('producto_solicitado', {
+  columnHelper.accessor('tipo_credito', {
     header: 'Producto Solicitado',
     cell: (info) => info.getValue(),
   }),

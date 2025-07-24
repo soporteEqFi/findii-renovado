@@ -1,7 +1,8 @@
 import { CreditType } from '../types/creditTypes';
 import { cacheService } from './cacheService';
+import { API_CONFIG } from '../config/constants';
 
-const API_URL = 'http://127.0.0.1:5000';
+const API_URL = API_CONFIG.BASE_URL;
 
 // Variable para rastrear requests en progreso
 let pendingRequests: Map<string, Promise<CreditType[]>> = new Map();
@@ -72,28 +73,28 @@ const convertKeysToSnakeCase = (obj: any): any => {
 };
 
 // Función de test para verificar la conversión
-const testConversion = () => {
-  const testField = {
-    id: 'test-id',
-    name: 'testName',
-    displayName: 'Test Display Name',
-    fieldType: 'text',
-    order: 1,
-    isRequired: true,
-    validation: { required: true },
-    options: ['option1', 'option2'],
-    defaultValue: 'default'
-  };
+// const testConversion = () => {
+//   const testField = {
+//     id: 'test-id',
+//     name: 'testName',
+//     displayName: 'Test Display Name',
+//     fieldType: 'text',
+//     order: 1,
+//     isRequired: true,
+//     validation: { required: true },
+//     options: ['option1', 'option2'],
+//     defaultValue: 'default'
+//   };
   
-  const converted = convertKeysToSnakeCase(testField);
-  console.log('=== TEST CONVERSIÓN ===');
-  console.log('Original:', testField);
-  console.log('Convertido:', converted);
-  console.log('=== FIN TEST ===');
-};
+  // const converted = convertKeysToSnakeCase(testField);
+  // console.log('=== TEST CONVERSIÓN ===');
+  // console.log('Original:', testField);
+  // console.log('Convertido:', converted);
+  // console.log('=== FIN TEST ===');
+// };
 
 // Ejecutar test una vez al cargar el módulo
-testConversion();
+// testConversion();
 
 const CREDIT_TYPES_CACHE_KEY = 'credit_types';
 
@@ -137,13 +138,13 @@ export const getCreditTypes = async (cedula: string): Promise<CreditType[]> => {
       const responseData = await response.json();
       const creditTypesRaw = responseData.data || [];
       
-      console.log('=== DATOS RAW DEL BACKEND ===');
-      console.log('Tipos de crédito raw:', creditTypesRaw);
+      // console.log('=== DATOS RAW DEL BACKEND ===');
+      // console.log('Tipos de crédito raw:', creditTypesRaw);
       
       // Mostrar un ejemplo de campos raw
-      if (creditTypesRaw.length > 0 && creditTypesRaw[0].fields) {
-        console.log('Ejemplo de campos raw del primer tipo:', creditTypesRaw[0].fields);
-      }
+      // if (creditTypesRaw.length > 0 && creditTypesRaw[0].fields) {
+      //   console.log('Ejemplo de campos raw del primer tipo:', creditTypesRaw[0].fields);
+      // }
       
       // Convertir los datos de snake_case a camelCase
       const creditTypes = Array.isArray(creditTypesRaw) 
@@ -158,8 +159,8 @@ export const getCreditTypes = async (cedula: string): Promise<CreditType[]> => {
           })
         : [];
       
-      console.log('=== DATOS CONVERTIDOS ===');
-      console.log('Tipos de crédito convertidos:', creditTypes);
+      // console.log('=== DATOS CONVERTIDOS ===');
+      // console.log('Tipos de crédito convertidos:', creditTypes);
       
       // Guardar los datos en el caché
       if (Array.isArray(creditTypes)) {

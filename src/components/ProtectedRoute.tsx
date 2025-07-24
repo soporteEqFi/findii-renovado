@@ -23,7 +23,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
   }
 
   // Check for required role if specified
-  if (requiredRole && user && user.role !== requiredRole) {
+      if (requiredRole && user && user.rol !== requiredRole) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <h2 className="text-xl font-semibold text-red-600 mb-4">Access Denied</h2>

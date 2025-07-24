@@ -435,7 +435,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
 
     // Mostrar el valor actual en consola para depuración
-    console.log(`Renderizando campo ${key}:`, value);
+    // console.log(`Renderizando campo ${key}:`, value);
 
     const label = key
       .charAt(0)

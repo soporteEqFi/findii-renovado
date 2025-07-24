@@ -9,8 +9,8 @@ interface CreditTypeFormProps {
 
 export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditType, onSave }) => {
   
-  console.log('=== INICIO CreditTypeForm ===');
-  console.log('initialCreditType recibido:', initialCreditType);
+  // console.log('=== INICIO CreditTypeForm ===');
+  // console.log('initialCreditType recibido:', initialCreditType);
 
   const [creditType, setCreditType] = useState<CreditType>(
     initialCreditType || {
@@ -23,8 +23,8 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
     }
   );
 
-  console.log('Estado inicial del creditType:', creditType);
-  console.log('Campos iniciales:', creditType.fields);
+  // console.log('Estado inicial del creditType:', creditType);
+  // console.log('Campos iniciales:', creditType.fields);
   
   // Verificar cada campo individualmente
   creditType.fields.forEach((field, index) => {
@@ -37,7 +37,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
     });
   });
   
-  console.log('=== FIN INICIO CreditTypeForm ===');
+  // console.log('=== FIN INICIO CreditTypeForm ===');
 
   const [newField, setNewField] = useState<Partial<CreditTypeField>>({
     fieldType: 'text',
@@ -88,12 +88,12 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
   };
 
   const removeField = (fieldId: string) => {
-    console.log('=== ELIMINANDO CAMPO ===');
-    console.log('ID del campo a eliminar:', fieldId);
-    console.log('Campos antes de eliminar:', creditType.fields);
+    // console.log('=== ELIMINANDO CAMPO ===');
+    // console.log('ID del campo a eliminar:', fieldId);
+    // console.log('Campos antes de eliminar:', creditType.fields);
     
     const updatedFields = creditType.fields.filter(field => field.id !== fieldId);
-    console.log('Campos después de eliminar:', updatedFields);
+    // console.log('Campos después de eliminar:', updatedFields);
     
     setCreditType({
       ...creditType,
@@ -126,9 +126,9 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('=== GUARDANDO TIPO DE CRÉDITO ===');
-    console.log('Datos a guardar:', creditType);
-    console.log('Campos a guardar:', creditType.fields);
+    // console.log('=== GUARDANDO TIPO DE CRÉDITO ===');
+    // console.log('Datos a guardar:', creditType);
+    // console.log('Campos a guardar:', creditType.fields);
     await onSave(creditType);
   };
 

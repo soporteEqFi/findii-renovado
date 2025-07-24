@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Plus, UserPlus } from 'lucide-react';
-import Modal from '../components/Modal';
+import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useUsers } from '../hooks/useUsers';
 import { UserTable } from '../components/users/UserTable';
@@ -34,8 +34,8 @@ const Users = () => {
   }, [isAuthenticated, loadUsers]);
 
   // Definir los permisos para cada usuario
-  const canEdit = (): boolean => user?.role === 'admin';
-  const canDelete = (): boolean => user?.role === 'admin';
+  const canEdit = (): boolean => user?.rol === 'admin';
+  const canDelete = (): boolean => user?.rol === 'admin';
 
   // Manejadores de eventos
   const handleRowClick = (user: User) => {
@@ -121,10 +121,10 @@ const Users = () => {
           <div className="flex items-center space-x-4">
             {user && (
               <span className="text-sm text-gray-600">
-                Logged in as: <span className="font-medium">{user.name}</span>
-                {user.role && (
+                Logged in as: <span className="font-medium">{user.nombre}</span>
+                {user.rol && (
                   <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                    {user.role}
+                    {user.rol}
                   </span>
                 )}
               </span>
@@ -161,7 +161,7 @@ const Users = () => {
           setIsEditing(false);
         }}
         title="Detalles del Usuario"
-        maxWidth="max-w-2xl"
+        size="xl"
       >
         {selectedUser && (
           <UserDetails
@@ -185,7 +185,7 @@ const Users = () => {
         isOpen={isNewUserModalOpen}
         onClose={() => setIsNewUserModalOpen(false)}
         title="Crear Nuevo Usuario"
-        maxWidth="max-w-2xl"
+        size="xl"
       >
         <NewUserForm
           onSubmit={handleCreateUser}

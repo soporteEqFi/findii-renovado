@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Plus, Download, UserCog } from 'lucide-react';
-import Modal from '../components/Modal';
+import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerForm } from '../components/customers/CustomerForm';
@@ -40,9 +40,9 @@ const Customers = () => {
   }, [isAuthenticated]);
 
   // Definir los permisos para cada usuario.
-  const canEdit = () => user && ['admin', 'manager'].includes(user.role);
-  const canDelete = () => user && user.role === 'admin';
-  const canDownloadSales = () => user && ['admin'].includes(user.role);
+  const canEdit = () => user && ['admin', 'manager'].includes(user.rol);
+  const canDelete = () => user && user.rol === 'admin';
+  const canDownloadSales = () => user && ['admin'].includes(user.rol);
 
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
@@ -183,10 +183,10 @@ const Customers = () => {
             
             {user && (
               <span className="text-sm text-gray-600">
-                Logged in as: <span className="font-medium">{user.name}</span>
-                {user.role && (
+                Logged in as: <span className="font-medium">{user.nombre}</span>
+                {user.rol && (
                   <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                    {user.role}
+                    {user.rol}
                   </span>
                 )}
               </span>
@@ -235,7 +235,7 @@ const Customers = () => {
           setIsEditing(false);
         }}
         title="Customer Details"
-        maxWidth="max-w-7xl"
+        size="xl"
       >
         <CustomerDetails
           customer={selectedCustomer!}
@@ -262,7 +262,7 @@ const Customers = () => {
         isOpen={isNewCustomerModalOpen}
         onClose={() => setIsNewCustomerModalOpen(false)}
         title="Nuevo Cliente"
-        maxWidth="max-w-6xl"
+        size="xl"
       >
         <CustomerForm
           onSubmit={() => {

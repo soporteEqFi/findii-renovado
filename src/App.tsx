@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout';
+import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Customers from './pages/Customers';
 import Users from './pages/Users';
@@ -54,12 +54,6 @@ function App() {
           style: {
             background: '#363636',
             color: '#fff',
-          },
-          success: {
-            duration: 3000,
-            theme: {
-              primary: '#4aed88',
-            },
           },
         }}
       />

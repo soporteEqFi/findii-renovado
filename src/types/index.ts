@@ -1,21 +1,7 @@
-// Customer type definition
-export interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  status: 'active' | 'inactive';
-  lastContact: string;
-}
-
-// User type definition
-export interface User {
-  id: string;
-  name: string;
-  role: 'admin' | 'manager' | 'user';
-  email?: string;
-  access_token?: string;
-}
+// Re-export types from their specific files
+export type { Customer } from './customer';
+export type { User } from './user';
+export type { CreditType, CreditTypeField, FieldValidation } from './creditTypes';
 
 // API response types
 export interface LoginResponse {

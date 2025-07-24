@@ -248,7 +248,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               required
             />
-            <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" />
+            {/* <Calendar className="absolute right-3 top-2.5 h-4 w-4 text-gray-400" /> */}
           </div>
         </div>
 
