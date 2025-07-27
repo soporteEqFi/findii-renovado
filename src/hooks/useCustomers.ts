@@ -12,7 +12,7 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
       
-      const response = await fetch('http://127.0.0.1:5000/get-combined-data', {
+      const response = await fetch('https://api-findii.onrender.com/get-combined-data', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

@@ -114,12 +114,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
     setLoading(true);
     setApiError(null);
-
+    http://127.0.0.A:5000
     console.log('Eliminando cliente:', customer.id_solicitante);
     console.log('Customer:', customer);
 
     try {
-      const response = await fetch('http://127.0.0.1:5000/delete-record', {
+      const response = await fetch('https://api-findii.onrender.com/delete-record', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -199,7 +199,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           solicitante_id: editedCustomer.id_solicitante
         });
         
-        const fileResponse = await fetch('http://127.0.0.1:5000/update-files/', {
+        const fileResponse = await fetch('https://api-findii.onrender.com/update-files/', {
           method: 'POST',
           body: fileFormData,
         });
@@ -268,7 +268,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       };
 
       // Luego, enviar los datos del cliente
-      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
+      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -86,7 +86,7 @@ const Customers = () => {
 
   const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
+      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ const Customers = () => {
 
   const handleDownloadSales = async () => {
     try {
-      const response = await fetch('http://127.0.0.1:5000/descargar-ventas/', {
+      const response = await fetch('https://api-findii.onrender.com/descargar-ventas/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
