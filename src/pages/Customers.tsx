@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Download } from 'lucide-react';
-import Modal from '../components/Modal';
+import { Loader2, Plus, Download, UserCog } from 'lucide-react';
+import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerForm } from '../components/customers/CustomerForm';
@@ -8,6 +8,7 @@ import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
+import { Link } from 'react-router-dom';
 
 const Customers = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -39,9 +40,9 @@ const Customers = () => {
   }, [isAuthenticated]);
 
   // Definir los permisos para cada usuario.
-  const canEdit = () => user && ['admin', 'manager'].includes(user.role);
-  const canDelete = () => user && user.role === 'admin';
-  const canDownloadSales = () => user && ['admin'].includes(user.role);
+  const canEdit = () => user && ['admin', 'manager'].includes(user.rol);
+  const canDelete = () => user && user.rol === 'admin';
+  const canDownloadSales = () => user && ['admin'].includes(user.rol);
 
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
@@ -85,40 +86,26 @@ const Customers = () => {
 
   const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
-      const updateData = {
-        estado: newStatus,
-        solicitante_id: customer.id_solicitante,
-        numero_documento: customer.numero_documento
-      };
-
       const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify({
+          estado: newStatus,
+          solicitante_id: customer.id_solicitante,
+          numero_documento: customer.numero_documento
+        }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al actualizar el estado');
+        throw new Error('Error en la respuesta del servidor');
       }
 
-      // Actualiza el estado global de customers
-      setCustomers(prevCustomers => 
-        prevCustomers.map(c => 
-          c.id_solicitante === customer.id_solicitante 
-            ? { ...c, estado: newStatus }
-            : c
-        )
-      );
-
-      // Fuerza un re-render de la tabla
-      setTableKey(prev => prev + 1);
-
+      // No necesitamos hacer nada más aquí, el estado visual ya se actualizó en la tabla
     } catch (error) {
-      console.error('Error al actualizar el estado:', error);
+      console.error('Error al actualizar estado:', error);
+      throw error;
     }
   };
 
@@ -184,13 +171,22 @@ const Customers = () => {
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
           <div className="flex items-center space-x-4">
+            {/* {canEdit() && (
+              <Link 
+                to="/users"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <UserCog className="w-4 h-4 mr-2" />
+                Gestionar Usuarios
+              </Link>
+            )} */}
             
             {user && (
               <span className="text-sm text-gray-600">
-                Logged in as: <span className="font-medium">{user.name}</span>
-                {user.role && (
+                Logged in as: <span className="font-medium">{user.nombre}</span>
+                {user.rol && (
                   <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                    {user.role}
+                    {user.rol}
                   </span>
                 )}
               </span>
@@ -198,6 +194,7 @@ const Customers = () => {
           </div>
         </div>
 
+        {/* Botón Nuevo Cliente */}
         <div className="flex justify-end p-4 bg-gray-50 border-b gap-4">
             {/* Botón de descargar ventas*/}
             {canDownloadSales() && (
@@ -209,7 +206,6 @@ const Customers = () => {
               Descargar Ventas
             </button>
             )}
-          {/* Botón Nuevo Cliente */}
           {canCreateCustomer() && (
             <button
               onClick={() => setIsNewCustomerModalOpen(true)}
@@ -239,7 +235,7 @@ const Customers = () => {
           setIsEditing(false);
         }}
         title="Customer Details"
-        maxWidth="max-w-4xl"
+        size="xl"
       >
         <CustomerDetails
           customer={selectedCustomer!}
@@ -251,7 +247,12 @@ const Customers = () => {
           canDelete={canDelete}
           onEdit={handleEdit}
           onSave={handleSave}
-          onDelete={handleDelete}
+          // onDelete={handleDelete}
+          onCustomerDelete={(solicitanteId) => {
+            // La eliminación ya fue manejada en CustomerDetails
+            loadCustomers(); // Recargar la lista de clientes
+            setIsModalOpen(false); // Cerrar el modal
+          }}
           onInputChange={handleInputChange}
         />
       </Modal>
@@ -261,7 +262,7 @@ const Customers = () => {
         isOpen={isNewCustomerModalOpen}
         onClose={() => setIsNewCustomerModalOpen(false)}
         title="Nuevo Cliente"
-        maxWidth="max-w-6xl"
+        size="xl"
       >
         <CustomerForm
           onSubmit={() => {

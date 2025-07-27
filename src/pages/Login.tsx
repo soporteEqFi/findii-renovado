@@ -19,77 +19,68 @@ const Login = () => {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err) {
-      if (err instanceof Error) {
-        if (err.message === 'Access denied') {
-          setError('Access denied. Please check your credentials.');
-        } else if (err.message === 'Login failed') {
-          setError('Login failed. Please check your credentials.');
-        } else {
-          setError('An error occurred during login. Please try again.');
-        }
-      } else {
-        setError('Invalid email or password. Please try again.');
-      }
-      console.error('Login error:', err);
+    } catch (error) {
+      setError('Credenciales inválidas. Por favor, intente nuevamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <div className="flex items-center justify-center mb-8">
-          <Lock className="w-8 h-8 text-blue-500" />
-          <h2 className="text-2xl font-bold ml-2">Login to CRM</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-lg shadow">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Iniciar sesión
+          </h2>
         </div>
+        
         {error && (
-          <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-md border border-red-200">
-            {error}
+          <div className="bg-red-50 p-4 rounded-md">
+            <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+        
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
               Email
             </label>
             <input
+              id="email"
+              name="email"
               type="email"
+              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              disabled={isLoading}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 text-sm font-bold mb-2">
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
             </label>
             <input
+              id="password"
+              name="password"
               type="password"
+              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-              disabled={isLoading}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Signing In...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
+          
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

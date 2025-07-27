@@ -1,35 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { loginUser, validateToken } from '../services/api';
-
-// Define User type locally to avoid import issues
-interface User {
-  id: string;
-  name: string;
-  role: 'admin' | 'manager' | 'user';
-  cedula: string;
-  email?: string;
-  access_token?: string;
-}
+import { loginUser, validateToken } from '../services/authService';
+import { User } from '../types/user';
 
 // Define context type
-type AuthContextType = {
+interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   token: string | null;
-};
+}
 
 // Create context with default values
-const AuthContext = createContext<AuthContextType>({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  login: async () => {},
-  logout: () => {},
-  token: null,
-});
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
 
 // Auth provider props
 type AuthProviderProps = {
@@ -37,7 +21,7 @@ type AuthProviderProps = {
 };
 
 // Auth provider component
-export const AuthProvider = ({ children }: AuthProviderProps) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [token, setToken] = useState<string | null>(null);
@@ -55,8 +39,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           const isValid = await validateToken();
           
           if (isValid) {
+            const parsedUser = JSON.parse(storedUser);
             setToken(storedToken);
-            setUser(JSON.parse(storedUser));
+            setUser(parsedUser);
           } else {
             // Token is invalid, clear storage
             localStorage.removeItem('access_token');
@@ -85,17 +70,23 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Extract user data from the response
       const userData = data.usuario[0];
 
-      console.log(userData);
+      // Datos del backend para debugging
       
       // Map API response to our User type
       const userObj: User = {
-        id: (userData.id || String(userData.id_usuario) || '1'),
-        name: (userData.nombre || userData.username || email),
-        role: (data.rol.toLowerCase() as 'admin' | 'manager' | 'user'),
+        id: Number(userData.id || userData.id_usuario || 1),
+        nombre: (userData.nombre || userData.name || userData.username || email),
+        rol: (data.rol || userData.role || 'user').toLowerCase() as string,
         cedula: (userData.cedula || userData.numero_documento || '1'),
         email: email,
-        access_token: data.access_token
+        empresa: userData.empresa || '',
+        password: undefined,
+        imagen_aliado: userData.imagen_aliado || null,
+        apellido: userData.apellido,
+        usuario: userData.usuario
       };
+      
+      // Objeto guardado para debugging
       
       // Save token and user data
       setToken(data.access_token);
@@ -104,6 +95,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       // Store in localStorage for persistence
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('user', JSON.stringify(userObj));
+      
+      // Objeto guardado en localStorage
       
     } catch (error) {
       console.error('Login error:', error);
@@ -126,20 +119,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.removeItem('user');
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user && !!token,
-        isLoading,
-        login,
-        logout,
-        token,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  // Valor del contexto
+  const value = {
+    user,
+    isAuthenticated: !!user && !!token,
+    isLoading,
+    login,
+    logout,
+    token,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // Custom hook to use auth context

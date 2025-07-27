@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,89 +8,38 @@ import {
   flexRender,
   ColumnFiltersState,
 } from '@tanstack/react-table';
-import { Customer } from '../../types/customer';
-import { columns } from './CustomerColumns';
-import { Search, Calendar } from 'lucide-react';
+import { User } from '../../types/user';
+import { columns } from './UserColumns';
+import { Search } from 'lucide-react';
 
-interface CustomerTableProps {
-  customers: Customer[];
-  onRowClick: (customer: Customer) => void;
-  onStatusChange: (customer: Customer, newStatus: string) => void;
+interface UserTableProps {
+  users: User[];
+  onRowClick: (user: User) => void;
   totalRecords: number;
 }
 
-// Función para convertir fecha dd/mm/yyyy a Date
-const parseDateFromDDMMYYYY = (dateString: string): Date | null => {
-  if (!dateString) return null;
-  
-  // Verificar si la fecha está en formato dd/mm/yyyy
-  const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
-  const match = dateString.match(dateRegex);
-  
-  if (match) {
-    const [, day, month, year] = match;
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  }
-  
-  // Si no coincide con el formato esperado, intentar parsear como fecha ISO
-  const date = new Date(dateString);
-  return isNaN(date.getTime()) ? null : date;
-};
-
-// Función para normalizar una fecha a solo año, mes y día (sin hora)
-const normalizeDate = (date: Date) => {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-};
-
-export const CustomerTable: React.FC<CustomerTableProps> = ({
-  customers,
+export const UserTable: React.FC<UserTableProps> = ({
+  users,
   onRowClick,
-  onStatusChange,
   totalRecords
 }) => {
-  // console.log('CustomerTable received customers:', customers);
-  // console.log('CustomerTable totalRecords:', totalRecords);
-  // console.log('Customers array length:', customers?.length);
-  
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
-  const [dateRange, setDateRange] = useState({
-    start: '',
-    end: ''
-  });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
 
   const filteredData = useMemo(() => {
-    return customers.filter(customer => {
-      // Filtro por fecha
-      if (dateRange.start && dateRange.end) {
-        const customerDateObj = parseDateFromDDMMYYYY(customer.created_at || '');
-        const startDateObj = new Date(dateRange.start);
-        const endDateObj = new Date(dateRange.end);
-
-        if (!customerDateObj) return false;
-
-        const customerDate = normalizeDate(customerDateObj);
-        const startDate = normalizeDate(startDateObj);
-        const endDate = normalizeDate(endDateObj);
-
-        if (customerDate < startDate || customerDate > endDate) {
-          return false;
-        }
-      }
-
+    return users.filter(user => {
       // Filtro global
       if (globalFilter) {
         const searchTerm = globalFilter.toLowerCase();
-        return Object.values(customer).some(value => 
+        return Object.values(user).some(value => 
           String(value).toLowerCase().includes(searchTerm)
         );
       }
-
       return true;
     });
-  }, [customers, dateRange, globalFilter]);
+  }, [users, globalFilter]);
 
   const paginatedData = useMemo(() => {
     const start = pageIndex * pageSize;
@@ -104,10 +53,10 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       columnFilters,
       globalFilter,
-      sorting: [],
       pagination: {
         pageIndex,
         pageSize,
@@ -149,23 +98,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                 className="w-full pl-8 pr-3 py-2 border rounded"
               />
             </div>
-          </div>
-
-          {/* Filtro de fecha */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="date"
-              value={dateRange.start}
-              onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-              className="border rounded px-2 py-1"
-            />
-            <span>-</span>
-            <input
-              type="date"
-              value={dateRange.end}
-              onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-              className="border rounded px-2 py-1"
-            />
           </div>
         </div>
       </div>
@@ -211,7 +143,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         </table>
       </div>
 
-      {/* Controles de paginación simplificados */}
+      {/* Controles de paginación */}
       <div className="px-6 py-4 flex items-center justify-between border-t">
         <div className="flex items-center gap-4">
           <select
@@ -227,7 +159,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           </select>
 
           <span className="text-sm text-gray-700">
-            Página {pageIndex + 1} de {Math.ceil(filteredData.length / pageSize)}
+            Página {pageIndex + 1} de {Math.max(1, Math.ceil(filteredData.length / pageSize))}
           </span>
         </div>
 
@@ -264,4 +196,4 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
       </div>
     </div>
   );
-};
+}; 

@@ -1,5 +1,4 @@
-// Definimos los tipos de roles disponibles
-export type UserRole = 'admin' | 'asesor' | 'banco' | 'manager';
+import { USER_ROLES, PERMISSIONS } from '../config/constants';
 
 // Definimos las acciones posibles
 export type Permission = 
@@ -10,12 +9,11 @@ export type Permission =
   | 'view_customer'
   | 'download_sales';
 
-// Definimos los permisos por rol
-export const rolePermissions: Record<UserRole, Permission[]> = {
-  admin: ['delete_customer', 'edit_customer', 'change_status', 'create_customer', 'view_customer', 'download_sales'],
-  asesor: ['create_customer', 'view_customer'],
-  banco: ['change_status', 'view_customer'],
-  manager: ['edit_customer', 'change_status', 'create_customer', 'view_customer']
+// Mapeamos los permisos de constants.ts a los permisos específicos
+const permissionMapping: Record<string, Permission[]> = {
+  [USER_ROLES.ADMIN]: ['delete_customer', 'edit_customer', 'change_status', 'create_customer', 'view_customer', 'download_sales'],
+  [USER_ROLES.MANAGER]: ['edit_customer', 'change_status', 'create_customer', 'view_customer'],
+  [USER_ROLES.USER]: ['view_customer'],
 };
 
 // Hook personalizado para manejar permisos
@@ -23,7 +21,7 @@ export const usePermissions = () => {
   const checkPermission = (permission: Permission): boolean => {
     // Obtener el usuario del localStorage y parsearlo como JSON
     const userString = localStorage.getItem('user');
-    let userRole: UserRole | null = null;
+    let userRole: string | null = null;
     
     if (userString) {
       try {
@@ -31,7 +29,7 @@ export const usePermissions = () => {
         const userData = JSON.parse(userString);
         // Si userData es un string (objeto serializado), parsearlo nuevamente
         const userObject = typeof userData === 'string' ? JSON.parse(userData) : userData;
-        userRole = userObject.role as UserRole;
+        userRole = userObject.rol as string;
       } catch (error) {
         console.error('Error parsing user data:', error);
       }
@@ -39,11 +37,11 @@ export const usePermissions = () => {
     
     // Fallback a user_role si no se pudo obtener del objeto user
     if (!userRole) {
-      userRole = localStorage.getItem('user_role') as UserRole;
+      userRole = localStorage.getItem('user_role');
     }
     
     if (!userRole) return false;
-    return rolePermissions[userRole]?.includes(permission) || false;
+    return permissionMapping[userRole]?.includes(permission) || false;
   };
 
   return {
