@@ -20,10 +20,14 @@ const Customers = () => {
     loadCustomers,
     updateCustomer,
     deleteCustomer,
-    updateStatus,
-    setCustomers
+    updateStatus
   } = useCustomers();
-  const { canCreateCustomer } = usePermissions();
+  const {
+    canCreateCustomer,
+    canEditCustomer,
+    canDeleteCustomer,
+    canDownloadSales
+  } = usePermissions();
 
   // Estados locales
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -39,10 +43,9 @@ const Customers = () => {
     }
   }, [isAuthenticated]);
 
-  // Definir los permisos para cada usuario.
-  const canEdit = () => user && ['admin', 'manager'].includes(user.rol);
-  const canDelete = () => user && user.rol === 'admin';
-  const canDownloadSales = () => user && ['admin'].includes(user.rol);
+  // Usar el sistema de permisos centralizado
+  const canEdit = canEditCustomer;
+  const canDelete = canDeleteCustomer;
 
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
@@ -70,7 +73,7 @@ const Customers = () => {
   };
 
   const handleDelete = async () => {
-    if (!selectedCustomer || !canDelete()) return;
+    if (!selectedCustomer || !canDelete() || !selectedCustomer.id) return;
     try {
       await deleteCustomer(selectedCustomer.id);
       setIsModalOpen(false);
@@ -86,10 +89,17 @@ const Customers = () => {
 
   const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      console.log('Enviando cambio de estado al backend:', {
+        estado: newStatus,
+        solicitante_id: customer.id_solicitante,
+        numero_documento: customer.numero_documento
+      });
+
+      const response = await fetch('  http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
         body: JSON.stringify({
           estado: newStatus,
@@ -99,10 +109,15 @@ const Customers = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
+        const errorData = await response.text();
+        console.error('Error del servidor:', errorData);
+        throw new Error(`Error en la respuesta del servidor: ${response.status}`);
       }
 
-      // No necesitamos hacer nada más aquí, el estado visual ya se actualizó en la tabla
+      console.log('Estado actualizado exitosamente');
+
+      // Recargar los datos para reflejar el cambio
+      await loadCustomers();
     } catch (error) {
       console.error('Error al actualizar estado:', error);
       throw error;
@@ -111,7 +126,7 @@ const Customers = () => {
 
   const handleDownloadSales = async () => {
     try {
-      const response = await fetch('https://api-findii.onrender.com/descargar-ventas/', {
+      const response = await fetch('  http://127.0.0.1:5000/descargar-ventas/', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -123,20 +138,20 @@ const Customers = () => {
 
       // Obtener el blob de la respuesta
       const blob = await response.blob();
-      
+
       // Crear URL del blob
       const url = window.URL.createObjectURL(blob);
-      
+
       // Crear elemento anchor temporal
       const a = document.createElement('a');
       a.href = url;
       a.download = 'ventas_realizadas.csv'; // Nombre del archivo a descargar
-      
+
       // Añadir al DOM, hacer clic y remover
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      
+
       // Liberar el objeto URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
@@ -172,7 +187,7 @@ const Customers = () => {
           <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
           <div className="flex items-center space-x-4">
             {/* {canEdit() && (
-              <Link 
+              <Link
                 to="/users"
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
@@ -180,7 +195,7 @@ const Customers = () => {
                 Gestionar Usuarios
               </Link>
             )} */}
-            
+
             {user && (
               <span className="text-sm text-gray-600">
                 Logged in as: <span className="font-medium">{user.nombre}</span>
@@ -256,7 +271,7 @@ const Customers = () => {
           onInputChange={handleInputChange}
         />
       </Modal>
-      
+
       {/* Modal de Nuevo Cliente */}
       <Modal
         isOpen={isNewCustomerModalOpen}
@@ -265,8 +280,8 @@ const Customers = () => {
         size="xl"
       >
         <CustomerForm
-          onSubmit={() => {
-            loadCustomers();
+          onSubmit={async () => {
+            await loadCustomers();
             setIsNewCustomerModalOpen(false);
           }}
           onCancel={() => setIsNewCustomerModalOpen(false)}
