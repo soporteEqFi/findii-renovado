@@ -11,20 +11,20 @@ export const useCustomers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const response = await fetch('https://api-findii.onrender.com/get-combined-data', {
+
+      const response = await fetch('http://127.0.0.1:5000/get-combined-data', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
       });
-  
+
       if (!response.ok) {
         throw new Error('Failed to fetch customers');
       }
-  
+
       const data = await response.json();
       console.log('API Response raw:', data);
-      
+
       if (data.datos_combinados && Array.isArray(data.datos_combinados)) {
         setCustomers(data.datos_combinados);
         setTotalRecords(data.datos_combinados.length);
@@ -67,10 +67,10 @@ export const useCustomers = () => {
       }
 
       const updatedCustomer = await response.json();
-      
+
       // Actualizar la lista de clientes con el cliente actualizado
-      setCustomers(prevCustomers => 
-        prevCustomers.map(c => 
+      setCustomers(prevCustomers =>
+        prevCustomers.map(c =>
           c.id === customer.id ? { ...c, ...updatedCustomer } : c
         )
       );
