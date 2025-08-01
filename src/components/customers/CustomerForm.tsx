@@ -36,7 +36,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       const data = await getCreditTypes(cedula);
       console.log('=== DATOS DE TIPOS DE CRÉDITO EN CUSTOMER FORM ===');
       console.log('Datos de los tipos de crédito:', data);
-      
+
       // Verificar cada tipo de crédito
       data.forEach((type, index) => {
         console.log(`Tipo ${index}:`, {
@@ -46,16 +46,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           isActive: type.isActive
         });
       });
-      
+
       // Guardar los tipos de crédito disponibles
       setAvailableCreditTypes(data);
 
       // Si hay un tipo seleccionado, procesar sus campos
       if (selectedType) {
-        const selectedCreditType = data.find((type: any) => 
+        const selectedCreditType = data.find((type: any) =>
           type.name === `credito_${selectedType}`
         );
-        
+
         if (selectedCreditType) {
           setCreditTypeFields(selectedCreditType.fields);
           const initialValues = selectedCreditType.fields.reduce((acc: any, field: any) => {
@@ -86,12 +86,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     console.log('=== CUSTOMER FORM: useEffect para tipo_credito ejecutado ===');
     console.log('tipo_credito:', newCustomer.tipo_credito);
     console.log('availableCreditTypes length:', availableCreditTypes.length);
-    
+
     if (newCustomer.tipo_credito) {
       const selectedType = availableCreditTypes.find(
         (type: any) => type.name === `credito_${newCustomer.tipo_credito}`
       );
-      
+
       if (selectedType) {
         setCreditTypeFields(selectedType.fields);
         const initialValues = selectedType.fields.reduce((acc: any, field: any) => {
@@ -104,7 +104,44 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   }, [newCustomer.tipo_credito, availableCreditTypes]);
 
   const handleInputChange = (field: string, value: any) => {
-    setNewCustomer(prev => ({ ...prev, [field]: value }));
+    // Validaciones específicas para campos numéricos
+    const numericValidations: Record<string, { min: number; max: number; step?: number }> = {
+      personas_a_cargo: { min: 0, max: 20 },
+      estrato: { min: 1, max: 6 },
+      ingresos: { min: 0, max: 1000000000, step: 1000 },
+      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
+      cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
+      porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
+      total_activos: { min: 0, max: 10000000000, step: 100000 },
+      total_pasivos: { min: 0, max: 10000000000, step: 100000 },
+      total_egresos: { min: 0, max: 1000000000, step: 1000 },
+      plazo_meses: { min: 12, max: 360 },
+      telefono_empresa: { min: 1, max: 9999999999}
+    };
+
+    // Si es un campo numérico con validación
+    if (numericValidations[field]) {
+      const validation = numericValidations[field];
+      const numValue = parseFloat(value);
+
+      // Si el valor no es un número válido, no actualizar
+      if (isNaN(numValue)) {
+        return;
+      }
+
+      // Aplicar límites
+      let finalValue = Math.max(validation.min, Math.min(validation.max, numValue));
+
+      // Aplicar step si está definido
+      if (validation.step) {
+        finalValue = Math.round(finalValue / validation.step) * validation.step;
+      }
+
+      setNewCustomer(prev => ({ ...prev, [field]: finalValue.toString() }));
+    } else {
+      // Para campos no numéricos, actualizar normalmente
+      setNewCustomer(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,29 +163,55 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
   // Modificar el handleInputChange existente para manejar campos dinámicos
   const handleDynamicFieldChange = (fieldName: string, value: any) => {
-    setDynamicFieldValues(prev => ({ ...prev, [fieldName]: value }));
+    // Si el campo tiene validación (min/max), aplicarla
+    const field = creditTypeFields.find(f => f.name === fieldName);
+
+    if (field && field.fieldType === 'number' && field.validation) {
+      const numValue = parseFloat(value);
+
+      // Si el valor no es un número válido, no actualizar
+      if (isNaN(numValue)) {
+        return;
+      }
+
+      // Aplicar límites si están definidos
+      let finalValue = numValue;
+
+      if (field.validation.minValue !== undefined) {
+        finalValue = Math.max(field.validation.minValue, finalValue);
+      }
+
+      if (field.validation.maxValue !== undefined) {
+        finalValue = Math.min(field.validation.maxValue, finalValue);
+      }
+
+      setDynamicFieldValues(prev => ({ ...prev, [fieldName]: finalValue.toString() }));
+    } else {
+      // Para campos sin validación o no numéricos, actualizar normalmente
+      setDynamicFieldValues(prev => ({ ...prev, [fieldName]: value }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const formData = new FormData();
       // Incluir los campos dinámicos en un JSON bajo "informacion_producto"
       const informacionProducto = { ...dynamicFieldValues };
-      
+
       // Incluir los campos dinámicos en los datos del cliente
       const customerData = {
         ...newCustomer,
         informacion_producto: JSON.stringify(informacionProducto),
         asesor_usuario: localStorage.getItem('cedula') || ''
       };
-      
+
       // Debug: verificar los datos antes de enviar
       console.log('Datos del cliente:', customerData);
       console.log('Tipo documento:', customerData.tipo_documento);
       console.log('Información del producto (JSON):', informacionProducto);
-      
+
       // Agregar todos los campos al FormData
       Object.entries(customerData).forEach(([key, value]) => {
         formData.append(key, value?.toString() || '');
@@ -174,10 +237,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       // Limpiar el caché después de un registro exitoso
       const cedula = localStorage.getItem('cedula') || '';
       clearCreditTypesCache(cedula);
-      
+
       toast.success('Cliente registrado exitosamente');
       await onSubmit(e);
-      
+
     } catch (error) {
       console.error('Error:', error);
       toast.error('Error al registrar el cliente');
@@ -191,7 +254,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         <div className="md:col-span-3">
           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3">Información Personal</h3>
         </div>
-        
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Nombre Completo *
@@ -280,6 +343,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.personas_a_cargo || ''}
             onChange={(e) => handleInputChange('personas_a_cargo', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="20"
             required
           />
         </div>
@@ -343,7 +408,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           />
         </div>
 
-    
+
 
         {/* Location Information */}
         <div className="md:col-span-3">
@@ -415,6 +480,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.estrato || ''}
             onChange={(e) => handleInputChange('estrato', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="1"
+            max="6"
             required
           />
         </div>
@@ -533,7 +600,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           />
         </div>
 
-    
+
 
         {/* Informational Financial */}
         <div className="md:col-span-3">
@@ -549,6 +616,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.ingresos || ''}
             onChange={(e) => handleInputChange('ingresos', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="1000000000"
+            step="1000"
             required
           />
         </div>
@@ -562,6 +632,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.valor_inmueble || ''}
             onChange={(e) => handleInputChange('valor_inmueble', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="5000000000"
+            step="100000"
             required
           />
         </div>
@@ -575,6 +648,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.cuota_inicial || ''}
             onChange={(e) => handleInputChange('cuota_inicial', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="5000000000"
+            step="100000"
             required
           />
         </div>
@@ -588,6 +664,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.porcentaje_financiar || ''}
             onChange={(e) => handleInputChange('porcentaje_financiar', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="100"
+            step="0.1"
             required
           />
         </div>
@@ -601,6 +680,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.total_activos || ''}
             onChange={(e) => handleInputChange('total_activos', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="10000000000"
+            step="100000"
             required
           />
         </div>
@@ -614,6 +696,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.total_pasivos || ''}
             onChange={(e) => handleInputChange('total_pasivos', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="10000000000"
+            step="100000"
             required
           />
         </div>
@@ -627,11 +712,14 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.total_egresos || ''}
             onChange={(e) => handleInputChange('total_egresos', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="0"
+            max="1000000000"
+            step="1000"
             required
           />
         </div>
 
-       
+
 
         {/* Informational Credit */}
         <div className="md:col-span-3">
@@ -661,7 +749,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </select>
         </div>
 
-     
+
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -689,6 +777,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             value={newCustomer.plazo_meses || ''}
             onChange={(e) => handleInputChange('plazo_meses', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            min="12"
+            max="360"
             required
           />
         </div>
@@ -754,7 +844,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             rows={3}
           />
         </div>
-         
+
         {/* File Upload Section */}
         <div className="md:col-span-3">
           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos Adjuntos</h3>
@@ -776,7 +866,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                 <Upload className="w-4 h-4 mr-2" />
                 Seleccionar Archivos
               </button>
-              
+
               {selectedFiles.length > 0 && (
                 <div className="mt-4">
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
