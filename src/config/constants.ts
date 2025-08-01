@@ -1,6 +1,6 @@
 // Configuración de la API
 export const API_CONFIG = {
-  BASE_URL: 'https://api-findii.onrender.com',
+  BASE_URL: '  http://127.0.0.1:5000',
   ENDPOINTS: {
     LOGIN: '/iniciar-sesion/',
     VALIDATE_TOKEN: '/validate-token',
@@ -31,7 +31,8 @@ export const API_CONFIG = {
 export const USER_ROLES = {
   ADMIN: 'admin',
   MANAGER: 'manager',
-  USER: 'user'
+  USER: 'user',
+  BANCO: 'banco'
 } as const;
 
 // Estados de clientes
@@ -62,4 +63,5 @@ export const PERMISSIONS = {
   [USER_ROLES.ADMIN]: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_credit_types'],
   [USER_ROLES.MANAGER]: ['create', 'read', 'update'],
   [USER_ROLES.USER]: ['read'],
+  [USER_ROLES.BANCO]: ['view_customer', 'download_sales'],
 } as const; 
