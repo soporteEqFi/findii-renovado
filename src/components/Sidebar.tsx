@@ -38,7 +38,7 @@ const Sidebar = () => {
       console.log(userData)
       console.log("Claves del objeto userData:", Object.keys(userData))
       localStorage.setItem('cedula', user_document_obj)
-      const response = await fetch(`https://api-findii.onrender.com/get-user-info/${user_document_obj}`, {
+      const response = await fetch(`  http://127.0.0.1:5000/get-user-info/${user_document_obj}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

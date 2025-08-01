@@ -63,7 +63,7 @@ export const columns = [
     },
     enableSorting: true,
   }),
-  
+
   columnHelper.accessor('nombre', {
     header: 'Nombre',
     cell: (info) => <span className="font-medium">{info.getValue()}</span>,
@@ -108,6 +108,7 @@ export const columns = [
     header: 'Estado',
     cell: (info) => {
       const [isOpen, setIsOpen] = useState(false);
+      const { canChangeStatus } = usePermissions();
       const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Radicado'];
       const colorClasses = {
         Pendiente: 'bg-yellow-100 text-yellow-800',
@@ -121,10 +122,10 @@ export const columns = [
 
       const handleStatusChange = async (newStatus: string) => {
         try {
-          console.log('Iniciando cambio de estado:', { 
+          console.log('Iniciando cambio de estado:', {
             id_solicitante: customer.id_solicitante,
             numero_documento: customer.numero_documento,
-            newStatus 
+            newStatus
           });
           await info.table.options.meta?.updateStatus(customer, newStatus);
           setIsOpen(false);
@@ -132,6 +133,17 @@ export const columns = [
           console.error('Error en columna al cambiar estado:', error);
         }
       };
+
+      // Solo mostrar el dropdown si el usuario tiene permisos para cambiar estado
+      if (!canChangeStatus()) {
+        return (
+          <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
+            colorClasses[currentState as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800'
+          }`}>
+            {info.getValue() || 'Pendiente'}
+          </span>
+        );
+      }
 
       return (
         <div className="relative" onClick={(e) => e.stopPropagation()}>
@@ -153,7 +165,7 @@ export const columns = [
                   <button
                     key={estado}
                     className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                      estado.toLowerCase() === currentState ? 'bg-gray-50' : ''
+                      estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50' : ''
                     }`}
                     onClick={() => handleStatusChange(estado)}
                   >

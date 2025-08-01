@@ -22,16 +22,16 @@ interface CustomerTableProps {
 // Función para convertir fecha dd/mm/yyyy a Date
 const parseDateFromDDMMYYYY = (dateString: string): Date | null => {
   if (!dateString) return null;
-  
+
   // Verificar si la fecha está en formato dd/mm/yyyy
   const dateRegex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
   const match = dateString.match(dateRegex);
-  
+
   if (match) {
     const [, day, month, year] = match;
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
-  
+
   // Si no coincide con el formato esperado, intentar parsear como fecha ISO
   const date = new Date(dateString);
   return isNaN(date.getTime()) ? null : date;
@@ -51,7 +51,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   // console.log('CustomerTable received customers:', customers);
   // console.log('CustomerTable totalRecords:', totalRecords);
   // console.log('Customers array length:', customers?.length);
-  
+
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [dateRange, setDateRange] = useState({
@@ -83,7 +83,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
       // Filtro global
       if (globalFilter) {
         const searchTerm = globalFilter.toLowerCase();
-        return Object.values(customer).some(value => 
+        return Object.values(customer).some(value =>
           String(value).toLowerCase().includes(searchTerm)
         );
       }
@@ -117,6 +117,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     onGlobalFilterChange: setGlobalFilter,
     pageCount: Math.ceil(filteredData.length / pageSize),
     manualPagination: true,
+    meta: {
+      updateStatus: onStatusChange,
+    },
   });
 
   const handlePreviousPage = () => {

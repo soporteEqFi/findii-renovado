@@ -46,7 +46,7 @@ interface SeguimientoResponse {
   solicitante_id: number;
 }
 
-const API_URL = 'https://api-findii.onrender.com';
+const API_URL = '  http://127.0.0.1:5000';
 
 export const CreditTracking: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
