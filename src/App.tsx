@@ -13,41 +13,41 @@ import { CreditTracking } from './components/tracking/CreditTracking';
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Cargando...</div>;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 // Componente para proteger rutas que requieren rol de administrador
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">Cargando...</div>;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
-  if (user?.role !== 'admin') {
+
+  if (user?.rol !== 'admin') {
     return <Navigate to="/" replace />;
   }
-  
+
   return <>{children}</>;
 };
 
 function App() {
   return (
     <>
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 3000,
@@ -62,10 +62,10 @@ function App() {
           <Routes>
             {/* Ruta pública de login */}
             <Route path="/login" element={<Login />} />
-            
+
             {/* Ruta pública de seguimiento */}
             <Route path="/seguimiento" element={<CreditTracking />} />
-            
+
             {/* Rutas protegidas dentro del Layout */}
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               {/* Ruta principal (índice) muestra Customers */}
@@ -73,7 +73,7 @@ function App() {
 
               {/* Rutas solo para administradores */}
               <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
-                            
+
               {/* Rutas accesibles para todos los usuarios autenticados */}
               {/* <Route path="customers" element={<Customers />} /> */}
               {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
@@ -87,7 +87,7 @@ function App() {
               } />
 
             </Route>
-            
+
             {/* Ruta para manejar URLs no encontradas */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
