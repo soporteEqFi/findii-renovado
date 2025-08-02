@@ -46,7 +46,7 @@ interface SeguimientoResponse {
   solicitante_id: number;
 }
 
-const API_URL = '  http://127.0.0.1:5000';
+const API_URL = 'https://api-findii.onrender.com';
 
 export const CreditTracking: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -158,7 +158,7 @@ export const CreditTracking: React.FC = () => {
 
   const getStatusClass = (estado: string | undefined) => {
     if (!estado) return 'bg-gray-100 text-gray-800';
-    
+
     switch (estado.toLowerCase()) {
       case 'aprobado':
         return 'bg-green-100 text-green-800';
@@ -282,7 +282,7 @@ export const CreditTracking: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      
+
                       {etapa.comentarios && (
                         <p className="text-gray-600 mt-2">{etapa.comentarios}</p>
                       )}
@@ -368,4 +368,4 @@ export const CreditTracking: React.FC = () => {
       )}
     </div>
   );
-}; 
+};

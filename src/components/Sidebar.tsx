@@ -28,7 +28,7 @@ const Sidebar = () => {
 
   const loadStats = async () => {
     try {
-      setError(null); 
+      setError(null);
 
       const user_document = localStorage.getItem('user');
       const userData = JSON.parse(user_document || '{}');
@@ -38,7 +38,7 @@ const Sidebar = () => {
       console.log(userData)
       console.log("Claves del objeto userData:", Object.keys(userData))
       localStorage.setItem('cedula', user_document_obj)
-      const response = await fetch(`  http://127.0.0.1:5000/get-user-info/${user_document_obj}`, {
+      const response = await fetch(`https://api-findii.onrender.com/get-user-info/${user_document_obj}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -94,8 +94,8 @@ const Sidebar = () => {
             <Link
               to={item.path}
               className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
-                location.pathname === item.path 
-                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500' 
+                location.pathname === item.path
+                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
                   : 'text-gray-300'
               }`}
             >
@@ -104,15 +104,15 @@ const Sidebar = () => {
             </Link>
           </li>
         ))}
-        
+
         {/* Elementos de menú solo para administradores */}
         {isAdmin && adminMenuItems.map((item) => (
           <li key={item.path}>
             <Link
               to={item.path}
               className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
-                location.pathname === item.path 
-                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500' 
+                location.pathname === item.path
+                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
                   : 'text-gray-300'
               }`}
             >

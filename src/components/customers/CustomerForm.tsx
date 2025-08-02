@@ -28,6 +28,36 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const [creditTypeFields, setCreditTypeFields] = useState<any[]>([]);
   const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
   const [availableCreditTypes, setAvailableCreditTypes] = useState<any[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Función para validar un campo específico
+  const validateField = (fieldName: string, value: any): string => {
+    const numericValidations: Record<string, { min: number; max: number; step?: number }> = {
+      personas_a_cargo: { min: 0, max: 20 },
+      estrato: { min: 1, max: 6 },
+      ingresos: { min: 0, max: 1000000000, step: 1000 },
+      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
+      cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
+      porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
+      total_activos: { min: 0, max: 10000000000, step: 100000 },
+      total_pasivos: { min: 0, max: 10000000000, step: 100000 },
+      total_egresos: { min: 0, max: 1000000000, step: 1000 },
+      plazo_meses: { min: 12, max: 360 },
+      telefono_empresa: { min: 1, max: 9999999999}
+    };
+
+    if (numericValidations[fieldName] && value) {
+      const numValue = parseFloat(value.toString());
+      if (!isNaN(numValue)) {
+        const validation = numericValidations[fieldName];
+        if (numValue < validation.min || numValue > validation.max) {
+          return `Debe estar entre ${validation.min} y ${validation.max}`;
+        }
+      }
+    }
+
+    return '';
+  };
 
   // Función unificada para cargar y procesar los tipos de crédito
   const loadCreditTypes = async (selectedType?: string) => {
@@ -104,44 +134,15 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   }, [newCustomer.tipo_credito, availableCreditTypes]);
 
   const handleInputChange = (field: string, value: any) => {
-    // Validaciones específicas para campos numéricos
-    const numericValidations: Record<string, { min: number; max: number; step?: number }> = {
-      personas_a_cargo: { min: 0, max: 20 },
-      estrato: { min: 1, max: 6 },
-      ingresos: { min: 0, max: 1000000000, step: 1000 },
-      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
-      cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
-      porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
-      total_activos: { min: 0, max: 10000000000, step: 100000 },
-      total_pasivos: { min: 0, max: 10000000000, step: 100000 },
-      total_egresos: { min: 0, max: 1000000000, step: 1000 },
-      plazo_meses: { min: 12, max: 360 },
-      telefono_empresa: { min: 1, max: 9999999999}
-    };
+    // Para todos los campos, permitir escritura libre
+    setNewCustomer(prev => ({ ...prev, [field]: value }));
 
-    // Si es un campo numérico con validación
-    if (numericValidations[field]) {
-      const validation = numericValidations[field];
-      const numValue = parseFloat(value);
-
-      // Si el valor no es un número válido, no actualizar
-      if (isNaN(numValue)) {
-        return;
-      }
-
-      // Aplicar límites
-      let finalValue = Math.max(validation.min, Math.min(validation.max, numValue));
-
-      // Aplicar step si está definido
-      if (validation.step) {
-        finalValue = Math.round(finalValue / validation.step) * validation.step;
-      }
-
-      setNewCustomer(prev => ({ ...prev, [field]: finalValue.toString() }));
-    } else {
-      // Para campos no numéricos, actualizar normalmente
-      setNewCustomer(prev => ({ ...prev, [field]: value }));
-    }
+    // Validar el campo y actualizar errores
+    const error = validateField(field, value);
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,37 +164,85 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
   // Modificar el handleInputChange existente para manejar campos dinámicos
   const handleDynamicFieldChange = (fieldName: string, value: any) => {
-    // Si el campo tiene validación (min/max), aplicarla
+    // Permitir escritura libre para todos los campos dinámicos
+    setDynamicFieldValues(prev => ({ ...prev, [fieldName]: value }));
+
+    // Validar campos dinámicos si tienen validación
     const field = creditTypeFields.find(f => f.name === fieldName);
+    let error = '';
 
-    if (field && field.fieldType === 'number' && field.validation) {
-      const numValue = parseFloat(value);
-
-      // Si el valor no es un número válido, no actualizar
-      if (isNaN(numValue)) {
-        return;
+    if (field && field.fieldType === 'number' && field.validation && value) {
+      const numValue = parseFloat(value.toString());
+      if (!isNaN(numValue)) {
+        if (field.validation.minValue !== undefined && numValue < field.validation.minValue) {
+          error = `Mínimo ${field.validation.minValue}`;
+        } else if (field.validation.maxValue !== undefined && numValue > field.validation.maxValue) {
+          error = `Máximo ${field.validation.maxValue}`;
+        }
       }
-
-      // Aplicar límites si están definidos
-      let finalValue = numValue;
-
-      if (field.validation.minValue !== undefined) {
-        finalValue = Math.max(field.validation.minValue, finalValue);
-      }
-
-      if (field.validation.maxValue !== undefined) {
-        finalValue = Math.min(field.validation.maxValue, finalValue);
-      }
-
-      setDynamicFieldValues(prev => ({ ...prev, [fieldName]: finalValue.toString() }));
-    } else {
-      // Para campos sin validación o no numéricos, actualizar normalmente
-      setDynamicFieldValues(prev => ({ ...prev, [fieldName]: value }));
     }
+
+    setFieldErrors(prev => ({
+      ...prev,
+      [fieldName]: error
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validaciones específicas para campos numéricos
+    const numericValidations: Record<string, { min: number; max: number; step?: number }> = {
+      personas_a_cargo: { min: 0, max: 20 },
+      estrato: { min: 1, max: 6 },
+      ingresos: { min: 0, max: 1000000000, step: 1000 },
+      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
+      cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
+      porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
+      total_activos: { min: 0, max: 10000000000, step: 100000 },
+      total_pasivos: { min: 0, max: 10000000000, step: 100000 },
+      total_egresos: { min: 0, max: 1000000000, step: 1000 },
+      plazo_meses: { min: 12, max: 360 },
+      telefono_empresa: { min: 1, max: 9999999999}
+    };
+
+    // Validar campos numéricos antes del envío
+    const validationErrors: string[] = [];
+
+    Object.entries(numericValidations).forEach(([field, validation]) => {
+      const value = newCustomer[field as keyof Customer];
+      if (value) {
+        const numValue = parseFloat(value.toString());
+        if (!isNaN(numValue)) {
+          if (numValue < validation.min || numValue > validation.max) {
+            validationErrors.push(`${field}: debe estar entre ${validation.min} y ${validation.max}`);
+          }
+        }
+      }
+    });
+
+    // Validar campos dinámicos
+    creditTypeFields.forEach((field) => {
+      if (field.fieldType === 'number' && field.validation) {
+        const value = dynamicFieldValues[field.name];
+        if (value && field.isRequired) {
+          const numValue = parseFloat(value.toString());
+          if (!isNaN(numValue)) {
+            if (field.validation.minValue !== undefined && numValue < field.validation.minValue) {
+              validationErrors.push(`${field.displayName}: mínimo ${field.validation.minValue}`);
+            }
+            if (field.validation.maxValue !== undefined && numValue > field.validation.maxValue) {
+              validationErrors.push(`${field.displayName}: máximo ${field.validation.maxValue}`);
+            }
+          }
+        }
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      toast.error(`Errores de validación:\n${validationErrors.join('\n')}`);
+      return;
+    }
 
     try {
       const formData = new FormData();
@@ -223,7 +272,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       });
 
       // Realizar la petición a la API
-      const response = await fetch('  http://127.0.0.1:5000/add-record/', {
+      const response = await fetch('https://api-findii.onrender.com/add-record/', {
         method: 'POST',
         body: formData,
       });
@@ -342,11 +391,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.personas_a_cargo || ''}
             onChange={(e) => handleInputChange('personas_a_cargo', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="20"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.personas_a_cargo
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.personas_a_cargo && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.personas_a_cargo}</p>
+          )}
         </div>
 
         {/* Contact Information */}
@@ -479,11 +533,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.estrato || ''}
             onChange={(e) => handleInputChange('estrato', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="1"
-            max="6"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.estrato
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.estrato && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.estrato}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -615,12 +674,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.ingresos || ''}
             onChange={(e) => handleInputChange('ingresos', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="1000000000"
-            step="1000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.ingresos
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.ingresos && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.ingresos}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -631,12 +694,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.valor_inmueble || ''}
             onChange={(e) => handleInputChange('valor_inmueble', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="5000000000"
-            step="100000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.valor_inmueble
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.valor_inmueble && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.valor_inmueble}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -647,12 +714,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.cuota_inicial || ''}
             onChange={(e) => handleInputChange('cuota_inicial', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="5000000000"
-            step="100000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.cuota_inicial
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.cuota_inicial && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.cuota_inicial}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -663,12 +734,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.porcentaje_financiar || ''}
             onChange={(e) => handleInputChange('porcentaje_financiar', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="100"
-            step="0.1"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.porcentaje_financiar
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.porcentaje_financiar && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.porcentaje_financiar}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -679,12 +754,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_activos || ''}
             onChange={(e) => handleInputChange('total_activos', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="10000000000"
-            step="100000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.total_activos
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.total_activos && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.total_activos}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -695,12 +774,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_pasivos || ''}
             onChange={(e) => handleInputChange('total_pasivos', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="10000000000"
-            step="100000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.total_pasivos
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.total_pasivos && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.total_pasivos}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -711,12 +794,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.total_egresos || ''}
             onChange={(e) => handleInputChange('total_egresos', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="0"
-            max="1000000000"
-            step="1000"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.total_egresos
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.total_egresos && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.total_egresos}</p>
+          )}
         </div>
 
 
@@ -776,11 +863,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             type="number"
             value={newCustomer.plazo_meses || ''}
             onChange={(e) => handleInputChange('plazo_meses', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            min="12"
-            max="360"
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.plazo_meses
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
             required
           />
+          {fieldErrors.plazo_meses && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.plazo_meses}</p>
+          )}
         </div>
           {/* Campos dinámicos del tipo de crédito */}
           {creditTypeFields.length > 0 && (
@@ -809,11 +901,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
                     type={field.fieldType}
                     value={dynamicFieldValues[field.name] || ''}
                     onChange={(e) => handleDynamicFieldChange(field.name, e.target.value)}
-                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                      fieldErrors[field.name]
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
                     required={field.isRequired}
-                    min={field.validation?.minValue}
-                    max={field.validation?.maxValue}
                   />
+                )}
+                {fieldErrors[field.name] && (
+                  <p className="text-sm text-red-600 mt-1">{fieldErrors[field.name]}</p>
                 )}
               </div>
             ))}

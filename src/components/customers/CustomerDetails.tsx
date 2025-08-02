@@ -67,7 +67,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
     // Parsear información_producto si existe
     try {
-      const productInfoData = typeof customer.informacion_producto === 'string' 
+      const productInfoData = typeof customer.informacion_producto === 'string'
         ? JSON.parse(customer.informacion_producto)
         : customer.informacion_producto || {};
       setProductInfo(productInfoData);
@@ -76,7 +76,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       console.error('Error al parsear información_producto:', error);
       setProductInfo({});
     }
-   
+
     setEditedCustomer(mappedCustomer);
   }, [customer]);
 
@@ -120,7 +120,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     console.log('Customer:', customer);
 
     try {
-      const response = await fetch('  http://127.0.0.1:5000/delete-record', {
+      const response = await fetch('https://api-findii.onrender.com/delete-record', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +180,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Primero, enviar los archivos si hay nuevos o para eliminar
       if (selectedFiles.length > 0 || filesToDelete.length > 0) {
         const fileFormData = new FormData();
-        
+
         // Agregar los archivos a eliminar
         filesToDelete.forEach(fileUrl => {
           fileFormData.append('files_to_delete', fileUrl);
@@ -199,8 +199,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           selectedFiles: selectedFiles.map(f => f.name),
           solicitante_id: editedCustomer.id_solicitante
         });
-        
-        const fileResponse = await fetch('  http://127.0.0.1:5000/update-files/', {
+
+        const fileResponse = await fetch('https://api-findii.onrender.com/update-files/', {
           method: 'POST',
           body: fileFormData,
         });
@@ -269,7 +269,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       };
 
       // Luego, enviar los datos del cliente
-      const response = await fetch('  http://127.0.0.1:5000/edit-record/', {
+      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -284,9 +284,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
       const updatedCustomer = await response.json();
       console.log('Respuesta exitosa:', updatedCustomer);
-      
+
       onSave();
-      
+
       setIsEditing(false);
       setSelectedFiles([]);
       setFilesToDelete([]);
@@ -300,7 +300,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   const renderField = (key: keyof Customer, value: any) => {
     if (key === 'id' || key === 'created_at' || key === 'asesor_usuario') return null;
-    
+
     // Log específico para los campos que nos interesan
     if (key === 'estado_civil' || key === 'tipo_credito') {
       console.log(`Rendering ${key}:`, value, 'from editedCustomer:', editedCustomer[key]);
@@ -310,7 +310,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Combinar archivos existentes (excluyendo los marcados para eliminar) con los nuevos
       const existingFiles = Array.isArray(value) ? value : [value];
       const filteredExistingFiles = existingFiles.filter(file => !filesToDelete.includes(file));
-      
+
       return (
         <div key={key} className="col-span-full">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -318,7 +318,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             {filteredExistingFiles.map((fileUrl, index) => {
               const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
               const fileName = fileUrl.split('/').pop()?.split('?')[0] || `Archivo ${index + 1}`;
-              
+
               return (
                 <div key={`existing-${index}`} className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -334,9 +334,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                       <span className="truncate max-w-[200px]">{fileName}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <a 
-                        href={fileUrl} 
-                        target="_blank" 
+                      <a
+                        href={fileUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 hover:text-blue-700"
                         download
@@ -381,7 +381,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               </div>
             ))}
           </div>
-          
+
           {isEditing && canEditCustomer() && (
             <div className="mt-4">
               <input
@@ -595,7 +595,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         )}
       </div>
     </div>
-    
+
   );
 };
 
