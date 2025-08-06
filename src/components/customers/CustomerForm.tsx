@@ -272,7 +272,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       });
 
       // Realizar la petición a la API
-      const response = await fetch('http://127.0.0.1:5000/add-record/', {
+      const response = await fetch('https://api-findii.onrender.com/add-record/', {
         method: 'POST',
         body: formData,
       });
