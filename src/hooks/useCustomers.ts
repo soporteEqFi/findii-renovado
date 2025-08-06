@@ -12,10 +12,25 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
+      // Obtener la cédula del asesor desde localStorage
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        console.error('No se encontró la cédula del asesor en localStorage');
+        setError('Error: No se encontró la información del asesor');
+        setCustomers([]);
+        return;
+      }
+
       const response = await fetch('http://127.0.0.1:5000/get-combined-data', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
+        },
+        body: JSON.stringify({
+          cedula: cedula
+        })
       });
 
       if (!response.ok) {
@@ -47,6 +62,13 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
       // Crear FormData y agregar todos los campos
       const formData = new FormData();
       Object.entries(customer).forEach(([key, value]) => {
@@ -55,7 +77,10 @@ export const useCustomers = () => {
         }
       });
 
-      const response = await fetch('/api/edit-record/', {
+      // Agregar la cédula del asesor
+      formData.append('cedula', cedula);
+
+      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
         method: 'PUT',
         body: formData,
       });
@@ -90,11 +115,22 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/delete-customer/${id}`, {
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
+      const response = await fetch(`http://127.0.0.1:5000/delete-customer/${id}`, {
         method: 'DELETE',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
+        },
+        body: JSON.stringify({
+          cedula: cedula
+        })
       });
 
       if (!response.ok) {
@@ -117,7 +153,14 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/editar-estado/', {
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
+      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -126,7 +169,8 @@ export const useCustomers = () => {
         body: JSON.stringify({
           estado: newStatus,
           id: customer.id,
-          numero_documento: customer.numero_documento
+          numero_documento: customer.numero_documento,
+          cedula: cedula
         })
       });
 
