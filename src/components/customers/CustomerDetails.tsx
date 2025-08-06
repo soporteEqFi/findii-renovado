@@ -120,12 +120,22 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     console.log('Customer:', customer);
 
     try {
-      const response = await fetch('https://api-findii.onrender.com/delete-record', {
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
+      const response = await fetch('http://127.0.0.1:5000/delete-record', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ solicitante_id: customer.id_solicitante }),
+        body: JSON.stringify({
+          solicitante_id: customer.id_solicitante,
+          cedula: cedula
+        }),
       });
 
       console.log('Respuesta de eliminación:', response);
@@ -191,16 +201,27 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           fileFormData.append('archivos', file);
         });
 
+        // Obtener la cédula del asesor
+        const cedula = localStorage.getItem('cedula') || '';
+
+        if (!cedula) {
+          throw new Error('No se encontró la información del asesor');
+        }
+
         // Agregar el ID del solicitante
         fileFormData.append('solicitante_id', editedCustomer.id_solicitante.toString());
+
+        // Agregar la cédula del asesor
+        fileFormData.append('cedula', cedula);
 
         console.log('Enviando archivos:', {
           filesToDelete,
           selectedFiles: selectedFiles.map(f => f.name),
-          solicitante_id: editedCustomer.id_solicitante
+          solicitante_id: editedCustomer.id_solicitante,
+          cedula: cedula
         });
 
-        const fileResponse = await fetch('https://api-findii.onrender.com/update-files/', {
+        const fileResponse = await fetch('http://127.0.0.1:5000/update-files/', {
           method: 'POST',
           body: fileFormData,
         });
@@ -269,12 +290,15 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       };
 
       // Luego, enviar los datos del cliente
-      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
+      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(mappedCustomer),
+        body: JSON.stringify({
+          ...mappedCustomer,
+          cedula: cedula
+        }),
       });
 
       if (!response.ok) {
