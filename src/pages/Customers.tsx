@@ -89,13 +89,21 @@ const Customers = () => {
 
   const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
       console.log('Enviando cambio de estado al backend:', {
         estado: newStatus,
         solicitante_id: customer.id_solicitante,
-        numero_documento: customer.numero_documento
+        numero_documento: customer.numero_documento,
+        cedula: cedula
       });
 
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -104,7 +112,8 @@ const Customers = () => {
         body: JSON.stringify({
           estado: newStatus,
           solicitante_id: customer.id_solicitante,
-          numero_documento: customer.numero_documento
+          numero_documento: customer.numero_documento,
+          cedula: cedula
         }),
       });
 
@@ -126,10 +135,22 @@ const Customers = () => {
 
   const handleDownloadSales = async () => {
     try {
-      const response = await fetch('https://api-findii.onrender.com/descargar-ventas/', {
+      // Obtener la cédula del asesor
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
+      const response = await fetch('http://127.0.0.1:5000/descargar-ventas/', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
+        },
+        body: JSON.stringify({
+          cedula: cedula
+        })
       });
 
       if (!response.ok) {
