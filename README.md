@@ -78,7 +78,7 @@ npm run build  # Construir para producción
 ## 📝 Notas importantes:
 
 - **Roles de usuario:** `admin`, `manager`, `user`
-- **API base:** `http://127.0.0.1:5000`
+- **API base:** `https://api-findii.onrender.com`
 - **Estilos:** Tailwind CSS (clases utilitarias)
 - **Iconos:** Lucide React
 - **Notificaciones:** React Hot Toast
