@@ -37,11 +37,41 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
   }
 
   const data = await response.json();
-  
+
+  // Verificar si la respuesta tiene la estructura esperada
+  if (!data) {
+    throw new Error('No se recibieron datos del servidor');
+  }
+
+  // Verificar si el campo 'acceso' existe
+  if (data.acceso === undefined) {
+    throw new Error('Respuesta del servidor inválida: campo "acceso" no encontrado');
+  }
+
   if (data.acceso !== 'AUTORIZADO') {
     throw new Error('Access denied');
   }
-  
+
+  // Verificar si el campo 'usuario' existe y no está vacío
+  if (!data.usuario) {
+    throw new Error('Respuesta del servidor inválida: datos de usuario no encontrados');
+  }
+
+  // El campo usuario puede ser un objeto o un array
+  // Si es un objeto, lo convertimos a array para mantener compatibilidad
+  if (!Array.isArray(data.usuario)) {
+    data.usuario = [data.usuario];
+  }
+
+  if (data.usuario.length === 0) {
+    throw new Error('Respuesta del servidor inválida: datos de usuario vacíos');
+  }
+
+  // Verificar si el campo 'access_token' existe
+  if (!data.access_token) {
+    throw new Error('Respuesta del servidor inválida: token no encontrado');
+  }
+
   return data;
 };
 

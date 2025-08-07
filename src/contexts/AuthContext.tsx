@@ -33,11 +33,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check for token and user data in localStorage
         const storedToken = localStorage.getItem('access_token');
         const storedUser = localStorage.getItem('user');
-        
+
         if (storedToken && storedUser) {
           // Validate the token with the server
           const isValid = await validateToken();
-          
+
           if (isValid) {
             const parsedUser = JSON.parse(storedUser);
             setToken(storedToken);
@@ -66,12 +66,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Use the loginUser function from our API service
       const data = await loginUser(email, password);
-      
+
       // Extract user data from the response
       const userData = data.usuario[0];
 
       // Datos del backend para debugging
-      
+
       // Map API response to our User type
       const userObj: User = {
         id: Number(userData.id || userData.id_usuario || 1),
@@ -82,30 +82,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         empresa: userData.empresa || '',
         password: undefined,
         imagen_aliado: userData.imagen_aliado || null,
-        apellido: userData.apellido,
-        usuario: userData.usuario
+        apellido: userData.apellido || '',
+        usuario: userData.usuario || ''
       };
-      
+
       // Objeto guardado para debugging
-      
+
       // Save token and user data
       setToken(data.access_token);
       setUser(userObj);
-      
+
       // Store in localStorage for persistence
       localStorage.setItem('access_token', data.access_token);
       localStorage.setItem('user', JSON.stringify(userObj));
-      
+      localStorage.setItem('cedula', userObj.cedula);
+
       // Objeto guardado en localStorage
-      
+
     } catch (error) {
       console.error('Login error:', error);
+
       // Clear any partial data
       setUser(null);
       setToken(null);
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
-      throw error;
+      localStorage.removeItem('cedula');
+
+      // Re-throw the error with more specific message
+      if (error instanceof Error) {
+        throw new Error(`Error de login: ${error.message}`);
+      } else {
+        throw new Error('Error desconocido durante el login');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -135,4 +144,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 // Custom hook to use auth context
 export const useAuth = () => useContext(AuthContext);
 
-export default AuthContext; 
+export default AuthContext;

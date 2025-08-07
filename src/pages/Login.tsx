@@ -15,12 +15,29 @@ const Login = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-    
+
     try {
       await login(email, password);
       navigate('/');
     } catch (error) {
-      setError('Credenciales inválidas. Por favor, intente nuevamente.');
+      // Mostrar mensaje de error más específico
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+
+        if (errorMessage.includes('acceso') || errorMessage.includes('Access denied')) {
+          setError('Credenciales inválidas. Por favor, verifique su email y contraseña.');
+        } else if (errorMessage.includes('usuario') || errorMessage.includes('datos')) {
+          setError('Error en la respuesta del servidor. Contacte al administrador.');
+        } else if (errorMessage.includes('token')) {
+          setError('Error de autenticación. Contacte al administrador.');
+        } else if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
+          setError('Error de conexión. Verifique su conexión a internet.');
+        } else {
+          setError(`Error: ${errorMessage}`);
+        }
+      } else {
+        setError('Error desconocido. Por favor, intente nuevamente.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -34,13 +51,13 @@ const Login = () => {
             Iniciar sesión
           </h2>
         </div>
-        
+
         {error && (
           <div className="bg-red-50 p-4 rounded-md">
             <p className="text-sm text-red-700">{error}</p>
           </div>
         )}
-        
+
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -56,7 +73,7 @@ const Login = () => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          
+
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700">
               Password
@@ -71,7 +88,7 @@ const Login = () => {
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md"
             />
           </div>
-          
+
           <div>
             <button
               type="submit"
