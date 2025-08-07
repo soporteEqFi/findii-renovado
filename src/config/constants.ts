@@ -1,6 +1,6 @@
 // Configuración de la API
 export const API_CONFIG = {
-  BASE_URL: 'https://api-findii.onrender.com',
+  BASE_URL: 'http://127.0.0.1:5000',
   ENDPOINTS: {
     LOGIN: '/iniciar-sesion/',
     VALIDATE_TOKEN: '/validate-token',

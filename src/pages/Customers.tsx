@@ -103,7 +103,7 @@ const Customers = () => {
         cedula: cedula
       });
 
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ const Customers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/descargar-ventas/', {
+      const response = await fetch('http://127.0.0.1:5000/descargar-ventas/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

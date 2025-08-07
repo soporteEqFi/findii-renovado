@@ -44,7 +44,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         <input
           type="text"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.nombre}
           onChange={(e) => handleInputChange('nombre', e.target.value)}
         />
@@ -55,7 +55,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         <input
           type="email"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
         />
@@ -66,7 +66,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         <input
           type="password"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.password}
           onChange={(e) => handleInputChange('password', e.target.value)}
         />
@@ -77,7 +77,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         <input
           type="text"
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.cedula}
           onChange={(e) => handleInputChange('cedula', e.target.value)}
         />
@@ -85,27 +85,30 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Empresa</label>
-        <input
-          type="text"
+        <select
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.empresa}
           onChange={(e) => handleInputChange('empresa', e.target.value)}
-        />
+        >
+          <option value="">Seleccionar...</option>
+          <option value="findii">Findii</option>
+          <option value="zack's company">Zack's company</option>
+        </select>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700">Rol</label>
         <select
           required
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
           value={formData.rol}
           onChange={(e) => handleInputChange('rol', e.target.value)}
         >
           <option value="">Seleccionar...</option>
           <option value="admin">Admin</option>
-          <option value="rh">RH</option>
           <option value="banco">Banco</option>
+          <option value="asesor">Asesor</option>
         </select>
       </div>
 
@@ -134,4 +137,4 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
       </div>
     </form>
   );
-}; 
+};

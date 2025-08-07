@@ -127,7 +127,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/delete-record', {
+      const response = await fetch('http://127.0.0.1:5000/delete-record', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +221,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           cedula: cedula
         });
 
-        const fileResponse = await fetch('https://api-findii.onrender.com/update-files/', {
+        const fileResponse = await fetch('http://127.0.0.1:5000/update-files/', {
           method: 'POST',
           body: fileFormData,
         });
@@ -290,7 +290,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       };
 
       // Luego, enviar los datos del cliente
-      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
+      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

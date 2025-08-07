@@ -22,7 +22,7 @@ export const useCustomers = () => {
         return;
       }
 
-      const response = await fetch('https://api-findii.onrender.com/get-combined-data', {
+      const response = await fetch('http://127.0.0.1:5000/get-combined-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +80,7 @@ export const useCustomers = () => {
       // Agregar la cédula del asesor
       formData.append('cedula', cedula);
 
-      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
+      const response = await fetch('http://127.0.0.1:5000/edit-record/', {
         method: 'PUT',
         body: formData,
       });
@@ -122,7 +122,7 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch(`https://api-findii.onrender.com/delete-customer/${id}`, {
+      const response = await fetch(`http://127.0.0.1:5000/delete-customer/${id}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      const response = await fetch('http://127.0.0.1:5000/editar-estado/', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
