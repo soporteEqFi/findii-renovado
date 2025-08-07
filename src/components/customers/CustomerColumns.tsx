@@ -109,16 +109,28 @@ export const columns = [
     cell: (info) => {
       const [isOpen, setIsOpen] = useState(false);
       const { canChangeStatus } = usePermissions();
-      const estados = ['Pendiente', 'Aprobado', 'Rechazado', 'Radicado'];
+      const estados = ['Pendiente', 'Aprobado', 'Negado', 'Radicado'];
       const colorClasses = {
         Pendiente: 'bg-yellow-100 text-yellow-800',
         Aprobado: 'bg-green-100 text-green-800',
-        Rechazado: 'bg-red-100 text-red-800',
+        Negado: 'bg-red-100 text-red-800',
         Radicado: 'bg-blue-100 text-blue-800'
       };
 
       const currentState = info.getValue() || 'Pendiente';
       const customer = info.row.original;
+
+      // Función para mapear el estado visual al estado que se envía al backend
+      const mapEstadoToBackend = (estadoVisual: string): string => {
+        switch (estadoVisual.toLowerCase()) {
+          case 'negado':
+            return 'Negado';
+          case 'rechazado':
+            return 'Negado';
+          default:
+            return estadoVisual;
+        }
+      };
 
       const handleStatusChange = async (newStatus: string) => {
         try {
@@ -127,7 +139,9 @@ export const columns = [
             numero_documento: customer.numero_documento,
             newStatus
           });
-          await info.table.options.meta?.updateStatus(customer, newStatus);
+          // Mapear el estado visual al estado que se envía al backend
+          const estadoBackend = mapEstadoToBackend(newStatus);
+          await info.table.options.meta?.updateStatus(customer, estadoBackend);
           setIsOpen(false);
         } catch (error) {
           console.error('Error en columna al cambiar estado:', error);
