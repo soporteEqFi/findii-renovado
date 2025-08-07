@@ -46,7 +46,7 @@ interface SeguimientoResponse {
   solicitante_id: number;
 }
 
-const API_URL = 'https://api-findii.onrender.com';
+const API_URL = 'http://127.0.0.1:5000';
 
 export const CreditTracking: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -117,10 +117,13 @@ export const CreditTracking: React.FC = () => {
   const handleEstadoChange = async (etapaIndex: number, nuevoEstado: string) => {
     if (!seguimiento || !isAdmin) return;
 
+    // Mapear el estado visual al estado que se envía al backend
+    const estadoBackend = mapEstadoToBackend(nuevoEstado);
+
     const etapasActualizadas = [...seguimiento.etapas];
     etapasActualizadas[etapaIndex] = {
       ...etapasActualizadas[etapaIndex],
-      estado: nuevoEstado,
+      estado: estadoBackend,
       fecha_actualizacion: new Date().toISOString(),
     };
 
@@ -162,6 +165,8 @@ export const CreditTracking: React.FC = () => {
     switch (estado.toLowerCase()) {
       case 'aprobado':
         return 'bg-green-100 text-green-800';
+      case 'negado':
+        return 'bg-red-100 text-red-800';
       case 'rechazado':
         return 'bg-red-100 text-red-800';
       case 'en revisión':
@@ -170,6 +175,18 @@ export const CreditTracking: React.FC = () => {
         return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  // Función para mapear el estado visual al estado que se envía al backend
+  const mapEstadoToBackend = (estadoVisual: string): string => {
+    switch (estadoVisual.toLowerCase()) {
+      case 'negado':
+        return 'Negado';
+      case 'rechazado':
+        return 'Negado';
+      default:
+        return estadoVisual;
     }
   };
 
@@ -274,7 +291,7 @@ export const CreditTracking: React.FC = () => {
                             <option value="pendiente">Pendiente</option>
                             <option value="en revisión">En revisión</option>
                             <option value="aprobado">Aprobado</option>
-                            <option value="rechazado">Rechazado</option>
+                            <option value="negado">Negado</option>
                           </select>
                         ) : (
                           <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}>
