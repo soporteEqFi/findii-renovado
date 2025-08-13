@@ -4,6 +4,7 @@ import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { Upload, File, X as XIcon, Save, Loader2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCreditTypes, clearCreditTypesCache } from '../../services/creditTypeService';
+import { useCities } from '../../hooks/useCities';
 
 interface CustomerFormProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -34,6 +35,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
   // Agregar estado para los campos del segundo titular
   const [segundoTitularFields, setSegundoTitularFields] = useState<Record<string, any>>({});
+
+  // Estados para los checkboxes de términos y condiciones
+  const [aceptaTerminos, setAceptaTerminos] = useState(false);
+  const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
+
+  // Hook para cargar ciudades de Colombia
+  const { cities, departments, loading: citiesLoading, error: citiesError, getCitiesByDepartment } = useCities();
+
+  // Estado para el departamento seleccionado
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
 
   // Función para validar un campo específico
   const validateField = (fieldName: string, value: any): string => {
@@ -237,8 +248,28 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     setSegundoTitularFields(prev => ({ ...prev, [fieldName]: value }));
   };
 
+  // Función para manejar el cambio de departamento
+  const handleDepartmentChange = (department: string) => {
+    setSelectedDepartment(department);
+    // Actualizar el campo departamento en el estado del cliente
+    handleInputChange('departamento', department);
+    // Limpiar la ciudad cuando cambia el departamento
+    handleInputChange('ciudad_gestion', '');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validar que se hayan aceptado ambos términos y condiciones
+    if (!aceptaTerminos) {
+      toast.error('Debes aceptar los términos y condiciones de uso para continuar');
+      return;
+    }
+
+    if (!aceptaAcuerdoFirma) {
+      toast.error('Debes aceptar el acuerdo de firma para continuar');
+      return;
+    }
 
     // Validaciones específicas para campos numéricos
     const numericValidations: Record<string, { min: number; max: number; step?: number }> = {
@@ -610,13 +641,25 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <label className="block text-sm font-medium text-gray-700">
             Departamento *
           </label>
-          <input
-            type="text"
-            value={newCustomer.departamento || ''}
-            onChange={(e) => handleInputChange('departamento', e.target.value)}
+          <select
+            value={selectedDepartment}
+            onChange={(e) => handleDepartmentChange(e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
-          />
+          >
+            <option value="">Seleccionar departamento...</option>
+            {departments.map((department) => (
+              <option key={department} value={department}>
+                {department}
+              </option>
+            ))}
+          </select>
+          {citiesLoading && (
+            <p className="text-xs text-gray-500 mt-1">Cargando departamentos...</p>
+          )}
+          {citiesError && (
+            <p className="text-xs text-red-500 mt-1">{citiesError}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -643,13 +686,25 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <label className="block text-sm font-medium text-gray-700">
             Ciudad de Gestión *
           </label>
-          <input
-            type="text"
+          <select
             value={newCustomer.ciudad_gestion || ''}
             onChange={(e) => handleInputChange('ciudad_gestion', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
             required
-          />
+            disabled={!selectedDepartment}
+          >
+            <option value="">
+              {selectedDepartment ? 'Seleccionar ciudad...' : 'Primero selecciona un departamento'}
+            </option>
+            {selectedDepartment && getCitiesByDepartment(selectedDepartment).map((city) => (
+              <option key={city.municipio} value={city.municipio}>
+                {city.municipio}
+              </option>
+            ))}
+          </select>
+          {citiesLoading && (
+            <p className="text-xs text-gray-500 mt-1">Cargando ciudades...</p>
+          )}
         </div>
 
         {/* Informational Laboral */}
@@ -1244,6 +1299,81 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
               )}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Checkboxes de Términos y Condiciones */}
+      <div className="mt-6 space-y-4">
+        {/* Primer checkbox - Términos y Condiciones de Uso */}
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <input
+              type="checkbox"
+              id="acepta-terminos"
+              checked={aceptaTerminos}
+              onChange={(e) => setAceptaTerminos(e.target.checked)}
+              className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              required
+            />
+            <div className="flex-1">
+              <label htmlFor="acepta-terminos" className="text-sm text-gray-700">
+                <span className="font-medium">Acepto los Términos y Condiciones de Uso</span> de la plataforma FINDII.CO.
+                He leído y comprendo que al aceptar estos términos autorizo el tratamiento de mis datos personales
+                y acepto las condiciones establecidas para el uso de la plataforma.
+              </label>
+              <div className="mt-2">
+                <a
+                  href="/terminos-condiciones"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+                >
+                  Leer términos y condiciones completos
+                </a>
+              </div>
+            </div>
+          </div>
+          {!aceptaTerminos && (
+            <p className="text-red-600 text-sm mt-2">
+              Debes aceptar los términos y condiciones de uso para continuar
+            </p>
+          )}
+        </div>
+
+        {/* Segundo checkbox - Acuerdo de Firma */}
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-start space-x-3">
+            <input
+              type="checkbox"
+              id="acepta-acuerdo-firma"
+              checked={aceptaAcuerdoFirma}
+              onChange={(e) => setAceptaAcuerdoFirma(e.target.checked)}
+              className="mt-1 h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              required
+            />
+            <div className="flex-1">
+              <label htmlFor="acepta-acuerdo-firma" className="text-sm text-gray-700">
+                <span className="font-medium">Acepto el Acuerdo de Firma</span> de la plataforma FINDII.CO.
+                He leído y comprendo que al aceptar este acuerdo autorizo el tratamiento de mis datos personales
+                y acepto las condiciones establecidas para el proceso de firma de documentos.
+              </label>
+              <div className="mt-2">
+                <a
+                  href="/acuerdo-firma"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-600 hover:text-green-800 text-sm font-medium underline"
+                >
+                  Leer acuerdo de firma completo
+                </a>
+              </div>
+            </div>
+          </div>
+          {!aceptaAcuerdoFirma && (
+            <p className="text-red-600 text-sm mt-2">
+              Debes aceptar el acuerdo de firma para continuar
+            </p>
+          )}
         </div>
       </div>
 
