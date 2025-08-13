@@ -188,6 +188,13 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('ID del solicitante no encontrado');
       }
 
+      // Obtener la cédula del asesor al inicio de la función
+      const cedula = localStorage.getItem('cedula') || '';
+
+      if (!cedula) {
+        throw new Error('No se encontró la información del asesor');
+      }
+
       // Primero, enviar los archivos si hay nuevos o para eliminar
       if (selectedFiles.length > 0 || filesToDelete.length > 0) {
         const fileFormData = new FormData();
@@ -201,13 +208,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         selectedFiles.forEach(file => {
           fileFormData.append('archivos', file);
         });
-
-        // Obtener la cédula del asesor
-        const cedula = localStorage.getItem('cedula') || '';
-
-        if (!cedula) {
-          throw new Error('No se encontró la información del asesor');
-        }
 
         // Agregar el ID del solicitante
         fileFormData.append('solicitante_id', editedCustomer.id_solicitante.toString());
@@ -283,7 +283,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           segundo_titular: editedCustomer.segundo_titular || 'no',
           observacion: editedCustomer.observacion,
           estado: editedCustomer.estado,
-          informacion_producto: editedCustomer.informacion_producto
+          informacion_producto: editedCustomer.informacion_producto,
+          info_segundo_titular: editedCustomer.info_segundo_titular
         },
         SOLICITUDES: {
           banco: editedCustomer.banco
@@ -569,6 +570,100 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       <Section title="Producto Solicitado" keys={[
         'tipo_credito', 'plazo_meses','segundo_titular', 'informacion_producto',  'observacion', 'estado',
       ]} customer={editedCustomer} renderField={renderField} />
+
+      {/* Información del Segundo Titular */}
+      {editedCustomer.segundo_titular === 'si' && (
+        <div className="bg-white p-6 rounded-lg shadow-sm border">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Segundo Titular</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {(() => {
+              let segundoTitularInfo: any = {};
+              try {
+                if (editedCustomer.info_segundo_titular) {
+                  segundoTitularInfo = JSON.parse(editedCustomer.info_segundo_titular);
+                }
+              } catch (error) {
+                console.error('Error parsing info_segundo_titular:', error);
+              }
+
+              const handleSegundoTitularChange = (field: string, value: string) => {
+                const updatedInfo = { ...segundoTitularInfo, [field]: value };
+                handleInputChange('info_segundo_titular', JSON.stringify(updatedInfo));
+              };
+
+                             const fields = [
+                 { key: 'nombre', label: 'Nombre Completo', type: 'text' },
+                 { key: 'tipo_documento', label: 'Tipo de Documento', type: 'select', options: [
+                   { value: 'CC', label: 'Cédula de Ciudadanía' },
+                   { value: 'CE', label: 'Cédula de Extranjería' },
+                   { value: 'TI', label: 'Tarjeta de Identidad' },
+                   { value: 'PP', label: 'Pasaporte' }
+                 ]},
+                 { key: 'numero_documento', label: 'Número de Documento', type: 'text' },
+                 { key: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date' },
+                 { key: 'estado_civil', label: 'Estado Civil', type: 'select', options: [
+                   { value: 'soltero', label: 'Soltero' },
+                   { value: 'casado', label: 'Casado' },
+                   { value: 'union_libre', label: 'Unión Libre' },
+                   { value: 'divorciado', label: 'Divorciado' },
+                   { value: 'viudo', label: 'Viudo' }
+                 ]},
+                 { key: 'personas_a_cargo', label: 'Personas a Cargo', type: 'text' },
+                 { key: 'numero_celular', label: 'Número de Celular', type: 'tel' },
+                 { key: 'correo_electronico', label: 'Correo Electrónico', type: 'email' },
+                 { key: 'nivel_estudio', label: 'Nivel de Estudio', type: 'select', options: [
+                   { value: 'primaria', label: 'Primaria' },
+                   { value: 'secundaria', label: 'Secundaria' },
+                   { value: 'tecnico', label: 'Técnico' },
+                   { value: 'tecnologo', label: 'Tecnólogo' },
+                   { value: 'profesional', label: 'Profesional' },
+                   { value: 'especializacion', label: 'Especialización' },
+                   { value: 'maestria', label: 'Maestría' },
+                   { value: 'doctorado', label: 'Doctorado' }
+                 ]},
+                 { key: 'profesion', label: 'Profesión', type: 'text' }
+               ];
+
+              return fields.map(field => (
+                <div key={field.key} className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {field.label}
+                  </label>
+                  {isEditing && canEditCustomer() ? (
+                    field.type === 'select' ? (
+                      <select
+                        value={segundoTitularInfo[field.key] || ''}
+                        onChange={(e) => handleSegundoTitularChange(field.key, e.target.value)}
+                        className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                        disabled={loading}
+                      >
+                        <option value="">Seleccionar...</option>
+                        {field.options?.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <input
+                        type={field.type}
+                        value={segundoTitularInfo[field.key] || ''}
+                        onChange={(e) => handleSegundoTitularChange(field.key, e.target.value)}
+                        className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                        disabled={loading}
+                      />
+                    )
+                  ) : (
+                    <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+                      <span>{segundoTitularInfo[field.key] || '-'}</span>
+                    </div>
+                  )}
+                </div>
+              ));
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Archivos */}
       <Section title="Archivos" keys={['archivos']} customer={editedCustomer} renderField={renderField} />
