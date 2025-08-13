@@ -8,7 +8,7 @@ interface CreditTypeFormProps {
 }
 
 export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditType, onSave }) => {
-  
+
   // console.log('=== INICIO CreditTypeForm ===');
   // console.log('initialCreditType recibido:', initialCreditType);
 
@@ -25,7 +25,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
 
   // console.log('Estado inicial del creditType:', creditType);
   // console.log('Campos iniciales:', creditType.fields);
-  
+
   // Verificar cada campo individualmente
   creditType.fields.forEach((field, index) => {
     console.log(`Campo ${index}:`, {
@@ -36,7 +36,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
       isRequired: field.isRequired
     });
   });
-  
+
   // console.log('=== FIN INICIO CreditTypeForm ===');
 
   const [newField, setNewField] = useState<Partial<CreditTypeField>>({
@@ -61,6 +61,13 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
 
   const addField = () => {
     if (!newField.name || !newField.displayName) return;
+
+    // Verificar si ya existe un campo con el mismo nombre
+    const existingField = creditType.fields.find(field => field.name === newField.name);
+    if (existingField) {
+      alert(`Ya existe un campo con el nombre "${newField.name}". Por favor, usa un nombre diferente.`);
+      return;
+    }
 
     const newFieldComplete: CreditTypeField = {
       id: uuidv4(),
@@ -91,10 +98,10 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
     // console.log('=== ELIMINANDO CAMPO ===');
     // console.log('ID del campo a eliminar:', fieldId);
     // console.log('Campos antes de eliminar:', creditType.fields);
-    
+
     const updatedFields = creditType.fields.filter(field => field.id !== fieldId);
     // console.log('Campos después de eliminar:', updatedFields);
-    
+
     setCreditType({
       ...creditType,
       fields: updatedFields,
@@ -104,20 +111,20 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
   const reorderField = (fieldId: string, direction: 'up' | 'down') => {
     const fieldIndex = creditType.fields.findIndex(field => field.id === fieldId);
     if (fieldIndex === -1) return;
-    
+
     if (direction === 'up' && fieldIndex === 0) return;
     if (direction === 'down' && fieldIndex === creditType.fields.length - 1) return;
-    
+
     const newFields = [...creditType.fields];
     const swapIndex = direction === 'up' ? fieldIndex - 1 : fieldIndex + 1;
-    
+
     [newFields[fieldIndex], newFields[swapIndex]] = [newFields[swapIndex], newFields[fieldIndex]];
-    
+
     // Actualizar los órdenes
     newFields.forEach((field, index) => {
       field.order = index + 1;
     });
-    
+
     setCreditType({
       ...creditType,
       fields: newFields,
@@ -136,7 +143,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Información del Tipo de Crédito</h2>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Nombre Interno *</label>
@@ -149,7 +156,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             />
             <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
           </div>
-          
+
           <div>
             <label className="block text-sm font-medium text-gray-700">Nombre para Mostrar *</label>
             <input
@@ -160,7 +167,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               required
             />
           </div>
-          
+
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700">Descripción</label>
             <textarea
@@ -170,7 +177,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               rows={2}
             />
           </div>
-          
+
           <div>
             <label className="flex items-center">
               <input
@@ -184,10 +191,10 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
           </div>
         </div>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Campos Personalizados</h2>
-        
+
         {creditType.fields.length > 0 ? (
           <div className="mb-6">
             <h3 className="text-lg font-medium mb-2">Campos Configurados</h3>
@@ -197,7 +204,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{field.displayName}</p>
                     <p className="text-sm text-gray-500">
-                      {field.name} - Tipo: {field.fieldType} 
+                      {field.name} - Tipo: {field.fieldType}
                       {field.isRequired ? ' (Obligatorio)' : ''}
                     </p>
                   </div>
@@ -233,7 +240,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
             No hay campos configurados todavía.
           </div>
         )}
-        
+
         <div className="border-t pt-4">
           <h3 className="text-lg font-medium mb-2">Agregar Nuevo Campo</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -247,7 +254,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
               />
               <p className="text-xs text-gray-500 mt-1">Sin espacios ni caracteres especiales</p>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Nombre para Mostrar</label>
               <input
@@ -257,7 +264,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700">Tipo de Campo</label>
               <select
@@ -272,7 +279,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 <option value="checkbox">Casilla de verificación</option>
               </select>
             </div>
-            
+
             {newField.fieldType === 'select' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">Opciones</label>
@@ -285,7 +292,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 />
               </div>
             )}
-            
+
             <div>
               <label className="flex items-center mt-4">
                 <input
@@ -297,7 +304,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
                 <span className="ml-2 text-sm text-gray-700">Campo obligatorio</span>
               </label>
             </div>
-            
+
             <div className="md:col-span-2">
               <button
                 type="button"
@@ -311,7 +318,7 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-end">
         <button
           type="submit"
@@ -322,4 +329,4 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
       </div>
     </form>
   );
-}; 
+};
