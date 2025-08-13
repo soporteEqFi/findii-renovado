@@ -5,6 +5,8 @@ import Login from './pages/Login';
 import Customers from './pages/Customers';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
+import TermsAndConditions from './pages/TermsAndConditions';
+import AcuerdoFirma from './pages/AcuerdoFirma';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import CreditTypeAdmin from './pages/CreditTypeAdmin';
@@ -66,7 +68,13 @@ function App() {
             {/* Ruta pública de seguimiento */}
             <Route path="/seguimiento" element={<CreditTracking />} />
 
-            {/* Rutas protegidas dentro del Layout */}
+                          {/* Ruta pública de términos y condiciones */}
+              <Route path="/terminos-condiciones" element={<TermsAndConditions />} />
+
+              {/* Ruta pública de acuerdo de firma */}
+              <Route path="/acuerdo-firma" element={<AcuerdoFirma />} />
+
+              {/* Rutas protegidas dentro del Layout */}
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               {/* Ruta principal (índice) muestra Customers */}
               <Route index element={<Customers />} />
