@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CREDIT_STATUSES } from '../../config/constants';
 
 interface Archivo {
   archivo_id: string;
@@ -46,7 +47,7 @@ interface SeguimientoResponse {
   solicitante_id: number;
 }
 
-const API_URL = 'https://api-findii.onrender.com';
+const API_URL = 'http://127.0.0.1:5000';
 
 export const CreditTracking: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -163,16 +164,26 @@ export const CreditTracking: React.FC = () => {
     if (!estado) return 'bg-gray-100 text-gray-800';
 
     switch (estado.toLowerCase()) {
+      case 'pendiente':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'en estudio':
+        return 'bg-blue-100 text-blue-800';
+      case 'pendiente información adicional':
+        return 'bg-orange-100 text-orange-800';
       case 'aprobado':
         return 'bg-green-100 text-green-800';
+      case 'desembolsado':
+        return 'bg-purple-100 text-purple-800';
+      case 'pagado':
+        return 'bg-emerald-100 text-emerald-800';
       case 'negado':
         return 'bg-red-100 text-red-800';
+      case 'desistido':
+        return 'bg-gray-100 text-gray-800';
       case 'rechazado':
         return 'bg-red-100 text-red-800';
       case 'en revisión':
         return 'bg-yellow-100 text-yellow-800';
-      case 'pendiente':
-        return 'bg-gray-100 text-gray-800';
       default:
         return 'bg-blue-100 text-blue-800';
     }
@@ -181,8 +192,22 @@ export const CreditTracking: React.FC = () => {
   // Función para mapear el estado visual al estado que se envía al backend
   const mapEstadoToBackend = (estadoVisual: string): string => {
     switch (estadoVisual.toLowerCase()) {
+      case 'pendiente':
+        return 'Pendiente';
+      case 'en estudio':
+        return 'En estudio';
+      case 'pendiente información adicional':
+        return 'Pendiente información adicional';
+      case 'aprobado':
+        return 'Aprobado';
+      case 'desembolsado':
+        return 'Desembolsado';
+      case 'pagado':
+        return 'Pagado';
       case 'negado':
         return 'Negado';
+      case 'desistido':
+        return 'Desistido';
       case 'rechazado':
         return 'Negado';
       default:
@@ -288,10 +313,11 @@ export const CreditTracking: React.FC = () => {
                             onChange={(e) => handleEstadoChange(index, e.target.value)}
                             className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}
                           >
-                            <option value="pendiente">Pendiente</option>
-                            <option value="en revisión">En revisión</option>
-                            <option value="aprobado">Aprobado</option>
-                            <option value="negado">Negado</option>
+                            {CREDIT_STATUSES.map((estado) => (
+                              <option key={estado} value={estado.toLowerCase()}>
+                                {estado}
+                              </option>
+                            ))}
                           </select>
                         ) : (
                           <span className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}>
