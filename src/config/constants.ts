@@ -1,6 +1,6 @@
 // Configuración de la API
 export const API_CONFIG = {
-  BASE_URL: 'https://api-findii.onrender.com',
+  BASE_URL: 'http://127.0.0.1:5000',
   ENDPOINTS: {
     LOGIN: '/iniciar-sesion/',
     VALIDATE_TOKEN: '/validate-token',
@@ -40,6 +40,18 @@ export const CUSTOMER_STATUS = {
   ACTIVE: 'active',
   INACTIVE: 'inactive'
 } as const;
+
+// Estados de crédito
+export const CREDIT_STATUSES = [
+  'Pendiente',
+  'En estudio',
+  'Pendiente información adicional',
+  'Aprobado',
+  'Desembolsado',
+  'Pagado',
+  'Negado',
+  'Desistido'
+] as const;
 
 // Configuración de la aplicación
 export const APP_CONFIG = {
