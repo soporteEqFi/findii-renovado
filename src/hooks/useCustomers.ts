@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Customer } from '../types/customer';
+import { buildApiUrl, API_CONFIG } from '../config/constants';
 
 export const useCustomers = () => {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -22,7 +23,7 @@ export const useCustomers = () => {
         return;
       }
 
-      const response = await fetch('https://api-findii.onrender.com/get-combined-data', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.GET_COMBINED_DATA), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,7 +81,7 @@ export const useCustomers = () => {
       // Agregar la cédula del asesor
       formData.append('cedula', cedula);
 
-      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_RECORD), {
         method: 'PUT',
         body: formData,
       });
@@ -122,7 +123,7 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch(`https://api-findii.onrender.com/delete-customer/${id}`, {
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.DELETE_CUSTOMER}/${id}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +161,7 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_STATUS), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

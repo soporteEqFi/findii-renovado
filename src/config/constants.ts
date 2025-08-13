@@ -1,6 +1,9 @@
 // Configuración de la API
+// Cambia esta variable para cambiar entre desarrollo y producción
+const IS_PRODUCTION = false; // Cambia a true para producción
+
 export const API_CONFIG = {
-  BASE_URL: 'http://127.0.0.1:5000',
+  BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://127.0.0.1:5000',
   ENDPOINTS: {
     LOGIN: '/iniciar-sesion/',
     VALIDATE_TOKEN: '/validate-token',
@@ -25,6 +28,11 @@ export const API_CONFIG = {
     UPDATE_CREDIT_TYPE: '/update-credit-type',
     DELETE_CREDIT_TYPE: '/delete-credit-type',
   }
+};
+
+// Función helper para construir URLs completas
+export const buildApiUrl = (endpoint: string): string => {
+  return `${API_CONFIG.BASE_URL}${endpoint}`;
 };
 
 // Roles de usuario

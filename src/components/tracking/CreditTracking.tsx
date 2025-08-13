@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CREDIT_STATUSES } from '../../config/constants';
+import { CREDIT_STATUSES, buildApiUrl, API_CONFIG } from '../../config/constants';
 
 interface Archivo {
   archivo_id: string;
@@ -47,7 +47,7 @@ interface SeguimientoResponse {
   solicitante_id: number;
 }
 
-const API_URL = 'http://127.0.0.1:5000';
+// API_URL ya no es necesario, usamos buildApiUrl
 
 export const CreditTracking: React.FC = () => {
   const [trackingId, setTrackingId] = useState('');
@@ -66,7 +66,7 @@ export const CreditTracking: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/api/seguimiento/radicado/${trackingId}`);
+      const response = await fetch(buildApiUrl(`/api/seguimiento/radicado/${trackingId}`));
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al buscar el radicado');
@@ -95,7 +95,7 @@ export const CreditTracking: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/seguimiento/actualizar-documentos`, {
+      const response = await fetch(buildApiUrl('/api/seguimiento/actualizar-documentos'), {
         method: 'POST',
         body: formData,
       });
@@ -129,7 +129,7 @@ export const CreditTracking: React.FC = () => {
     };
 
     try {
-      const response = await fetch(`${API_URL}/api/seguimiento/actualizar-estado`, {
+      const response = await fetch(buildApiUrl('/api/seguimiento/actualizar-estado'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -8,6 +8,7 @@ import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
+import { buildApiUrl, API_CONFIG } from '../config/constants';
 import { Link } from 'react-router-dom';
 
 const Customers = () => {
@@ -103,7 +104,7 @@ const Customers = () => {
         cedula: cedula
       });
 
-      const response = await fetch('https://api-findii.onrender.com/editar-estado/', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_STATUS), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ const Customers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/descargar-ventas/', {
+      const response = await fetch(buildApiUrl('/descargar-ventas/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
 import { Users, BarChart2, Settings, LogOut, Home, UserCog, User, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { buildApiUrl, API_CONFIG } from '../config/constants';
 
 const Sidebar = () => {
   const { logout, user } = useAuth();
@@ -38,7 +39,7 @@ const Sidebar = () => {
       console.log(userData)
       console.log("Claves del objeto userData:", Object.keys(userData))
       localStorage.setItem('cedula', user_document_obj)
-      const response = await fetch(`https://api-findii.onrender.com/get-user-info/${user_document_obj}`, {
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.USER_INFO}/${user_document_obj}`), {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Customer } from '../../types/customer';
+import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { Upload, File, X as XIcon, Save, Loader2, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getCreditTypes, clearCreditTypesCache } from '../../services/creditTypeService';
@@ -157,7 +158,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       console.log('Valor === "si":', value === 'si');
       console.log('Valor === true:', value === true);
       console.log('Valor === "true":', value === 'true');
-      
+
       if (String(value).toLowerCase() === 'si' || String(value).toLowerCase() === 'true') {
         console.log('Inicializando campos del segundo titular...');
         // Inicializar los campos del segundo titular
@@ -306,9 +307,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
       // Incluir la información del segundo titular en un JSON bajo "info_segundo_titular"
       const segundoTitularValue = String(newCustomer.segundo_titular).toLowerCase();
-      const infoSegundoTitular = (segundoTitularValue === 'si' || segundoTitularValue === 'true') ? 
+      const infoSegundoTitular = (segundoTitularValue === 'si' || segundoTitularValue === 'true') ?
                                   { ...segundoTitularFields } : {};
-      
+
       console.log('infoSegundoTitular result:', infoSegundoTitular);
 
       // Incluir los campos dinámicos en los datos del cliente
@@ -353,11 +354,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
       // Realizar la petición a la API
       console.log('=== ENVIANDO PETICIÓN A LA API ===');
-      console.log('URL:', 'http://127.0.0.1:5000/add-record/');
+      console.log('URL:', buildApiUrl(API_CONFIG.ENDPOINTS.ADD_RECORD));
       console.log('Método:', 'POST');
       console.log('Body (FormData):', formData);
-      
-      const response = await fetch('http://127.0.0.1:5000/add-record/', {
+
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.ADD_RECORD), {
         method: 'POST',
         body: formData,
       });
@@ -366,7 +367,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       console.log('=== RESPUESTA DE LA API ===');
       console.log('Status:', response.status);
       console.log('Status Text:', response.statusText);
-      
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         console.error('Error response:', errorData);

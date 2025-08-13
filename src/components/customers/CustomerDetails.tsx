@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Customer } from '../../types/customer';
 import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon } from 'lucide-react';
 import { usePermissions } from '../../utils/permissions';
+import { buildApiUrl, API_CONFIG } from '../../config/constants';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -127,7 +128,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch('https://api-findii.onrender.com/delete-record', {
+      const response = await fetch(buildApiUrl('/delete-record'), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -221,7 +222,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           cedula: cedula
         });
 
-        const fileResponse = await fetch('https://api-findii.onrender.com/update-files/', {
+        const fileResponse = await fetch(buildApiUrl('/update-files/'), {
           method: 'POST',
           body: fileFormData,
         });
@@ -290,7 +291,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       };
 
       // Luego, enviar los datos del cliente
-      const response = await fetch('https://api-findii.onrender.com/edit-record/', {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_RECORD), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
