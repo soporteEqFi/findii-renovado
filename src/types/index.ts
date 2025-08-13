@@ -1,7 +1,18 @@
 // Re-export types from their specific files
-export type { Customer } from './customer';
-export type { User } from './user';
-export type { CreditType, CreditTypeField, FieldValidation } from './creditTypes';
+export * from './customer';
+export * from './user';
+export * from './creditTypes';
+
+// Tipo para estados de crédito
+export type CreditStatus =
+  | 'Pendiente'
+  | 'En estudio'
+  | 'Pendiente información adicional'
+  | 'Aprobado'
+  | 'Desembolsado'
+  | 'Pagado'
+  | 'Negado'
+  | 'Desistido';
 
 // API response types
 export interface LoginResponse {
@@ -22,4 +33,4 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
   error?: string;
-} 
+}
