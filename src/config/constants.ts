@@ -85,3 +85,6 @@ export const PERMISSIONS = {
   [USER_ROLES.USER]: ['read'],
   [USER_ROLES.BANCO]: ['view_customer', 'download_sales'],
 } as const;
+
+// API para ciudades de Colombia
+export const COLOMBIA_CITIES_API = 'https://www.datos.gov.co/resource/xdk5-pm3f.json';
