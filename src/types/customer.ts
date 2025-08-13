@@ -54,6 +54,10 @@ export interface Customer {
 
   // Información Adicional
   segundo_titular: string;
+  
+  // Información del Segundo Titular (JSON)
+  info_segundo_titular?: string;
+  
   observacion: string;
 
   // Meta Información

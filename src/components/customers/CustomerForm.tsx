@@ -19,7 +19,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const asesorCedula = localStorage.getItem('cedula') || '';
 
   const [newCustomer, setNewCustomer] = useState<Partial<Customer>>({
-    asesor_usuario: asesorCedula // Asignar la cédula directamente aquí
+    asesor_usuario: asesorCedula, // Asignar la cédula directamente aquí
+    segundo_titular: 'no' // Establecer valor por defecto explícitamente
   });
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,6 +30,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const [dynamicFieldValues, setDynamicFieldValues] = useState<Record<string, any>>({});
   const [availableCreditTypes, setAvailableCreditTypes] = useState<any[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  // Agregar estado para los campos del segundo titular
+  const [segundoTitularFields, setSegundoTitularFields] = useState<Record<string, any>>({});
 
   // Función para validar un campo específico
   const validateField = (fieldName: string, value: any): string => {
@@ -108,6 +112,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   useEffect(() => {
     console.log('=== CUSTOMER FORM: useEffect ejecutado ===');
     console.log('Componente montado, cargando tipos de crédito...');
+    console.log('Estado inicial de segundo_titular:', newCustomer.segundo_titular);
     loadCreditTypes();
   }, []);
 
@@ -133,9 +138,47 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
     }
   }, [newCustomer.tipo_credito, availableCreditTypes]);
 
+  // Efecto para debuggear cambios en segundo_titular
+  useEffect(() => {
+    console.log('=== DEBUG SEGUNDO TITULAR ===');
+    console.log('Estado actual de segundo_titular:', newCustomer.segundo_titular);
+    console.log('Estado actual de segundoTitularFields:', segundoTitularFields);
+  }, [newCustomer.segundo_titular, segundoTitularFields]);
+
   const handleInputChange = (field: string, value: any) => {
     // Para todos los campos, permitir escritura libre
     setNewCustomer(prev => ({ ...prev, [field]: value }));
+
+    // Si es el campo segundo_titular, limpiar o inicializar los campos del segundo titular
+    if (field === 'segundo_titular') {
+      console.log('=== CAMBIO EN SEGUNDO TITULAR ===');
+      console.log('Valor seleccionado:', value);
+      console.log('Tipo de valor:', typeof value);
+      console.log('Valor === "si":', value === 'si');
+      console.log('Valor === true:', value === true);
+      console.log('Valor === "true":', value === 'true');
+      
+      if (String(value).toLowerCase() === 'si' || String(value).toLowerCase() === 'true') {
+        console.log('Inicializando campos del segundo titular...');
+        // Inicializar los campos del segundo titular
+        setSegundoTitularFields({
+          nombre: '',
+          tipo_documento: '',
+          numero_documento: '',
+          fecha_nacimiento: '',
+          estado_civil: '',
+          personas_a_cargo: '',
+          numero_celular: '',
+          correo_electronico: '',
+          nivel_estudio: '',
+          profesion: ''
+        });
+      } else {
+        console.log('Limpiando campos del segundo titular...');
+        // Limpiar los campos del segundo titular
+        setSegundoTitularFields({});
+      }
+    }
 
     // Validar el campo y actualizar errores
     const error = validateField(field, value);
@@ -186,6 +229,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       ...prev,
       [fieldName]: error
     }));
+  };
+
+  // Función para manejar cambios en los campos del segundo titular
+  const handleSegundoTitularChange = (fieldName: string, value: any) => {
+    setSegundoTitularFields(prev => ({ ...prev, [fieldName]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -249,22 +297,54 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       // Incluir los campos dinámicos en un JSON bajo "informacion_producto"
       const informacionProducto = { ...dynamicFieldValues };
 
+      // Debug: verificar el valor de segundo_titular
+      console.log('=== DEBUG SEGUNDO TITULAR ===');
+      console.log('newCustomer.segundo_titular:', newCustomer.segundo_titular);
+      console.log('typeof newCustomer.segundo_titular:', typeof newCustomer.segundo_titular);
+      console.log('newCustomer.segundo_titular === "si":', newCustomer.segundo_titular === 'si');
+      console.log('segundoTitularFields:', segundoTitularFields);
+
+      // Incluir la información del segundo titular en un JSON bajo "info_segundo_titular"
+      const segundoTitularValue = String(newCustomer.segundo_titular).toLowerCase();
+      const infoSegundoTitular = (segundoTitularValue === 'si' || segundoTitularValue === 'true') ? 
+                                  { ...segundoTitularFields } : {};
+      
+      console.log('infoSegundoTitular result:', infoSegundoTitular);
+
       // Incluir los campos dinámicos en los datos del cliente
       const customerData = {
         ...newCustomer,
+        // Asegurar que segundo_titular se envíe como string
+        segundo_titular: newCustomer.segundo_titular === 'si' ? 'si' : 'no',
         informacion_producto: JSON.stringify(informacionProducto),
+        info_segundo_titular: JSON.stringify(infoSegundoTitular),
         asesor_usuario: localStorage.getItem('cedula') || ''
       };
 
       // Debug: verificar los datos antes de enviar
       console.log('Datos del cliente:', customerData);
       console.log('Tipo documento:', customerData.tipo_documento);
+      console.log('Segundo titular (valor final):', customerData.segundo_titular);
+      console.log('Tipo de segundo titular:', typeof customerData.segundo_titular);
       console.log('Información del producto (JSON):', informacionProducto);
+      console.log('Información del segundo titular (JSON):', infoSegundoTitular);
+
+      // Debug: verificar el FormData antes de enviar
+      console.log('=== VERIFICACIÓN DEL FORMDATA ===');
+      for (let [key, value] of formData.entries()) {
+        console.log(`FormData - ${key}:`, value, `(tipo: ${typeof value})`);
+      }
 
       // Agregar todos los campos al FormData
       Object.entries(customerData).forEach(([key, value]) => {
+        console.log(`FormData - ${key}:`, value, `(tipo: ${typeof value})`);
         formData.append(key, value?.toString() || '');
       });
+
+      // Verificar específicamente el valor de segundo_titular en el FormData
+      console.log('=== VERIFICACIÓN ESPECÍFICA SEGUNDO TITULAR ===');
+      console.log('Valor de segundo_titular en FormData:', formData.get('segundo_titular'));
+      console.log('Tipo de segundo_titular en FormData:', typeof formData.get('segundo_titular'));
 
       // Modificar cómo se envían los archivos
       selectedFiles.forEach((file) => {
@@ -272,15 +352,28 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       });
 
       // Realizar la petición a la API
-      const response = await fetch('https://api-findii.onrender.com/add-record/', {
+      console.log('=== ENVIANDO PETICIÓN A LA API ===');
+      console.log('URL:', 'http://127.0.0.1:5000/add-record/');
+      console.log('Método:', 'POST');
+      console.log('Body (FormData):', formData);
+      
+      const response = await fetch('http://127.0.0.1:5000/add-record/', {
         method: 'POST',
         body: formData,
       });
 
+      // Debug: verificar la respuesta de la API
+      console.log('=== RESPUESTA DE LA API ===');
+      console.log('Status:', response.status);
+      console.log('Status Text:', response.statusText);
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
         console.error('Error response:', errorData);
         throw new Error(errorData?.message || 'Error al enviar el formulario');
+      } else {
+        const responseData = await response.json().catch(() => null);
+        console.log('Respuesta exitosa:', responseData);
       }
 
       // Limpiar el caché después de un registro exitoso
@@ -922,13 +1015,170 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           <label className="block text-sm font-medium text-gray-700">
             Segundo Titular
           </label>
-          <input
-            type="text"
-            value={newCustomer.segundo_titular || ''}
+          <select
+            value={newCustomer.segundo_titular || 'no'}
             onChange={(e) => handleInputChange('segundo_titular', e.target.value)}
             className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-          />
+          >
+            <option value="no">No</option>
+            <option value="si">Sí</option>
+          </select>
         </div>
+
+        {/* Campos del Segundo Titular - Solo se muestran si se selecciona "Sí" */}
+        {(newCustomer.segundo_titular === 'si' || String(newCustomer.segundo_titular).toLowerCase() === 'true') && (
+          <>
+            <div className="md:col-span-3">
+              <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Información del Segundo Titular</h3>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Nombre Completo *
+              </label>
+              <input
+                type="text"
+                value={segundoTitularFields.nombre || ''}
+                onChange={(e) => handleSegundoTitularChange('nombre', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Tipo Documento *
+              </label>
+              <select
+                value={segundoTitularFields.tipo_documento || ''}
+                onChange={(e) => handleSegundoTitularChange('tipo_documento', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                <option value="CC">CC - Cédula de Ciudadanía</option>
+                <option value="TI">TI - Tarjeta de Identidad</option>
+                <option value="CE">CE - Cédula de Extranjería</option>
+                <option value="PA">PA - Pasaporte</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Número Documento *
+              </label>
+              <input
+                type="text"
+                value={segundoTitularFields.numero_documento || ''}
+                onChange={(e) => handleSegundoTitularChange('numero_documento', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Fecha Nacimiento *
+              </label>
+              <input
+                type="date"
+                value={segundoTitularFields.fecha_nacimiento || ''}
+                onChange={(e) => handleSegundoTitularChange('fecha_nacimiento', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Estado Civil *
+              </label>
+              <select
+                value={segundoTitularFields.estado_civil || ''}
+                onChange={(e) => handleSegundoTitularChange('estado_civil', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                <option value="soltero">Soltero(a)</option>
+                <option value="casado">Casado(a)</option>
+                <option value="divorciado">Divorciado(a)</option>
+                <option value="viudo">Viudo(a)</option>
+                <option value="union_libre">Unión Libre</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Personas a Cargo *
+              </label>
+              <input
+                type="number"
+                value={segundoTitularFields.personas_a_cargo || ''}
+                onChange={(e) => handleSegundoTitularChange('personas_a_cargo', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Número Celular *
+              </label>
+              <input
+                type="tel"
+                value={segundoTitularFields.numero_celular || ''}
+                onChange={(e) => handleSegundoTitularChange('numero_celular', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Correo Electrónico *
+              </label>
+              <input
+                type="email"
+                value={segundoTitularFields.correo_electronico || ''}
+                onChange={(e) => handleSegundoTitularChange('correo_electronico', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Nivel Estudio
+              </label>
+              <select
+                value={segundoTitularFields.nivel_estudio || ''}
+                onChange={(e) => handleSegundoTitularChange('nivel_estudio', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              >
+                <option value="">Seleccionar...</option>
+                <option value="primaria">Primaria</option>
+                <option value="bachillerato">Bachillerato</option>
+                <option value="tecnico">Técnico</option>
+                <option value="tecnologo">Tecnólogo</option>
+                <option value="profesional">Profesional</option>
+                <option value="postgrado">Postgrado</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Profesión
+              </label>
+              <input
+                type="text"
+                value={segundoTitularFields.profesion || ''}
+                onChange={(e) => handleSegundoTitularChange('profesion', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+          </>
+        )}
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
