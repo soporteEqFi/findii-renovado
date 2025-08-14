@@ -52,13 +52,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       personas_a_cargo: { min: 0, max: 20 },
       estrato: { min: 1, max: 6 },
       ingresos: { min: 0, max: 1000000000, step: 1000 },
-      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
       cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
       porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
       total_activos: { min: 0, max: 10000000000, step: 100000 },
       total_pasivos: { min: 0, max: 10000000000, step: 100000 },
       total_egresos: { min: 0, max: 1000000000, step: 1000 },
-      plazo_meses: { min: 12, max: 360 },
       telefono_empresa: { min: 1, max: 9999999999}
     };
 
@@ -276,13 +274,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       personas_a_cargo: { min: 0, max: 20 },
       estrato: { min: 1, max: 6 },
       ingresos: { min: 0, max: 1000000000, step: 1000 },
-      valor_inmueble: { min: 0, max: 5000000000, step: 100000 },
       cuota_inicial: { min: 0, max: 5000000000, step: 100000 },
       porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
       total_activos: { min: 0, max: 10000000000, step: 100000 },
       total_pasivos: { min: 0, max: 10000000000, step: 100000 },
       total_egresos: { min: 0, max: 1000000000, step: 1000 },
-      plazo_meses: { min: 12, max: 360 },
       telefono_empresa: { min: 1, max: 9999999999}
     };
 
@@ -348,6 +344,10 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         ...newCustomer,
         // Asegurar que segundo_titular se envíe como string
         segundo_titular: newCustomer.segundo_titular === 'si' ? 'si' : 'no',
+        // Valor por defecto para valor_inmueble (campo oculto del formulario)
+        valor_inmueble: 0,
+        // Valor por defecto para plazo_meses (campo oculto del formulario)
+        plazo_meses: 12,
         informacion_producto: JSON.stringify(informacionProducto),
         info_segundo_titular: JSON.stringify(infoSegundoTitular),
         asesor_usuario: localStorage.getItem('cedula') || ''
@@ -609,6 +609,19 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
+            Barrio *
+          </label>
+          <input
+            type="text"
+            value={newCustomer.barrio || ''}
+            onChange={(e) => handleInputChange('barrio', e.target.value)}
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
             Tipo de Vivienda *
           </label>
           <select
@@ -622,19 +635,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             <option value="familiar">Familiar</option>
             <option value="arrendada">Arrendada</option>
           </select>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Barrio *
-          </label>
-          <input
-            type="text"
-            value={newCustomer.barrio || ''}
-            onChange={(e) => handleInputChange('barrio', e.target.value)}
-            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-            required
-          />
         </div>
 
         <div className="space-y-2">
@@ -664,26 +664,6 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
-            Estrato *
-          </label>
-          <input
-            type="number"
-            value={newCustomer.estrato || ''}
-            onChange={(e) => handleInputChange('estrato', e.target.value)}
-            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
-              fieldErrors.estrato
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            required
-          />
-          {fieldErrors.estrato && (
-            <p className="text-sm text-red-600 mt-1">{fieldErrors.estrato}</p>
-          )}
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
             Ciudad de Gestión *
           </label>
           <select
@@ -704,6 +684,26 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </select>
           {citiesLoading && (
             <p className="text-xs text-gray-500 mt-1">Cargando ciudades...</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            Estrato *
+          </label>
+          <input
+            type="number"
+            value={newCustomer.estrato || ''}
+            onChange={(e) => handleInputChange('estrato', e.target.value)}
+            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+              fieldErrors.estrato
+                ? 'border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:ring-blue-500'
+            }`}
+            required
+          />
+          {fieldErrors.estrato && (
+            <p className="text-sm text-red-600 mt-1">{fieldErrors.estrato}</p>
           )}
         </div>
 
@@ -835,25 +835,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Valor del Inmueble *
-          </label>
-          <input
-            type="number"
-            value={newCustomer.valor_inmueble || ''}
-            onChange={(e) => handleInputChange('valor_inmueble', e.target.value)}
-            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
-              fieldErrors.valor_inmueble
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            required
-          />
-          {fieldErrors.valor_inmueble && (
-            <p className="text-sm text-red-600 mt-1">{fieldErrors.valor_inmueble}</p>
-          )}
-        </div>
+
 
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
@@ -1004,25 +986,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </select>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Plazo en Meses *
-          </label>
-          <input
-            type="number"
-            value={newCustomer.plazo_meses || ''}
-            onChange={(e) => handleInputChange('plazo_meses', e.target.value)}
-            className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
-              fieldErrors.plazo_meses
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-blue-500'
-            }`}
-            required
-          />
-          {fieldErrors.plazo_meses && (
-            <p className="text-sm text-red-600 mt-1">{fieldErrors.plazo_meses}</p>
-          )}
-        </div>
+
           {/* Campos dinámicos del tipo de crédito */}
           {creditTypeFields.length > 0 && (
           <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -1236,6 +1200,11 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </>
         )}
 
+        {/* Informational Credit */}
+        <div className="md:col-span-3">
+          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Otros</h3>
+        </div>
+
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">
             Observaciones
@@ -1251,6 +1220,9 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
         {/* File Upload Section */}
         <div className="md:col-span-3">
           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos Adjuntos</h3>
+          <h3 className="text-xs font-medium text-gray-900 pb-2 mb-3 mt-4">
+            <span className="font-bold">Recuerda adjuntar: </span></h3>
+          <p className='text-xs font-medium text-gray-900'>* Carga de autorización de consulta en centrales en archivos adjuntos.</p> <br />
           <div className="mt-2">
             <input
               type="file"
@@ -1317,20 +1289,8 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             />
             <div className="flex-1">
               <label htmlFor="acepta-terminos" className="text-sm text-gray-700">
-                <span className="font-medium">Acepto los Términos y Condiciones de Uso</span> de la plataforma FINDII.CO.
-                He leído y comprendo que al aceptar estos términos autorizo el tratamiento de mis datos personales
-                y acepto las condiciones establecidas para el uso de la plataforma.
+                <a href="/terminos-condiciones" target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline">Acepto los Términos y Condiciones de Uso</a>
               </label>
-              <div className="mt-2">
-                <a
-                  href="/terminos-condiciones"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
-                >
-                  Leer términos y condiciones completos
-                </a>
-              </div>
             </div>
           </div>
           {!aceptaTerminos && (
@@ -1353,20 +1313,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
             />
             <div className="flex-1">
               <label htmlFor="acepta-acuerdo-firma" className="text-sm text-gray-700">
-                <span className="font-medium">Acepto el Acuerdo de Firma</span> de la plataforma FINDII.CO.
-                He leído y comprendo que al aceptar este acuerdo autorizo el tratamiento de mis datos personales
-                y acepto las condiciones establecidas para el proceso de firma de documentos.
-              </label>
-              <div className="mt-2">
-                <a
-                  href="/acuerdo-firma"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-600 hover:text-green-800 text-sm font-medium underline"
-                >
-                  Leer acuerdo de firma completo
-                </a>
-              </div>
+                <a href="/acuerdo-firma" target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline">Acepto el Acuerdo de Firma</a></label>
             </div>
           </div>
           {!aceptaAcuerdoFirma && (
