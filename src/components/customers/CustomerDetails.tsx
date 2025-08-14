@@ -61,6 +61,13 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       tipo_contrato: customer.tipo_contrato || customer.tipo_de_contrato || '',
       tipo_credito: customer.tipo_credito || customer.tipo_de_credito || '',
       estado_civil: customer.estado_civil || '',
+      // Normalizar segundo titular y su info
+      segundo_titular: (() => {
+        const st = (customer.segundo_titular as any) ?? (customer as any).tiene_segundo_titular ?? 'no';
+        const s = st?.toString().toLowerCase();
+        return s === 'si' || s === 'sí' || s === 'true' ? 'si' : 'no';
+      })(),
+      info_segundo_titular: (customer as any).info_segundo_titular || (customer as any).informacion_segundo_titular || '',
       // Mapear campos financieros
       total_egresos: customer.total_egresos || customer.egresos || '',
       egresos: customer.egresos || customer.total_egresos || '',
@@ -236,6 +243,35 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         console.log('Respuesta de archivos:', fileResult);
       }
 
+      // Normalizar campos JSON para enviar como objetos reales
+      let infoSegundoObj: any = {};
+      try {
+        if (typeof editedCustomer.info_segundo_titular === 'string') {
+          infoSegundoObj = editedCustomer.info_segundo_titular
+            ? JSON.parse(editedCustomer.info_segundo_titular)
+            : {};
+        } else if (editedCustomer.info_segundo_titular && typeof editedCustomer.info_segundo_titular === 'object') {
+          infoSegundoObj = editedCustomer.info_segundo_titular;
+        }
+      } catch (e) {
+        console.warn('No se pudo parsear info_segundo_titular, usando objeto vacío:', e);
+        infoSegundoObj = {};
+      }
+
+      let informacionProductoObj: any = {};
+      try {
+        if (typeof (editedCustomer as any).informacion_producto === 'string') {
+          informacionProductoObj = (editedCustomer as any).informacion_producto
+            ? JSON.parse((editedCustomer as any).informacion_producto as any)
+            : {};
+        } else if ((editedCustomer as any).informacion_producto && typeof (editedCustomer as any).informacion_producto === 'object') {
+          informacionProductoObj = (editedCustomer as any).informacion_producto;
+        }
+      } catch (e) {
+        console.warn('No se pudo parsear informacion_producto, usando objeto vacío:', e);
+        informacionProductoObj = {};
+      }
+
       // Estructurar los datos según las tablas de la API
       const mappedCustomer = {
         solicitante_id: editedCustomer.id_solicitante,
@@ -283,8 +319,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           segundo_titular: editedCustomer.segundo_titular || 'no',
           observacion: editedCustomer.observacion,
           estado: editedCustomer.estado,
-          informacion_producto: editedCustomer.informacion_producto,
-          info_segundo_titular: editedCustomer.info_segundo_titular
+          informacion_producto: informacionProductoObj,
+          info_segundo_titular: infoSegundoObj
         },
         SOLICITUDES: {
           banco: editedCustomer.banco
@@ -572,18 +608,28 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       ]} customer={editedCustomer} renderField={renderField} />
 
       {/* Información del Segundo Titular */}
-      {editedCustomer.segundo_titular === 'si' && (
+      {(() => {
+        const st = (editedCustomer.segundo_titular || '').toString().toLowerCase();
+        const showSegundo = st === 'si' || st === 'sí' || st === 'si ' || (editedCustomer as any).segundo_titular === true;
+        return showSegundo;
+      })() && (
         <div className="bg-white p-6 rounded-lg shadow-sm border">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Segundo Titular</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {(() => {
               let segundoTitularInfo: any = {};
               try {
-                if (editedCustomer.info_segundo_titular) {
-                  segundoTitularInfo = JSON.parse(editedCustomer.info_segundo_titular);
+                const raw = (editedCustomer as any).info_segundo_titular;
+                if (raw) {
+                  if (typeof raw === 'string') {
+                    segundoTitularInfo = JSON.parse(raw);
+                  } else if (typeof raw === 'object') {
+                    segundoTitularInfo = raw;
+                  }
                 }
               } catch (error) {
                 console.error('Error parsing info_segundo_titular:', error);
+                segundoTitularInfo = {};
               }
 
               const handleSegundoTitularChange = (field: string, value: string) => {

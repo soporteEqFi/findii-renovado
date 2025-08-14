@@ -19,7 +19,6 @@ const Customers = () => {
     error,
     totalRecords,
     loadCustomers,
-    updateCustomer,
     deleteCustomer,
     updateStatus
   } = useCustomers();
@@ -63,13 +62,13 @@ const Customers = () => {
   };
 
   const handleSave = async () => {
-    if (!editedCustomer) return;
+    // CustomerDetails realiza la actualización directamente.
+    // Aquí solo recargamos los datos y salimos del modo edición.
     try {
-      const updatedCustomer = await updateCustomer(editedCustomer);
-      setSelectedCustomer(updatedCustomer);
+      await loadCustomers();
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating customer:', error);
+      console.error('Error post-save:', error);
     }
   };
 

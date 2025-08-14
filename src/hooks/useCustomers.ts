@@ -70,20 +70,19 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      // Crear FormData y agregar todos los campos
-      const formData = new FormData();
-      Object.entries(customer).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, value.toString());
-        }
-      });
-
-      // Agregar la cédula del asesor
-      formData.append('cedula', cedula);
+      // Preparar los datos del cliente para enviar como JSON
+      const customerData = {
+        ...customer,
+        cedula: cedula
+      };
 
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_RECORD), {
         method: 'PUT',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(customerData),
       });
 
       if (!response.ok) {
