@@ -40,6 +40,92 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
 
+  // Estado para las referencias
+  const [references, setReferences] = useState([
+    {
+      tipo_referencia: '',
+      nombre: '',
+      relacion: '',
+      departamento: '',
+      ciudad: '',
+      telefono: ''
+    }
+  ]);
+
+  // Opciones para el tipo de referencia
+  const referenceTypes = [
+    { value: 'familiar', label: 'Familiar' },
+    { value: 'personal', label: 'Personal' },
+    { value: 'comercial', label: 'Comercial' }
+  ];
+
+  // Obtener opciones de relación según el tipo de referencia
+  const getRelationshipOptions = (tipoReferencia: string) => {
+    switch (tipoReferencia) {
+      case 'familiar':
+        return [
+          { value: 'padre', label: 'Padre' },
+          { value: 'madre', label: 'Madre' },
+          { value: 'hermano', label: 'Hermano/a' },
+          { value: 'hijo', label: 'Hijo/a' },
+          { value: 'esposo', label: 'Esposo/a' },
+          { value: 'otro', label: 'Otro familiar' }
+        ];
+      case 'personal':
+        return [
+          { value: 'amigo', label: 'Amigo/a' },
+          { value: 'vecino', label: 'Vecino/a' },
+          { value: 'compañero', label: 'Compañero/a' },
+          { value: 'otro', label: 'Otra relación personal' }
+        ];
+      case 'comercial':
+        return [
+          { value: 'jefe', label: 'Jefe' },
+          { value: 'compañero', label: 'Compañero de trabajo' },
+          { value: 'cliente', label: 'Cliente' },
+          { value: 'proveedor', label: 'Proveedor' },
+          { value: 'otro', label: 'Otra relación comercial' }
+        ];
+      default:
+        return [];
+    }
+  };
+
+  // Manejar cambios en los campos de referencia
+  const handleReferenceChange = (index: number, field: string, value: string) => {
+    const updatedReferences = [...references];
+    updatedReferences[index] = { ...updatedReferences[index], [field]: value };
+    
+    // Si cambia el departamento, limpiar la ciudad
+    if (field === 'departamento') {
+      updatedReferences[index].ciudad = '';
+      getCitiesByDepartment(value);
+    }
+    
+    setReferences(updatedReferences);
+  };
+
+  // Agregar nueva referencia
+  const addReference = () => {
+    setReferences([
+      ...references,
+      {
+        tipo_referencia: '',
+        nombre: '',
+        relacion: '',
+        departamento: '',
+        ciudad: '',
+        telefono: ''
+      }
+    ]);
+  };
+
+  // Eliminar referencia
+  const removeReference = (index: number) => {
+    const updatedReferences = references.filter((_, i) => i !== index);
+    setReferences(updatedReferences);
+  };
+
   // Hook para cargar ciudades de Colombia
   const { cities, departments, loading: citiesLoading, error: citiesError, getCitiesByDepartment } = useCities();
 
@@ -56,8 +142,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
       porcentaje_financiar: { min: 0, max: 100, step: 0.1 },
       total_activos: { min: 0, max: 10000000000, step: 100000 },
       total_pasivos: { min: 0, max: 10000000000, step: 100000 },
-      total_egresos: { min: 0, max: 1000000000, step: 1000 },
-      telefono_empresa: { min: 1, max: 9999999999}
+      total_egresos: { min: 0, max: 1000000000, step: 1000 }
     };
 
     if (numericValidations[fieldName] && value) {
@@ -1200,12 +1285,430 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({
           </>
         )}
 
-        {/* Informational Credit */}
+        {/* Información Laboral */}
         <div className="md:col-span-3">
-          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Otros</h3>
+          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Información Laboral</h3>
         </div>
 
         <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">Tipo de actividad económica *</label>
+          <select
+            value={laborInfo.tipo_actividad_economica}
+            onChange={(e) => handleLaborChange('tipo_actividad_economica', e.target.value)}
+            className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            required
+          >
+            <option value="">Seleccionar...</option>
+            <option value="empleado">Empleado</option>
+            <option value="independiente">Independiente</option>
+            <option value="pensionado">Pensionado</option>
+          </select>
+        </div>
+
+        {laborInfo.tipo_actividad_economica === 'empleado' && (
+          <>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Empresa</label>
+              <input
+                type="text"
+                value={laborInfo.empresa_empleado || ''}
+                onChange={(e) => handleLaborChange('empresa_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Sector económico</label>
+              <input
+                type="text"
+                value={laborInfo.sector_economico_empleado || ''}
+                onChange={(e) => handleLaborChange('sector_economico_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Departamento empresa</label>
+              <select
+                value={laborInfo.departamento_empresa_empleado || ''}
+                onChange={(e) => handleLaborChange('departamento_empresa_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              >
+                <option value="">Seleccionar...</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Ciudad empresa</label>
+              <select
+                value={laborInfo.ciudad_empresa_empleado || ''}
+                onChange={(e) => handleLaborChange('ciudad_empresa_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                disabled={!laborInfo.departamento_empresa_empleado}
+              >
+                <option value="">Seleccionar...</option>
+                {laborInfo.departamento_empresa_empleado && getCitiesByDepartment(laborInfo.departamento_empresa_empleado).map((c) => (
+                  <option key={c.municipio} value={c.municipio}>{c.municipio}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Fecha de ingreso</label>
+              <input
+                type="date"
+                value={laborInfo.fecha_ingreso_empleado || ''}
+                onChange={(e) => handleLaborChange('fecha_ingreso_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Número celular</label>
+              <input
+                type="tel"
+                value={laborInfo.numero_celular_empleado || ''}
+                onChange={(e) => handleLaborChange('numero_celular_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Tipo de contrato</label>
+              <select
+                value={laborInfo.tipo_contrato_empleado || ''}
+                onChange={(e) => handleLaborChange('tipo_contrato_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              >
+                <option value="">Seleccionar...</option>
+                <option value="fijo">Fijo</option>
+                <option value="indefinido">Indefinido</option>
+                <option value="obra o labor">Obra o labor</option>
+                <option value="prestación de servicios">Prestación de servicios</option>
+                <option value="provisional">Provisional</option>
+                <option value="decongestión">Decongestión</option>
+                <option value="carrera administrativa">Carrera administrativa</option>
+                <option value="propiedad">Propiedad</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Correo oficina</label>
+              <input
+                type="email"
+                value={laborInfo.correo_oficina_empleado || ''}
+                onChange={(e) => handleLaborChange('correo_oficina_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Código CIIU</label>
+              <input
+                type="text"
+                value={laborInfo.ciiu_empleado || ''}
+                onChange={(e) => handleLaborChange('ciiu_empleado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+          </>
+        )}
+
+        {laborInfo.tipo_actividad_economica === 'independiente' && (
+          <>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Nombre de la empresa o negocio propio</label>
+              <input
+                type="text"
+                value={laborInfo.empresa_independiente || ''}
+                onChange={(e) => handleLaborChange('empresa_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Dirección de empresa o negocio</label>
+              <input
+                type="text"
+                value={laborInfo.direccion_independiente || ''}
+                onChange={(e) => handleLaborChange('direccion_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Departamento empresa</label>
+              <select
+                value={laborInfo.departamento_empresa_independiente || ''}
+                onChange={(e) => handleLaborChange('departamento_empresa_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              >
+                <option value="">Seleccionar...</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Ciudad empresa</label>
+              <select
+                value={laborInfo.ciudad_empresa_independiente || ''}
+                onChange={(e) => handleLaborChange('ciudad_empresa_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                disabled={!laborInfo.departamento_empresa_independiente}
+              >
+                <option value="">Seleccionar...</option>
+                {laborInfo.departamento_empresa_independiente && getCitiesByDepartment(laborInfo.departamento_empresa_independiente).map((c) => (
+                  <option key={c.municipio} value={c.municipio}>{c.municipio}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+              <input
+                type="tel"
+                value={laborInfo.telefono_independiente || ''}
+                onChange={(e) => handleLaborChange('telefono_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Sector económico</label>
+              <input
+                type="text"
+                value={laborInfo.sector_economico_independiente || ''}
+                onChange={(e) => handleLaborChange('sector_economico_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">N° de empleados</label>
+              <input
+                type="number"
+                value={laborInfo.empleados_independiente || ''}
+                onChange={(e) => handleLaborChange('empleados_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Código CIIU</label>
+              <input
+                type="text"
+                value={laborInfo.ciiu_independiente || ''}
+                onChange={(e) => handleLaborChange('ciiu_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Fecha de constitución en Cámara de Comercio o RUT</label>
+              <input
+                type="date"
+                value={laborInfo.fecha_constitucion_independiente || ''}
+                onChange={(e) => handleLaborChange('fecha_constitucion_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Tiempo en la actividad</label>
+              <input
+                type="text"
+                value={laborInfo.tiempo_actividad_independiente || ''}
+                onChange={(e) => handleLaborChange('tiempo_actividad_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Correo oficina</label>
+              <input
+                type="email"
+                value={laborInfo.correo_oficina_independiente || ''}
+                onChange={(e) => handleLaborChange('correo_oficina_independiente', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+          </>
+        )}
+
+        {laborInfo.tipo_actividad_economica === 'pensionado' && (
+          <>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Empresa pagadora (Fondo de pensiones)</label>
+              <input
+                type="text"
+                value={laborInfo.empresa_pagadora_pension || ''}
+                onChange={(e) => handleLaborChange('empresa_pagadora_pension', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Fecha en la que se pensionó</label>
+              <input
+                type="date"
+                value={laborInfo.fecha_pension_pensionado || ''}
+                onChange={(e) => handleLaborChange('fecha_pension_pensionado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Código CIIU</label>
+              <input
+                type="text"
+                value={laborInfo.ciiu_pensionado || ''}
+                onChange={(e) => handleLaborChange('ciiu_pensionado', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+          </>
+        )}
+
+        {/* Referencias */}
+        <div className="md:col-span-3">
+          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Referencias</h3>
+        </div>
+
+        {references.map((reference, index) => (
+          <React.Fragment key={index}>
+            <div className="md:col-span-3 flex justify-between items-center">
+              <h4 className="text-md font-medium text-gray-900">Referencia {index + 1}</h4>
+              {index > 0 && (
+                <button
+                  type="button"
+                  onClick={() => removeReference(index)}
+                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                >
+                  Eliminar referencia
+                </button>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Tipo de Referencia *
+              </label>
+              <select
+                value={reference.tipo_referencia}
+                onChange={(e) => handleReferenceChange(index, 'tipo_referencia', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {referenceTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Nombre Completo *
+              </label>
+              <input
+                type="text"
+                value={reference.nombre}
+                onChange={(e) => handleReferenceChange(index, 'nombre', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Número Celular
+              </label>
+              <input
+                type="tel"
+                value={reference.telefono || ''}
+                onChange={(e) => handleReferenceChange(index, 'telefono', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Relación *
+              </label>
+              <select
+                value={reference.relacion}
+                onChange={(e) => handleReferenceChange(index, 'relacion', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {getRelationshipOptions(reference.tipo_referencia).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Departamento *
+              </label>
+              <select
+                value={reference.departamento}
+                onChange={(e) => handleReferenceChange(index, 'departamento', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Ciudad *
+              </label>
+              <select
+                value={reference.ciudad}
+                onChange={(e) => handleReferenceChange(index, 'ciudad', e.target.value)}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                disabled={!reference.departamento}
+                required
+              >
+                <option value="">Seleccionar...</option>
+                {reference.departamento && getCitiesByDepartment(reference.departamento).map((city) => (
+                  <option key={city.municipio} value={city.municipio}>
+                    {city.municipio}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </React.Fragment>
+        ))}
+
+        <div className="md:col-span-3 flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={addReference}
+            className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            + Agregar otra referencia
+          </button>
+        </div>
+
+        <div className="space-y-2 md:col-span-3">
           <label className="block text-sm font-medium text-gray-700">
             Observaciones
           </label>

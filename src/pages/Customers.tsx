@@ -205,7 +205,7 @@ const Customers = () => {
       <div className="bg-white rounded-lg shadow">
         {/* Header */}
         <div className="p-6 border-b flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-800">Customers</h1>
+          <h1 className="text-2xl font-semibold text-gray-800">Creditos</h1>
           <div className="flex items-center space-x-4">
             {/* {canEdit() && (
               <Link

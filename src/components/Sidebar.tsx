@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, BarChart2, Settings, LogOut, Home, UserCog, User, CreditCard } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Users, Settings, LogOut, UserCog, User, CreditCard } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { buildApiUrl, API_CONFIG } from '../config/constants';
 
@@ -8,7 +8,6 @@ const Sidebar = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [error, setError] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
 
@@ -24,12 +23,12 @@ const Sidebar = () => {
   // Agregar elementos solo para administradores
   const adminMenuItems = [
     { icon: CreditCard, label: 'Tipos de Crédito', path: '/credit-types' },
+    { icon: Settings, label: 'Configuración', path: '/config' },
     { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];
 
   const loadStats = async () => {
     try {
-      setError(null);
 
       const user_document = localStorage.getItem('user');
       const userData = JSON.parse(user_document || '{}');
@@ -58,8 +57,7 @@ const Sidebar = () => {
       // Asignamos el nombre de la empresa
       setBusinessName(data["empresa"]);
     } catch (error) {
-      setError('Error al cargar los datos');
-      console.error('Error:', error);
+      console.error('Error al cargar los datos:', error);
     }
   };
 

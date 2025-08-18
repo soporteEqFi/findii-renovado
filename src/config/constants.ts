@@ -15,6 +15,8 @@ export const API_CONFIG = {
     EDIT_RECORD: '/edit-record/',
     DELETE_CUSTOMER: '/delete-customer',
     EDIT_STATUS: '/editar-estado',
+    // Dashboard tabla nuevo origen de datos
+    DASHBOARD_TABLA: '/dashboard/tabla',
 
     // Users
     GET_ALL_USERS: '/get-all-user/',
@@ -87,6 +89,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   CREDIT_TYPES: '/credit-types',
   SEGUIMIENTO: '/seguimiento',
+  CONFIG: '/config',
 } as const;
 
 // Permisos por rol

@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import CreditTypeAdmin from './pages/CreditTypeAdmin';
 import { CreditTracking } from './components/tracking/CreditTracking';
+import ConfiguracionAdmin from './pages/ConfiguracionAdmin';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,13 +69,13 @@ function App() {
             {/* Ruta pública de seguimiento */}
             <Route path="/seguimiento" element={<CreditTracking />} />
 
-                          {/* Ruta pública de términos y condiciones */}
-              <Route path="/terminos-condiciones" element={<TermsAndConditions />} />
+            {/* Ruta pública de términos y condiciones */}
+            <Route path="/terminos-condiciones" element={<TermsAndConditions />} />
 
-              {/* Ruta pública de acuerdo de firma */}
-              <Route path="/acuerdo-firma" element={<AcuerdoFirma />} />
+            {/* Ruta pública de acuerdo de firma */}
+            <Route path="/acuerdo-firma" element={<AcuerdoFirma />} />
 
-              {/* Rutas protegidas dentro del Layout */}
+            {/* Rutas protegidas dentro del Layout */}
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               {/* Ruta principal (índice) muestra Customers */}
               <Route index element={<Customers />} />
@@ -91,6 +92,13 @@ function App() {
               <Route path="credit-types" element={
                 <AdminRoute>
                   <CreditTypeAdmin />
+                </AdminRoute>
+              } />
+
+              {/* Ruta para la administración de configuración de campos (solo admin) */}
+              <Route path="config" element={
+                <AdminRoute>
+                  <ConfiguracionAdmin />
                 </AdminRoute>
               } />
 

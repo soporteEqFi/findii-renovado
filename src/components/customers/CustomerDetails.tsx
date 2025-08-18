@@ -370,7 +370,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
     if (key === 'archivos') {
       // Combinar archivos existentes (excluyendo los marcados para eliminar) con los nuevos
-      const existingFiles = Array.isArray(value) ? value : [value];
+      const existingFilesRaw = Array.isArray(value) ? value : (value ? [value] : []);
+      const existingFiles = existingFilesRaw.filter((f: any): f is string => typeof f === 'string' && f.length > 0);
       const filteredExistingFiles = existingFiles.filter(file => !filesToDelete.includes(file));
 
       return (
@@ -378,8 +379,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mostrar archivos existentes */}
             {filteredExistingFiles.map((fileUrl, index) => {
-              const isImage = fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-              const fileName = fileUrl.split('/').pop()?.split('?')[0] || `Archivo ${index + 1}`;
+              const isImage = typeof fileUrl === 'string' && fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+              const fileName = typeof fileUrl === 'string'
+                ? (fileUrl.split('/').pop()?.split('?')[0] || `Archivo ${index + 1}`)
+                : `Archivo ${index + 1}`;
 
               return (
                 <div key={`existing-${index}`} className="mb-4">
