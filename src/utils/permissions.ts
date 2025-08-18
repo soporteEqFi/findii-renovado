@@ -31,6 +31,11 @@ export const usePermissions = () => {
         // Si userData es un string (objeto serializado), parsearlo nuevamente
         const userObject = typeof userData === 'string' ? JSON.parse(userData) : userData;
         userRole = userObject.rol as string;
+
+        // Log para debugging
+        console.log('Usuario parseado del localStorage:', userObject);
+        console.log('Rol encontrado:', userRole);
+        console.log('Permisos disponibles para este rol:', permissionMapping[userRole]);
       } catch (error) {
         console.error('Error parsing user data:', error);
       }

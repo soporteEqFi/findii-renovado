@@ -1,11 +1,11 @@
 // Configuración de la API
 // Cambia esta variable para cambiar entre desarrollo y producción
-const IS_PRODUCTION = true; // Cambia a true para producción
+const IS_PRODUCTION = false; // Cambia a true para producción
 
 export const API_CONFIG = {
   BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://127.0.0.1:5000',
   ENDPOINTS: {
-    LOGIN: '/iniciar-sesion/',
+    LOGIN: '/auth/login',
     VALIDATE_TOKEN: '/validate-token',
     USER_INFO: '/get-user-info',
 
@@ -27,6 +27,17 @@ export const API_CONFIG = {
     CREATE_CREDIT_TYPE: '/create-credit-type',
     UPDATE_CREDIT_TYPE: '/update-credit-type',
     DELETE_CREDIT_TYPE: '/delete-credit-type',
+
+    // Nuevos endpoints para esquemas dinámicos
+    GET_ESQUEMA: '/json/schema',
+    UPDATE_JSON: '/json',
+    // Endpoints para entidades base
+    SOLICITANTES: '/solicitantes',
+    UBICACIONES: '/ubicaciones',
+    ACTIVIDAD_ECONOMICA: '/actividad_economica',
+    INFORMACION_FINANCIERA: '/informacion_financiera',
+    REFERENCIAS: '/referencias',
+    SOLICITUDES: '/solicitudes',
   }
 };
 

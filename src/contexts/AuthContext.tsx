@@ -67,16 +67,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Use the loginUser function from our API service
       const data = await loginUser(email, password);
 
-      // Extract user data from the response
-      const userData = data.usuario[0];
+      // Extract user data from the response (handle different formats)
+      let userData: any;
+      if (data.usuario && Array.isArray(data.usuario)) {
+        userData = data.usuario[0];
+      } else if (data.usuario) {
+        userData = data.usuario;
+      } else if (data.user) {
+        userData = data.user;
+      } else if (data.data) {
+        userData = data.data;
+      } else {
+        throw new Error('No se encontraron datos de usuario en la respuesta');
+      }
 
-      // Datos del backend para debugging
+      // Log para debugging
+      console.log('Datos completos del backend:', data);
+      console.log('Datos del usuario extraídos:', userData);
+      console.log('Rol encontrado en data.rol:', data.rol);
+      console.log('Rol encontrado en userData.rol:', userData.rol);
 
       // Map API response to our User type
       const userObj: User = {
         id: Number(userData.id || userData.id_usuario || 1),
         nombre: (userData.nombre || userData.name || userData.username || email),
-        rol: (data.rol || userData.role || 'user').toLowerCase() as string,
+        rol: (data.rol || userData.rol || userData.role || 'user').toLowerCase() as string,
         cedula: (userData.cedula || userData.numero_documento || '1'),
         email: email,
         empresa: userData.empresa || '',
@@ -86,14 +101,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         usuario: userData.usuario || ''
       };
 
-      // Objeto guardado para debugging
+      // Log del objeto final
+      console.log('Objeto de usuario final:', userObj);
 
       // Save token and user data
-      setToken(data.access_token);
+      setToken(data.access_token || '');
       setUser(userObj);
 
       // Store in localStorage for persistence
-      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('access_token', data.access_token || '');
       localStorage.setItem('user', JSON.stringify(userObj));
       localStorage.setItem('cedula', userObj.cedula);
 

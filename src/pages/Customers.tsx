@@ -3,7 +3,7 @@ import { Loader2, Plus, Download, UserCog } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
-import { CustomerForm } from '../components/customers/CustomerForm';
+import { CustomerFormDinamico as CustomerForm } from '../components/customers/CustomerFormDinamico';
 import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
