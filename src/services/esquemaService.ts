@@ -1,4 +1,5 @@
 import { buildApiUrl } from '../config/constants';
+import { camposDinamicosAPI } from './camposDinamicosService';
 import {
   EsquemaCampo,
   EsquemaResponse,
@@ -7,26 +8,41 @@ import {
 } from '../types/esquemas';
 
 export const esquemaService = {
-  // Obtener esquema de campos dinámicos
+  // Obtener esquema de campos dinámicos (optimizado con nuevo servicio)
   async obtenerEsquema(entidad: string, campoJson: string, empresaId: number = 1): Promise<EsquemaCampo[]> {
-    const response = await fetch(
-      buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`)
-    );
+    try {
+      // Usar el nuevo servicio optimizado
+      camposDinamicosAPI.setEmpresaId(empresaId.toString());
+      return await camposDinamicosAPI.obtenerEsquemaJSON(entidad, campoJson);
+    } catch (error) {
+      console.error('Error con nuevo servicio, fallback al método anterior:', error);
 
-    if (!response.ok) {
-      throw new Error(`Error al cargar esquema: ${response.statusText}`);
+      // Fallback al método anterior para compatibilidad
+      const response = await fetch(
+        buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`)
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error al cargar esquema: ${response.statusText}`);
+      }
+
+      const result: EsquemaResponse = await response.json();
+
+      if (!result.ok) {
+        throw new Error(result.error || 'Error en la respuesta del servidor');
+      }
+
+      return result.data;
     }
-
-    const result: EsquemaResponse = await response.json();
-
-    if (!result.ok) {
-      throw new Error(result.error || 'Error en la respuesta del servidor');
-    }
-
-    return result.data;
   },
 
-  // Actualizar campos JSON dinámicos con validación
+  // Obtener esquema completo (NUEVO - según guía)
+  async obtenerEsquemaCompleto(entidad: string, empresaId: number = 1): Promise<any> {
+    camposDinamicosAPI.setEmpresaId(empresaId.toString());
+    return await camposDinamicosAPI.obtenerEsquemaCompleto(entidad);
+  },
+
+  // Actualizar campos JSON dinámicos con validación (optimizado)
   async actualizarJson(
     entidad: string,
     id: number,
@@ -36,40 +52,49 @@ export const esquemaService = {
     validar: boolean = true
   ): Promise<any> {
     try {
-      const url = buildApiUrl(
-        `/json/${entidad}/${id}/${campoJson}?empresa_id=${empresaId}${validar ? '&validate=true' : ''}`
-      );
-
-      const response = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({ value: datos })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
-        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
-      }
-
-      const result: JsonUpdateResponse = await response.json();
-
-      if (!result.ok) {
-        throw new Error(result.error || 'Error en la respuesta del servidor');
-      }
-
-      return result.data;
+      // Usar el nuevo servicio optimizado
+      camposDinamicosAPI.setEmpresaId(empresaId.toString());
+      return await camposDinamicosAPI.actualizarVariasClavesJSON(entidad, id, campoJson, datos, validar);
     } catch (error) {
-      console.error(`Error actualizando JSON ${entidad}/${id}/${campoJson}:`, error);
+      console.error(`Error con nuevo servicio, fallback al método anterior:`, error);
 
-      // Simular respuesta exitosa para desarrollo
-      console.log(`Simulando actualización de JSON para ${entidad}/${id}/${campoJson} con datos:`, datos);
-      return {
-        success: true,
-        data: datos
-      };
+      // Fallback al método anterior para compatibilidad
+      try {
+        const url = buildApiUrl(
+          `/json/${entidad}/${id}/${campoJson}?empresa_id=${empresaId}${validar ? '&validate=true' : ''}`
+        );
+
+        const response = await fetch(url, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify({ value: datos })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+          throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+        }
+
+        const result: JsonUpdateResponse = await response.json();
+
+        if (!result.ok) {
+          throw new Error(result.error || 'Error en la respuesta del servidor');
+        }
+
+        return result.data;
+      } catch (fallbackError) {
+        console.error(`Error actualizando JSON ${entidad}/${id}/${campoJson}:`, fallbackError);
+
+        // Simular respuesta exitosa para desarrollo
+        console.log(`Simulando actualización de JSON para ${entidad}/${id}/${campoJson} con datos:`, datos);
+        return {
+          success: true,
+          data: datos
+        };
+      }
     }
   },
 
@@ -206,14 +231,18 @@ export const esquemaService = {
 
     // Si tiene estructura definida en list_values (legacy para campos anidados)
     if (campo.list_values && Array.isArray(campo.list_values)) {
-      const objetoCompleto: Record<string, any> = {};
-      (campo.list_values as EsquemaCampo[]).forEach((subcampo: EsquemaCampo) => {
-        const valor = valores[`${campo.key}.${subcampo.key}`];
-        if (valor !== undefined && valor !== null && valor !== '') {
-          objetoCompleto[subcampo.key] = valor;
-        }
-      });
-      return Object.keys(objetoCompleto).length > 0 ? objetoCompleto : undefined;
+      // Verificar si es un array de objetos EsquemaCampo (no strings)
+      const primerElemento = campo.list_values[0];
+      if (primerElemento && typeof primerElemento === 'object' && 'key' in primerElemento) {
+        const objetoCompleto: Record<string, any> = {};
+        (campo.list_values as EsquemaCampo[]).forEach((subcampo: EsquemaCampo) => {
+          const valor = valores[`${campo.key}.${subcampo.key}`];
+          if (valor !== undefined && valor !== null && valor !== '') {
+            objetoCompleto[subcampo.key] = valor;
+          }
+        });
+        return Object.keys(objetoCompleto).length > 0 ? objetoCompleto : undefined;
+      }
     }
 
     // Si es objeto libre, retornar como está

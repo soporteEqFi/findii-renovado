@@ -30,9 +30,15 @@ export const API_CONFIG = {
     UPDATE_CREDIT_TYPE: '/update-credit-type',
     DELETE_CREDIT_TYPE: '/delete-credit-type',
 
-    // Nuevos endpoints para esquemas dinámicos
+        // Nuevos endpoints para esquemas dinámicos
     GET_ESQUEMA: '/json/schema',
     UPDATE_JSON: '/json',
+
+    // Endpoints según guía campos dinámicos
+    SCHEMA_COMPLETO: '/schema',           // GET /schema/{entidad}
+    JSON_DATA: '/json',                   // CRUD /json/{entidad}/{id}/{campo}
+    JSON_DEFINITIONS: '/json/definitions', // POST /json/definitions/{entidad}/{campo}
+
     // Endpoints para entidades base
     SOLICITANTES: '/solicitantes',
     UBICACIONES: '/ubicaciones',
