@@ -3,6 +3,7 @@ import { Customer } from '../../types/customer';
 import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon } from 'lucide-react';
 import { usePermissions } from '../../utils/permissions';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
+import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -32,6 +33,14 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   onInputChange,
 }) => {
   const { canEditCustomer, canDeleteCustomer } = usePermissions();
+
+  // Usar el nuevo hook para obtener datos completos del solicitante
+  const solicitanteId = customer.id_solicitante || customer.solicitante_id || customer.id;
+  const solicitanteIdNumber = typeof solicitanteId === 'number' ? solicitanteId : parseInt(solicitanteId as string, 10);
+
+  const { datos: datosCompletos, datosMapeados, loading: loadingCompletos, error: errorCompletos } = useSolicitanteCompleto(
+    isNaN(solicitanteIdNumber) || solicitanteIdNumber <= 0 ? null : solicitanteIdNumber
+  );
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [editedCustomer, setEditedCustomer] = useState<Customer>(initialEditedCustomer);
   const [loading, setLoading] = useState(isLoading);
@@ -41,45 +50,59 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Mostrar loading si se están cargando los datos completos
+  // MOVER ESTO DESPUÉS DE TODOS LOS HOOKS
+
   useEffect(() => {
     console.log('🔍 === DIAGNÓSTICO DE DATOS DEL CLIENTE ===');
     console.log('📦 Customer data received:', customer);
     console.log('📋 All customer keys:', Object.keys(customer));
-    console.log('📊 Campos específicos:');
-    console.log('  - nombre_completo:', customer.nombre_completo);
-    console.log('  - tipo_documento:', customer.tipo_documento);
-    console.log('  - numero_documento:', customer.numero_documento);
-    console.log('  - fecha_nacimiento:', customer.fecha_nacimiento);
-    console.log('  - numero_celular:', customer.numero_celular);
-    console.log('  - correo_electronico:', customer.correo_electronico);
-    console.log('  - tipo_credito:', customer.tipo_credito);
-    console.log('  - banco:', customer.banco);
-    console.log('  - estado:', customer.estado);
-    console.log('  - plazo_meses:', customer.plazo_meses);
-    console.log('  - ingresos:', customer.ingresos);
-    console.log('  - valor_inmueble:', customer.valor_inmueble);
-    console.log('  - cuota_inicial:', customer.cuota_inicial);
-    console.log('  - archivos:', customer.archivos);
-    console.log('🔍 === FIN DIAGNÓSTICO ===');
-    // Mapear los campos del customer al formato correcto cuando se recibe
-    const mappedCustomer = {
-      ...customer,
-      id_solicitante: customer.id_solicitante || customer.solicitante_id || customer.id,
-      // Mapear nombres alternativos para compatibilidad
-      nombre_completo: customer.nombre_completo || customer.nombre || '',
-      correo_electronico: customer.correo_electronico || customer.correo || '',
-      tipo_credito: customer.tipo_credito || customer.tipo_de_credito || '',
-      // Normalizar campos numéricos
-      ingresos: customer.ingresos || 0,
-      valor_inmueble: customer.valor_inmueble || 0,
-      cuota_inicial: customer.cuota_inicial || 0,
-      plazo_meses: customer.plazo_meses || 0,
-    };
 
-    // La información del producto ya no es necesaria para la versión simplificada
+    // Si tenemos datos completos del solicitante, usarlos
+    if (datosMapeados) {
+      console.log('📊 Datos completos disponibles:', datosMapeados);
+      const mappedCustomer = {
+        ...customer,
+                 ...datosMapeados, // Usar los datos mapeados del servicio
+         id_solicitante: solicitanteIdNumber,
+      };
+      setEditedCustomer(mappedCustomer);
+    } else {
+      console.log('📊 Campos específicos del customer:');
+      console.log('  - nombre_completo:', customer.nombre_completo);
+      console.log('  - tipo_documento:', customer.tipo_documento);
+      console.log('  - numero_documento:', customer.numero_documento);
+      console.log('  - fecha_nacimiento:', customer.fecha_nacimiento);
+      console.log('  - numero_celular:', customer.numero_celular);
+      console.log('  - correo_electronico:', customer.correo_electronico);
+      console.log('  - tipo_credito:', customer.tipo_credito);
+      console.log('  - banco:', customer.banco);
+      console.log('  - estado:', customer.estado);
+      console.log('  - plazo_meses:', customer.plazo_meses);
+      console.log('  - ingresos:', customer.ingresos);
+      console.log('  - valor_inmueble:', customer.valor_inmueble);
+      console.log('  - cuota_inicial:', customer.cuota_inicial);
+      console.log('  - archivos:', customer.archivos);
 
-    setEditedCustomer(mappedCustomer);
-  }, [customer]);
+      // Mapear los campos del customer al formato correcto cuando se recibe
+      const mappedCustomer = {
+        ...customer,
+        id_solicitante: customer.id_solicitante || customer.solicitante_id || customer.id,
+        // Mapear nombres alternativos para compatibilidad
+        nombre_completo: customer.nombre_completo || customer.nombre || '',
+        correo_electronico: customer.correo_electronico || customer.correo || '',
+        tipo_credito: customer.tipo_credito || customer.tipo_de_credito || '',
+        // Normalizar campos numéricos
+        ingresos: customer.ingresos || 0,
+        valor_inmueble: customer.valor_inmueble || 0,
+        cuota_inicial: customer.cuota_inicial || 0,
+        plazo_meses: customer.plazo_meses || 0,
+      };
+      setEditedCustomer(mappedCustomer);
+    }
+
+         console.log('🔍 === FIN DIAGNÓSTICO ===');
+   }, [customer, datosMapeados, solicitanteIdNumber]);
 
   const handleInputChange = (field: keyof Customer, value: string) => {
     setEditedCustomer(prev => {
@@ -297,6 +320,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
   };
 
+  // Mostrar loading si se están cargando los datos completos
+  if (loadingCompletos) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+        <span className="ml-2">Cargando datos completos del cliente...</span>
+      </div>
+    );
+  }
+
   const renderField = (key: keyof Customer, value: any) => {
     if (key === 'id' || key === 'created_at' || key === 'asesor_usuario') return null;
 
@@ -485,31 +518,92 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   return (
     <div className="space-y-6">
+             {/* Debug info - solo en desarrollo */}
+       {process.env.NODE_ENV === 'development' && datosCompletos && (
+         <div className="bg-blue-50 p-2 text-xs text-blue-700 border rounded">
+           ✅ Datos completos cargados del endpoint /solicitantes/{solicitanteIdNumber}/traer-todos-registros
+         </div>
+       )}
+
       {apiError && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
           <p className="text-red-600">{apiError}</p>
         </div>
       )}
 
-      {/* Secciones Simplificadas */}
-      {/* Información Básica */}
-      <Section title="Información Básica" keys={[
-        'nombre_completo', 'tipo_documento', 'numero_documento',
-        'fecha_nacimiento', 'numero_celular', 'correo_electronico'
-      ]} customer={editedCustomer} renderField={renderField} />
+             {/* TODOS LOS CAMPOS DISPONIBLES */}
+       {/* Información Básica del Solicitante */}
+       <Section title="Información Básica del Solicitante" keys={[
+         'nombre_completo', 'tipo_documento', 'numero_documento',
+         'fecha_nacimiento', 'genero', 'correo_electronico'
+       ]} customer={editedCustomer} renderField={renderField} />
 
-      {/* Información del Crédito */}
-      <Section title="Información del Crédito" keys={[
-        'tipo_credito', 'banco', 'estado', 'plazo_meses'
-      ]} customer={editedCustomer} renderField={renderField} />
+       {/* Información Adicional del Solicitante */}
+       <Section title="Información Adicional del Solicitante" keys={[
+         'personas_a_cargo', 'telefono', 'nacionalidad', 'estado_civil'
+       ]} customer={editedCustomer} renderField={renderField} />
 
-      {/* Información Financiera */}
-      <Section title="Información Financiera" keys={[
-        'ingresos', 'valor_inmueble', 'cuota_inicial'
-      ]} customer={editedCustomer} renderField={renderField} />
+       {/* Información de Ubicación */}
+       <Section title="Información de Ubicación" keys={[
+         'direccion', 'ciudad', 'departamento'
+       ]} customer={editedCustomer} renderField={renderField} />
 
-      {/* Archivos */}
-      <Section title="Archivos" keys={['archivos']} customer={editedCustomer} renderField={renderField} />
+       {/* Información de Actividad Económica */}
+       <Section title="Actividad Económica" keys={[
+         'tipo_actividad', 'sector_economico', 'empresa', 'tipo_contrato'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Detalles de Actividad Económica */}
+       <Section title="Detalles de Actividad Económica" keys={[
+         'codigo_ciiu', 'departamento_empresa', 'ciudad_empresa', 'telefono_empresa', 'correo_oficina', 'nit'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Información del Negocio */}
+       <Section title="Información del Negocio" keys={[
+         'direccion_empresa', 'tiene_negocio_propio', 'nombre_negocio', 'direccion_negocio', 'departamento_negocio', 'ciudad_negocio', 'numero_empleados'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Información Financiera */}
+       <Section title="Información Financiera" keys={[
+         'ingresos_mensuales', 'gastos_mensuales', 'total_activos', 'total_pasivos'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Detalles Financieros */}
+       <Section title="Detalles Financieros" keys={[
+         'ingreso_basico_mensual', 'ingreso_variable_mensual', 'otros_ingresos_mensuales', 'gastos_financieros_mensuales', 'gastos_personales_mensuales'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Otros Ingresos */}
+       <Section title="Otros Ingresos" keys={[
+         'ingresos_fijos_pension', 'ingresos_por_ventas', 'ingresos_varios', 'honorarios', 'arriendos', 'ingresos_actividad_independiente', 'declara_renta'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Información de Referencias */}
+       <Section title="Información de Referencias" keys={[
+         'tipo_referencia', 'nombre_referencia', 'relacion_referencia', 'direccion_referencia', 'ciudad_referencia'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Información de Crédito */}
+       <Section title="Información de Crédito" keys={[
+         'estado_credito'
+       ]} customer={editedCustomer} renderField={renderField} />
+
+       {/* Archivos */}
+       <Section title="Archivos" keys={['archivos']} customer={editedCustomer} renderField={renderField} />
+
+       {/* Datos Completos (Solo en desarrollo) */}
+       {process.env.NODE_ENV === 'development' && datosCompletos && (
+         <div className="md:col-span-2">
+           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">
+             Datos Completos (Debug)
+           </h3>
+           <div className="bg-gray-50 p-4 rounded-md">
+             <pre className="text-xs overflow-auto max-h-96">
+               {JSON.stringify(datosCompletos, null, 2)}
+             </pre>
+           </div>
+         </div>
+       )}
       <div className="flex justify-end space-x-2">
         {isEditing ? (
           <>

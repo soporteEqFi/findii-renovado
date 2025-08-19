@@ -49,6 +49,9 @@ export const API_CONFIG = {
 
     // Endpoint unificado para crear registro completo
     CREAR_REGISTRO_COMPLETO: '/solicitantes/crear-registro-completo',
+
+    // Endpoint para traer todos los registros de un solicitante
+    TRAER_TODOS_REGISTROS: '/solicitantes',
   }
 };
 
