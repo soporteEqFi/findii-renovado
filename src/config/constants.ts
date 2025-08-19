@@ -46,6 +46,9 @@ export const API_CONFIG = {
     INFORMACION_FINANCIERA: '/informacion_financiera',
     REFERENCIAS: '/referencias',
     SOLICITUDES: '/solicitudes',
+
+    // Endpoint unificado para crear registro completo
+    CREAR_REGISTRO_COMPLETO: '/solicitantes/crear-registro-completo',
   }
 };
 

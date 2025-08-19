@@ -159,7 +159,7 @@ export const FormularioDinamicoMejorado: React.FC<FormularioDinamicoMejoradoProp
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Información del esquema para debug */}
+      Información del esquema para debug
       {process.env.NODE_ENV === 'development' && esquemaCompleto && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="text-sm font-medium text-blue-800 mb-2">

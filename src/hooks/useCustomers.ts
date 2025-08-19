@@ -17,9 +17,12 @@ export const useCustomers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const empresaId = localStorage.getItem('empresa_id') || '1';
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`, {
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`;
+      console.log('🌐 Llamando endpoint:', url);
+
+      const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -31,7 +34,19 @@ export const useCustomers = () => {
       }
 
       const responseData: ApiResponse = await response.json();
-      console.log('API Response raw:', responseData);
+      console.log('🔍 === DIAGNÓSTICO BACKEND ===');
+      console.log('📦 API Response raw:', responseData);
+      console.log('📊 Primer cliente (si existe):', responseData.data?.[0]);
+      console.log('📋 Estructura del primer cliente:');
+      if (responseData.data?.[0]) {
+        const cliente = responseData.data[0];
+        console.log('  - solicitante:', cliente.solicitante);
+        console.log('  - ubicacion:', cliente.ubicacion);
+        console.log('  - actividad_economica:', cliente.actividad_economica);
+        console.log('  - informacion_financiera:', cliente.informacion_financiera);
+        console.log('  - solicitud:', cliente.solicitud);
+      }
+      console.log('🔍 === FIN DIAGNÓSTICO BACKEND ===');
 
       // Handle the response structure
       if (!responseData.data || !Array.isArray(responseData.data)) {
@@ -39,12 +54,21 @@ export const useCustomers = () => {
       }
 
       // Map the API response to the Customer type
-      const mappedCustomers = responseData.data.map(item => {
+      const mappedCustomers = responseData.data.map((item, index) => {
+        console.log(`🔍 Mapeando cliente ${index + 1}:`, item);
+
         const s = item.solicitante || {};
         const ue = item.ubicacion || {};
         const act = item.actividad_economica || {};
         const fin = item.informacion_financiera || {};
         const sol = item.solicitud || {};
+
+        console.log(`📊 Datos del cliente ${index + 1}:`);
+        console.log('  - Solicitante:', s);
+        console.log('  - Ubicación:', ue);
+        console.log('  - Actividad Económica:', act);
+        console.log('  - Información Financiera:', fin);
+        console.log('  - Solicitud:', sol);
 
         // Build full name from available name fields
         const fullName = [
@@ -105,6 +129,18 @@ export const useCustomers = () => {
           porcentaje_financiar: 0,
           segundo_titular: ''
         } as Customer;
+
+        console.log(`✅ Cliente ${index + 1} mapeado:`, {
+          nombre_completo: fullName,
+          correo_electronico: s.correo,
+          numero_celular: ue.detalle_direccion?.celular || ue.celular,
+          tipo_credito: sol.tipo_credito,
+          banco: sol.banco,
+          estado: sol.estado,
+          ingresos: fin.total_ingresos_mensuales || fin.ingresos,
+          valor_inmueble: fin.valor_inmueble,
+          cuota_inicial: 0
+        });
       });
 
       setCustomers(mappedCustomers);
@@ -164,7 +200,7 @@ export const useCustomers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DELETE_CUSTOMER}/${id}`, {
         method: 'DELETE',
         headers: {
@@ -193,7 +229,7 @@ export const useCustomers = () => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EDIT_STATUS}`, {
         method: 'PUT',
         headers: {
@@ -212,8 +248,8 @@ export const useCustomers = () => {
       }
 
       // Update local state
-      setCustomers(prev => 
-        prev.map(c => 
+      setCustomers(prev =>
+        prev.map(c =>
           c.id === customer.id ? { ...c, estado: newStatus } : c
         )
       );

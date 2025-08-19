@@ -1,4 +1,4 @@
-import { buildApiUrl } from '../config/constants';
+import { buildApiUrl, API_CONFIG } from '../config/constants';
 import { camposDinamicosAPI } from './camposDinamicosService';
 import {
   EsquemaCampo,
@@ -316,6 +316,16 @@ export const esquemaService = {
     esquemaCompleto: any,
     empresaId: number = 1
   ): Promise<any> {
+    // Método legacy - mantener para compatibilidad
+    return this.crearRegistroCompletoLegacy(entidad, formData, esquemaCompleto, empresaId);
+  },
+
+  async crearRegistroCompletoLegacy(
+    entidad: string,
+    formData: Record<string, any>,
+    esquemaCompleto: any,
+    empresaId: number = 1
+  ): Promise<any> {
     try {
       // Separar campos fijos y dinámicos
       const camposFijos = esquemaCompleto.campos_fijos.map((c: EsquemaCampo) => c.key);
@@ -336,7 +346,12 @@ export const esquemaService = {
       }
 
       // Crear registro base
-      const response = await fetch(buildApiUrl(`/${esquemaCompleto.tabla}/?empresa_id=${empresaId}`), {
+      const url = buildApiUrl(`/${esquemaCompleto.tabla}/?empresa_id=${empresaId}`);
+      console.log(`🌐 CREANDO REGISTRO EN: ${url}`);
+      console.log(`📋 Tabla objetivo: ${esquemaCompleto.tabla}`);
+      console.log(`📤 Datos fijos a enviar:`, datosFijos);
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -344,12 +359,39 @@ export const esquemaService = {
         body: JSON.stringify(datosFijos)
       });
 
+      console.log(`📡 Respuesta del servidor: ${response.status} ${response.statusText}`);
+      console.log('📋 Headers de respuesta:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al crear registro');
+        console.error(`❌ Error HTTP ${response.status} para ${url}`);
+        console.error('📋 Headers de respuesta:', response.headers);
+
+        try {
+          const errorData = await response.json();
+          console.error('📋 Error JSON del backend:', errorData);
+          throw new Error(errorData.error || `Error ${response.status} al crear registro`);
+        } catch (parseError) {
+          // Si no puede parsear JSON, es probablemente HTML
+          const errorText = await response.text();
+          console.error('📋 Respuesta HTML del backend:', errorText.substring(0, 500));
+          console.error(`🔍 El endpoint ${url} probablemente no existe o devuelve HTML`);
+          throw new Error(`Endpoint ${url} no disponible (devuelve HTML en lugar de JSON)`);
+        }
       }
 
-      const result = await response.json();
+      let result;
+      try {
+        const responseText = await response.text();
+        console.log('📋 Respuesta cruda del servidor:', responseText.substring(0, 200) + '...');
+
+        result = JSON.parse(responseText);
+        console.log('✅ JSON parseado correctamente:', result);
+      } catch (parseError) {
+        console.error('❌ Error parseando JSON:', parseError);
+        console.error('🔍 La respuesta no es JSON válido');
+        throw new Error(`Respuesta inválida del servidor para ${url}: no es JSON`);
+      }
+
       const registroId = result.data.id;
 
               // Procesar campos dinámicos si existen
@@ -382,5 +424,125 @@ export const esquemaService = {
       console.error('Error en crearRegistroCompleto:', error);
       throw error;
     }
+  },
+
+  // Nuevo método para crear registro completo usando endpoint unificado
+  async crearRegistroCompletoUnificado(
+    formData: Record<string, any>,
+    esquemasCompletos: any,
+    empresaId: number = 1
+  ): Promise<any> {
+    try {
+      console.log('🚀 === CREANDO REGISTRO COMPLETO UNIFICADO ===');
+      console.log('📦 Datos del formulario:', formData);
+      console.log('📋 Esquemas disponibles:', esquemasCompletos);
+
+      // Estructurar datos según el formato esperado por el backend
+      const datosCompletos = {
+        solicitante: this.extraerDatosEntidad(formData, esquemasCompletos.solicitante?.esquema, 'solicitante'),
+        ubicaciones: [this.extraerDatosEntidad(formData, esquemasCompletos.ubicacion?.esquema, 'ubicacion')],
+        actividad_economica: this.extraerDatosEntidad(formData, esquemasCompletos.actividad_economica?.esquema, 'actividad_economica'),
+        informacion_financiera: this.extraerDatosEntidad(formData, esquemasCompletos.informacion_financiera?.esquema, 'informacion_financiera'),
+        referencias: [this.extraerDatosEntidad(formData, esquemasCompletos.referencia?.esquema, 'referencia')],
+        solicitudes: [this.extraerDatosEntidad(formData, esquemasCompletos.solicitud?.esquema, 'solicitud')]
+      };
+
+      // Agregar campos adicionales a la solicitud
+      if (datosCompletos.solicitudes[0]) {
+        datosCompletos.solicitudes[0].created_by_user_id = parseInt(localStorage.getItem('user_id') || '1');
+        datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
+        datosCompletos.solicitudes[0].estado = 'abierta';
+      }
+
+      console.log('📤 Datos estructurados para enviar:', datosCompletos);
+      console.log('📋 Estructura JSON generada:');
+      console.log(JSON.stringify(datosCompletos, null, 2));
+
+      const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.CREAR_REGISTRO_COMPLETO}?empresa_id=${empresaId}`);
+      console.log('🌐 Llamando endpoint unificado:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(datosCompletos)
+      });
+
+      console.log(`📡 Respuesta del servidor: ${response.status} ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Error del servidor:', errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Registro completo creado exitosamente:', result);
+
+      return result;
+
+    } catch (error) {
+      console.error('❌ Error en crearRegistroCompletoUnificado:', error);
+      throw error;
+    }
+  },
+
+  // Función auxiliar para extraer datos de una entidad específica
+  extraerDatosEntidad(formData: Record<string, any>, esquema: any, entidad: string): Record<string, any> {
+    if (!esquema) {
+      console.warn(`⚠️ No hay esquema para ${entidad}`);
+      return {};
+    }
+
+    const datos: Record<string, any> = {};
+
+    // Extraer campos fijos (van directamente al objeto principal)
+    if (esquema.campos_fijos) {
+      esquema.campos_fijos.forEach((campo: any) => {
+        if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
+          datos[campo.key] = formData[campo.key];
+        }
+      });
+    }
+
+    // Extraer campos dinámicos (van al objeto JSON correspondiente)
+    if (esquema.campos_dinamicos && esquema.campos_dinamicos.length > 0) {
+      // Determinar el nombre del objeto JSON según la entidad
+      const jsonObjectName = this.getJsonObjectName(entidad);
+
+      if (!datos[jsonObjectName]) {
+        datos[jsonObjectName] = {};
+      }
+
+      esquema.campos_dinamicos.forEach((campo: any) => {
+        if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
+          datos[jsonObjectName][campo.key] = formData[campo.key];
+        }
+      });
+
+      // Solo incluir el objeto JSON si tiene campos
+      if (Object.keys(datos[jsonObjectName]).length === 0) {
+        delete datos[jsonObjectName];
+      }
+    }
+
+    console.log(`📊 Datos extraídos para ${entidad}:`, datos);
+    return datos;
+  },
+
+  // Función auxiliar para determinar el nombre del objeto JSON según la entidad
+  getJsonObjectName(entidad: string): string {
+    const jsonObjectMapping: Record<string, string> = {
+      'solicitante': 'info_extra',
+      'ubicacion': 'detalle_direccion',
+      'actividad_economica': 'detalle_actividad',
+      'informacion_financiera': 'detalle_financiera',
+      'referencia': 'detalle_referencia',
+      'solicitud': 'detalle_credito'
+    };
+
+    return jsonObjectMapping[entidad] || 'datos_adicionales';
   }
 };

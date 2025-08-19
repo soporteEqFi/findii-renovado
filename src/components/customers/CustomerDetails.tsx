@@ -36,54 +36,47 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [editedCustomer, setEditedCustomer] = useState<Customer>(initialEditedCustomer);
   const [loading, setLoading] = useState(isLoading);
   const [apiError, setApiError] = useState<string | null>(error);
-  const [productInfo, setProductInfo] = useState<Record<string, string>>({});
+  // const [productInfo, setProductInfo] = useState<Record<string, string>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    console.log('Customer data received:', customer);
-    console.log('Estado civil:', customer.estado_civil);
-    console.log('Tipo crédito:', customer.tipo_credito);
-    console.log('All customer keys:', Object.keys(customer));
+    console.log('🔍 === DIAGNÓSTICO DE DATOS DEL CLIENTE ===');
+    console.log('📦 Customer data received:', customer);
+    console.log('📋 All customer keys:', Object.keys(customer));
+    console.log('📊 Campos específicos:');
+    console.log('  - nombre_completo:', customer.nombre_completo);
+    console.log('  - tipo_documento:', customer.tipo_documento);
+    console.log('  - numero_documento:', customer.numero_documento);
+    console.log('  - fecha_nacimiento:', customer.fecha_nacimiento);
+    console.log('  - numero_celular:', customer.numero_celular);
+    console.log('  - correo_electronico:', customer.correo_electronico);
+    console.log('  - tipo_credito:', customer.tipo_credito);
+    console.log('  - banco:', customer.banco);
+    console.log('  - estado:', customer.estado);
+    console.log('  - plazo_meses:', customer.plazo_meses);
+    console.log('  - ingresos:', customer.ingresos);
+    console.log('  - valor_inmueble:', customer.valor_inmueble);
+    console.log('  - cuota_inicial:', customer.cuota_inicial);
+    console.log('  - archivos:', customer.archivos);
+    console.log('🔍 === FIN DIAGNÓSTICO ===');
     // Mapear los campos del customer al formato correcto cuando se recibe
     const mappedCustomer = {
       ...customer,
       id_solicitante: customer.id_solicitante || customer.solicitante_id || customer.id,
       // Mapear nombres alternativos para compatibilidad
-      nombre: customer.nombre || customer.nombre_completo || '',
       nombre_completo: customer.nombre_completo || customer.nombre || '',
-      correo: customer.correo || customer.correo_electronico || '',
       correo_electronico: customer.correo_electronico || customer.correo || '',
-      direccion: customer.direccion || customer.direccion_residencia || '',
-      direccion_residencia: customer.direccion_residencia || customer.direccion || '',
-      tipo_de_contrato: customer.tipo_de_contrato || customer.tipo_contrato || '',
-      tipo_contrato: customer.tipo_contrato || customer.tipo_de_contrato || '',
       tipo_credito: customer.tipo_credito || customer.tipo_de_credito || '',
-      estado_civil: customer.estado_civil || '',
-      // Normalizar segundo titular y su info
-      segundo_titular: (() => {
-        const st = (customer.segundo_titular as any) ?? (customer as any).tiene_segundo_titular ?? 'no';
-        const s = st?.toString().toLowerCase();
-        return s === 'si' || s === 'sí' || s === 'true' ? 'si' : 'no';
-      })(),
-      info_segundo_titular: (customer as any).info_segundo_titular || (customer as any).informacion_segundo_titular || '',
-      // Mapear campos financieros
-      total_egresos: customer.total_egresos || customer.egresos || '',
-      egresos: customer.egresos || customer.total_egresos || '',
+      // Normalizar campos numéricos
+      ingresos: customer.ingresos || 0,
+      valor_inmueble: customer.valor_inmueble || 0,
+      cuota_inicial: customer.cuota_inicial || 0,
+      plazo_meses: customer.plazo_meses || 0,
     };
 
-    // Parsear información_producto si existe
-    try {
-      const productInfoData = typeof customer.informacion_producto === 'string'
-        ? JSON.parse(customer.informacion_producto)
-        : customer.informacion_producto || {};
-      setProductInfo(productInfoData);
-      mappedCustomer.informacion_producto = productInfoData;
-    } catch (error) {
-      console.error('Error al parsear información_producto:', error);
-      setProductInfo({});
-    }
+    // La información del producto ya no es necesaria para la versión simplificada
 
     setEditedCustomer(mappedCustomer);
   }, [customer]);
@@ -96,16 +89,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     });
   };
 
-  const handleProductInfoChange = (field: string, value: string) => {
-    setProductInfo(prev => {
-      const newInfo = { ...prev, [field]: value };
-      setEditedCustomer(prev => ({
-        ...prev,
-        informacion_producto: JSON.stringify(newInfo)
-      }));
-      return newInfo;
-    });
-  };
+  // const handleProductInfoChange = (field: string, value: string) => {
+  //   setProductInfo(prev => {
+  //     const newInfo = { ...prev, [field]: value };
+  //     setEditedCustomer(prev => ({
+  //       ...prev,
+  //       informacion_producto: JSON.stringify(newInfo)
+  //     }));
+  //     return newInfo;
+  //   });
+  // };
 
   const handleEdit = () => {
     setEditedCustomer({ ...customer }); // Reset to current customer data when starting edit
@@ -243,84 +236,28 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         console.log('Respuesta de archivos:', fileResult);
       }
 
-      // Normalizar campos JSON para enviar como objetos reales
-      let infoSegundoObj: any = {};
-      try {
-        if (typeof editedCustomer.info_segundo_titular === 'string') {
-          infoSegundoObj = editedCustomer.info_segundo_titular
-            ? JSON.parse(editedCustomer.info_segundo_titular)
-            : {};
-        } else if (editedCustomer.info_segundo_titular && typeof editedCustomer.info_segundo_titular === 'object') {
-          infoSegundoObj = editedCustomer.info_segundo_titular;
-        }
-      } catch (e) {
-        console.warn('No se pudo parsear info_segundo_titular, usando objeto vacío:', e);
-        infoSegundoObj = {};
-      }
+      // Los campos JSON ya no son necesarios para la versión simplificada
 
-      let informacionProductoObj: any = {};
-      try {
-        if (typeof (editedCustomer as any).informacion_producto === 'string') {
-          informacionProductoObj = (editedCustomer as any).informacion_producto
-            ? JSON.parse((editedCustomer as any).informacion_producto as any)
-            : {};
-        } else if ((editedCustomer as any).informacion_producto && typeof (editedCustomer as any).informacion_producto === 'object') {
-          informacionProductoObj = (editedCustomer as any).informacion_producto;
-        }
-      } catch (e) {
-        console.warn('No se pudo parsear informacion_producto, usando objeto vacío:', e);
-        informacionProductoObj = {};
-      }
-
-      // Estructurar los datos según las tablas de la API
+      // Estructurar los datos simplificados
       const mappedCustomer = {
         solicitante_id: editedCustomer.id_solicitante,
         SOLICITANTES: {
-          nombre_completo: editedCustomer.nombre_completo || editedCustomer.nombre,
+          nombre_completo: editedCustomer.nombre_completo,
           tipo_documento: editedCustomer.tipo_documento || '',
           numero_documento: editedCustomer.numero_documento || '',
           fecha_nacimiento: editedCustomer.fecha_nacimiento || '',
           numero_celular: editedCustomer.numero_celular || '',
-          correo_electronico: editedCustomer.correo_electronico || editedCustomer.correo,
-          nivel_estudio: editedCustomer.nivel_estudio || '',
-          profesion: editedCustomer.profesion || '',
-          estado_civil: editedCustomer.estado_civil || '',
-          personas_a_cargo: editedCustomer.personas_a_cargo || ''
-        },
-        UBICACION: {
-          direccion_residencia: editedCustomer.direccion_residencia,
-          tipo_vivienda: editedCustomer.tipo_vivienda,
-          barrio: editedCustomer.barrio,
-          departamento: editedCustomer.departamento,
-          estrato: Number(editedCustomer.estrato) || 0,
-          ciudad_gestion: editedCustomer.ciudad_gestion
-        },
-        ACTIVIDAD_ECONOMICA: {
-          actividad_economica: editedCustomer.actividad_economica,
-          empresa_labora: editedCustomer.empresa_labora,
-          fecha_vinculacion: editedCustomer.fecha_vinculacion,
-          direccion_empresa: editedCustomer.direccion_empresa,
-          telefono_empresa: editedCustomer.telefono_empresa,
-          tipo_contrato: editedCustomer.tipo_contrato,
-          cargo_actual: editedCustomer.cargo_actual
+          correo_electronico: editedCustomer.correo_electronico
         },
         INFORMACION_FINANCIERA: {
           ingresos: Number(editedCustomer.ingresos) || 0,
           valor_inmueble: Number(editedCustomer.valor_inmueble) || 0,
-          cuota_inicial: Number(editedCustomer.cuota_inicial) || 0,
-          porcentaje_financiar: Number(editedCustomer.porcentaje_financiar) || 0,
-          total_egresos: Number(editedCustomer.total_egresos) || 0,
-          total_activos: Number(editedCustomer.total_activos) || 0,
-          total_pasivos: Number(editedCustomer.total_pasivos) || 0
+          cuota_inicial: Number(editedCustomer.cuota_inicial) || 0
         },
         PRODUCTO_SOLICITADO: {
           tipo_de_credito: editedCustomer.tipo_credito,
           plazo_meses: Number(editedCustomer.plazo_meses) || 0,
-          segundo_titular: editedCustomer.segundo_titular || 'no',
-          observacion: editedCustomer.observacion,
-          estado: editedCustomer.estado,
-          informacion_producto: informacionProductoObj,
-          info_segundo_titular: infoSegundoObj
+          estado: editedCustomer.estado
         },
         SOLICITUDES: {
           banco: editedCustomer.banco
@@ -472,32 +409,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
 
     if (key === 'informacion_producto') {
-      return (
-        <div key={key} className="col-span-full">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(productInfo).map(([field, value]) => (
-              <div key={field} className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, ' ')}
-                </label>
-                {isEditing && canEditCustomer() ? (
-                  <input
-                    type="text"
-                    value={value || ''}
-                    onChange={(e) => handleProductInfoChange(field, e.target.value)}
-                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                    disabled={loading}
-                  />
-                ) : (
-                  <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
-                    <span>{value || '-'}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
+      return null; // Ya no mostramos esta información en la versión simplificada
     }
 
     // Mostrar el valor actual en consola para depuración
@@ -514,21 +426,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           {label}
         </label>
         {isEditing && canEditCustomer() ? (
-          key === 'estado_civil' ? (
-            <select
-              value={editedCustomer[key] || ''}
-              onChange={(e) => handleInputChange(key, e.target.value)}
-              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-              disabled={loading}
-            >
-              <option value="">Seleccionar...</option>
-              <option value="soltero">Soltero(a)</option>
-              <option value="casado">Casado(a)</option>
-              <option value="divorciado">Divorciado(a)</option>
-              <option value="viudo">Viudo(a)</option>
-              <option value="union_libre">Unión Libre</option>
-            </select>
-          ) : key === 'tipo_credito' ? (
+          key === 'tipo_credito' ? (
             <select
               value={editedCustomer[key] || ''}
               onChange={(e) => handleInputChange(key, e.target.value)}
@@ -540,6 +438,20 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               <option value="consumo">Consumo</option>
               <option value="libre_inversion">Libre Inversión</option>
               <option value="vehiculo">Vehículo</option>
+            </select>
+          ) : key === 'estado' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            >
+              <option value="">Seleccionar...</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="En estudio">En estudio</option>
+              <option value="Aprobado">Aprobado</option>
+              <option value="Negado">Negado</option>
+              <option value="Desembolsado">Desembolsado</option>
             </select>
           ) : (
             <input
@@ -579,146 +491,25 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         </div>
       )}
 
-      {/* Secciones */}
-      {/* Información Personal */}
-      <Section title="Información Personal" keys={[
-        'nombre', 'tipo_documento', 'numero_documento',
-        'fecha_nacimiento', 'numero_celular', 'correo',
-        'nivel_estudio', 'profesion', 'estado_civil', 'personas_a_cargo'
+      {/* Secciones Simplificadas */}
+      {/* Información Básica */}
+      <Section title="Información Básica" keys={[
+        'nombre_completo', 'tipo_documento', 'numero_documento',
+        'fecha_nacimiento', 'numero_celular', 'correo_electronico'
       ]} customer={editedCustomer} renderField={renderField} />
 
-      {/* Ubicación */}
-      <Section title="Ubicación" keys={[
-        'direccion', 'tipo_vivienda', 'barrio',
-        'departamento', 'estrato', 'ciudad_gestion'
-      ]} customer={editedCustomer} renderField={renderField} />
-
-      {/* Actividad Económica */}
-      <Section title="Actividad Económica" keys={[
-        'actividad_economica', 'empresa_labora', 'fecha_vinculacion',
-        'direccion_empresa', 'telefono_empresa', 'tipo_de_contrato', 'cargo_actual'
+      {/* Información del Crédito */}
+      <Section title="Información del Crédito" keys={[
+        'tipo_credito', 'banco', 'estado', 'plazo_meses'
       ]} customer={editedCustomer} renderField={renderField} />
 
       {/* Información Financiera */}
       <Section title="Información Financiera" keys={[
-        'ingresos', 'valor_inmueble', 'cuota_inicial', 'porcentaje_financiar',
-        'total_egresos', 'total_activos', 'total_pasivos'
+        'ingresos', 'valor_inmueble', 'cuota_inicial'
       ]} customer={editedCustomer} renderField={renderField} />
-
-      {/* Producto Solicitado */}
-      <Section title="Producto Solicitado" keys={[
-        'tipo_credito', 'plazo_meses','segundo_titular', 'informacion_producto',  'observacion', 'estado',
-      ]} customer={editedCustomer} renderField={renderField} />
-
-      {/* Información del Segundo Titular */}
-      {(() => {
-        const st = (editedCustomer.segundo_titular || '').toString().toLowerCase();
-        const showSegundo = st === 'si' || st === 'sí' || st === 'si ' || (editedCustomer as any).segundo_titular === true;
-        return showSegundo;
-      })() && (
-        <div className="bg-white p-6 rounded-lg shadow-sm border">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Información del Segundo Titular</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {(() => {
-              let segundoTitularInfo: any = {};
-              try {
-                const raw = (editedCustomer as any).info_segundo_titular;
-                if (raw) {
-                  if (typeof raw === 'string') {
-                    segundoTitularInfo = JSON.parse(raw);
-                  } else if (typeof raw === 'object') {
-                    segundoTitularInfo = raw;
-                  }
-                }
-              } catch (error) {
-                console.error('Error parsing info_segundo_titular:', error);
-                segundoTitularInfo = {};
-              }
-
-              const handleSegundoTitularChange = (field: string, value: string) => {
-                const updatedInfo = { ...segundoTitularInfo, [field]: value };
-                handleInputChange('info_segundo_titular', JSON.stringify(updatedInfo));
-              };
-
-                             const fields = [
-                 { key: 'nombre', label: 'Nombre Completo', type: 'text' },
-                 { key: 'tipo_documento', label: 'Tipo de Documento', type: 'select', options: [
-                   { value: 'CC', label: 'Cédula de Ciudadanía' },
-                   { value: 'CE', label: 'Cédula de Extranjería' },
-                   { value: 'TI', label: 'Tarjeta de Identidad' },
-                   { value: 'PP', label: 'Pasaporte' }
-                 ]},
-                 { key: 'numero_documento', label: 'Número de Documento', type: 'text' },
-                 { key: 'fecha_nacimiento', label: 'Fecha de Nacimiento', type: 'date' },
-                 { key: 'estado_civil', label: 'Estado Civil', type: 'select', options: [
-                   { value: 'soltero', label: 'Soltero' },
-                   { value: 'casado', label: 'Casado' },
-                   { value: 'union_libre', label: 'Unión Libre' },
-                   { value: 'divorciado', label: 'Divorciado' },
-                   { value: 'viudo', label: 'Viudo' }
-                 ]},
-                 { key: 'personas_a_cargo', label: 'Personas a Cargo', type: 'text' },
-                 { key: 'numero_celular', label: 'Número de Celular', type: 'tel' },
-                 { key: 'correo_electronico', label: 'Correo Electrónico', type: 'email' },
-                 { key: 'nivel_estudio', label: 'Nivel de Estudio', type: 'select', options: [
-                   { value: 'primaria', label: 'Primaria' },
-                   { value: 'secundaria', label: 'Secundaria' },
-                   { value: 'tecnico', label: 'Técnico' },
-                   { value: 'tecnologo', label: 'Tecnólogo' },
-                   { value: 'profesional', label: 'Profesional' },
-                   { value: 'especializacion', label: 'Especialización' },
-                   { value: 'maestria', label: 'Maestría' },
-                   { value: 'doctorado', label: 'Doctorado' }
-                 ]},
-                 { key: 'profesion', label: 'Profesión', type: 'text' }
-               ];
-
-              return fields.map(field => (
-                <div key={field.key} className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {field.label}
-                  </label>
-                  {isEditing && canEditCustomer() ? (
-                    field.type === 'select' ? (
-                      <select
-                        value={segundoTitularInfo[field.key] || ''}
-                        onChange={(e) => handleSegundoTitularChange(field.key, e.target.value)}
-                        className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                        disabled={loading}
-                      >
-                        <option value="">Seleccionar...</option>
-                        {field.options?.map(option => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        type={field.type}
-                        value={segundoTitularInfo[field.key] || ''}
-                        onChange={(e) => handleSegundoTitularChange(field.key, e.target.value)}
-                        className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                        disabled={loading}
-                      />
-                    )
-                  ) : (
-                    <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
-                      <span>{segundoTitularInfo[field.key] || '-'}</span>
-                    </div>
-                  )}
-                </div>
-              ));
-            })()}
-          </div>
-        </div>
-      )}
 
       {/* Archivos */}
       <Section title="Archivos" keys={['archivos']} customer={editedCustomer} renderField={renderField} />
-
-      {/* Solicitudes */}
-      <Section title="Solicitudes" keys={['banco']} customer={editedCustomer} renderField={renderField} />
       <div className="flex justify-end space-x-2">
         {isEditing ? (
           <>

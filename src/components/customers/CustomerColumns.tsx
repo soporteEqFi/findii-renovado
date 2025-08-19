@@ -65,7 +65,7 @@ export const columns = [
     enableSorting: true,
   }),
 
-  columnHelper.accessor('nombre', {
+  columnHelper.accessor('nombre_completo', {
     header: 'Nombre',
     cell: (info) => <span className="font-medium">{info.getValue()}</span>,
     enableColumnFilter: true,
@@ -75,7 +75,7 @@ export const columns = [
     cell: (info) => info.getValue(),
     enableColumnFilter: true,
   }),
-  columnHelper.accessor('correo', {
+  columnHelper.accessor('correo_electronico', {
     header: 'Correo',
     cell: (info) => (
       <div className="flex items-center">
@@ -83,27 +83,6 @@ export const columns = [
         {info.getValue()}
       </div>
     ),
-  }),
-  columnHelper.accessor('numero_celular', {
-    header: 'Número Celular',
-    cell: (info) => (
-      <div className="flex items-center">
-        <Phone className="w-4 h-4 mr-2 text-gray-500" />
-        {info.getValue()}
-      </div>
-    ),
-  }),
-  columnHelper.accessor('ciudad_gestion', {
-    header: 'Ciudad Gestión',
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor('tipo_credito', {
-    header: 'Producto Solicitado',
-    cell: (info) => info.getValue(),
-  }),
-  columnHelper.accessor('banco', {
-    header: 'Banco',
-    cell: (info) => info.getValue(),
   }),
   columnHelper.accessor('estado', {
     header: 'Estado',

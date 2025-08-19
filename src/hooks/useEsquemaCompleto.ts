@@ -145,7 +145,97 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
 
     } catch (err) {
       console.error('Error cargando esquema completo:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.warn(`No se pudo cargar esquema desde backend para ${entidad}, usando esquema temporal`);
+
+            // ✅ FALLBACK: Usar esquemas temporales si el backend falla
+      try {
+        const { esquemasTemporales } = await import('../config/esquemasTemporales');
+        const esquemaTemporal = esquemasTemporales[`${entidad}_info_extra`] || [];
+
+        // ✅ Definir campos fijos según la entidad
+        let camposFijos: EsquemaCampo[] = [];
+
+        if (entidad === 'solicitante') {
+          camposFijos = [
+            {
+              key: 'nombres',
+              type: 'string',
+              required: true,
+              description: 'Nombres',
+              order_index: 1
+            },
+            {
+              key: 'primer_apellido',
+              type: 'string',
+              required: true,
+              description: 'Primer apellido',
+              order_index: 2
+            },
+            {
+              key: 'segundo_apellido',
+              type: 'string',
+              required: false,
+              description: 'Segundo apellido',
+              order_index: 3
+            },
+            {
+              key: 'tipo_identificacion',
+              type: 'array',
+              required: true,
+              list_values: {
+                enum: ['CC', 'TE', 'TI']
+              },
+              description: 'Tipo de identificación',
+              order_index: 4
+            },
+            {
+              key: 'numero_documento',
+              type: 'string',
+              required: true,
+              description: 'Número de documento',
+              order_index: 5
+            },
+            {
+              key: 'fecha_nacimiento',
+              type: 'date',
+              required: true,
+              description: 'Fecha de nacimiento',
+              order_index: 6
+            },
+            {
+              key: 'genero',
+              type: 'array',
+              required: true,
+              list_values: {
+                enum: ['M', 'F']
+              },
+              description: 'Género',
+              order_index: 7
+            },
+            {
+              key: 'correo',
+              type: 'string',
+              required: true,
+              description: 'Correo electrónico',
+              order_index: 8
+            }
+          ];
+        }
+
+        const esquemaCompleto: EsquemaCompleto = {
+          entidad: entidad,
+          tabla: entidad,  // Mantener nombres originales como en la BD
+          json_column: 'info_extra',
+          total_campos: camposFijos.length + esquemaTemporal.length,
+          campos_fijos: camposFijos,
+          campos_dinamicos: esquemaTemporal // Campos adicionales del JSON
+        };
+
+        setEsquema(esquemaCompleto);
+      } catch (fallbackError) {
+        console.error('Error cargando esquema temporal:', fallbackError);
+        setError(err instanceof Error ? err.message : 'Error desconocido');
+      }
     } finally {
       setLoading(false);
     }

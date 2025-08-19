@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FieldDefinition } from '../../types/fieldDefinition';
 
 interface Props {
@@ -20,6 +20,7 @@ const defaultItem: FieldDefinition = {
 
 const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
   const [form, setForm] = useState<FieldDefinition>(initial || defaultItem);
+  const [listValuesText, setListValuesText] = useState<string>(''); // ✅ Estado local para el textarea
 
   useEffect(() => {
     if (initial) setForm(initial);
@@ -29,6 +30,20 @@ const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
   const isArray = form.type === 'array';
   const isString = form.type === 'string';
 
+  // ✅ Sincronizar el texto del textarea cuando cambie form.list_values desde fuera
+  useEffect(() => {
+    if (isObject) {
+      setListValuesText(form.list_values ? JSON.stringify(form.list_values, null, 2) : '');
+    } else if (isArray) {
+      const arr = (form.list_values && (form.list_values as any).enum) || [];
+      setListValuesText(Array.isArray(arr) ? arr.join(', ') : '');
+    } else if (isString) {
+      setListValuesText(Array.isArray(form.list_values) ? (form.list_values as any[]).join(', ') : '');
+    } else {
+      setListValuesText('');
+    }
+  }, [form.list_values, isObject, isArray, isString]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target as any;
     setForm(prev => ({
@@ -37,22 +52,25 @@ const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
     }));
   };
 
-  const handleListValuesChange = (value: string) => {
-    // Para string: options separadas por coma
-    // Para array: enum separada por coma
-    // Para object: estructura como JSON { object_structure: [{key, type, required}] }
+  // ✅ Solo actualizar el estado local del textarea (sin procesamiento inmediato)
+  const handleListValuesTextChange = (value: string) => {
+    setListValuesText(value);
+  };
+
+  // ✅ Procesar solo cuando se pierde el foco (onBlur)
+  const handleListValuesBlur = () => {
     try {
       if (isObject) {
-        const parsed = JSON.parse(value || 'null');
+        const parsed = JSON.parse(listValuesText || 'null');
         setForm(prev => ({ ...prev, list_values: parsed }));
       } else if (isArray) {
-        const enumArr = value
+        const enumArr = listValuesText
           .split(',')
           .map(v => v.trim())
           .filter(Boolean);
         setForm(prev => ({ ...prev, list_values: { enum: enumArr } }));
       } else if (isString) {
-        const arr = value
+        const arr = listValuesText
           .split(',')
           .map(v => v.trim())
           .filter(Boolean);
@@ -61,28 +79,22 @@ const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
         setForm(prev => ({ ...prev, list_values: undefined }));
       }
     } catch (e) {
-      // ignore parse error, user can fix
+      // En caso de error de parsing, mostrar un mensaje o mantener el valor
+      console.warn('Error parsing list values:', e);
     }
   };
-
-  const listValuesText = useMemo(() => {
-    if (isObject) {
-      return form.list_values ? JSON.stringify(form.list_values, null, 2) : '';
-    }
-    if (isArray) {
-      const arr = (form.list_values && (form.list_values as any).enum) || [];
-      return Array.isArray(arr) ? arr.join(', ') : '';
-    }
-    if (isString) {
-      return Array.isArray(form.list_values) ? (form.list_values as any[]).join(', ') : '';
-    }
-    return '';
-  }, [form.list_values, isObject, isArray, isString]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.key) return;
-    onSubmit(form);
+
+    // ✅ Asegurar que los list_values estén actualizados antes del submit
+    handleListValuesBlur();
+
+    // Dar un micro-delay para que se actualice el estado
+    setTimeout(() => {
+      onSubmit(form);
+    }, 10);
   };
 
   return (
@@ -124,6 +136,7 @@ const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
             <option value="integer">integer</option>
             <option value="number">number</option>
             <option value="boolean">boolean</option>
+            <option value="date">date</option>
             <option value="object">object</option>
             <option value="array">array</option>
           </select>
@@ -150,10 +163,12 @@ const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
           </label>
           <textarea
             value={listValuesText}
-            onChange={(e) => handleListValuesChange(e.target.value)}
+            onChange={(e) => handleListValuesTextChange(e.target.value)}
+            onBlur={handleListValuesBlur}
             className="w-full border rounded px-3 py-2 font-mono"
             rows={isObject ? 6 : 3}
             placeholder={isObject ? '{"object_structure": [{"key":"subcampo","type":"string","required":false}]}' : 'opcion1, opcion2, opcion3'}
+            title="Escribe las opciones separadas por comas. El procesamiento se hace al salir del campo."
           />
         </div>
       )}

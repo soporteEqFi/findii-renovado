@@ -12,6 +12,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Nombres del solicitante',
+      default_value: 'Juan Carlos',
       order_index: 1
     },
     {
@@ -19,6 +20,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Primer apellido',
+      default_value: 'Rodríguez',
       order_index: 2
     },
     {
@@ -26,6 +28,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: false,
       description: 'Segundo apellido',
+      default_value: 'García',
       order_index: 3
     },
     {
@@ -33,9 +36,10 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'array',
       required: true,
       list_values: {
-        enum: ['cc', 'ti', 'ce', 'pa']
+        enum: ['CC', 'TE', 'TI']
       },
       description: 'Tipo de identificación',
+      default_value: 'CC',
       order_index: 4
     },
     {
@@ -43,6 +47,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Número de documento',
+      default_value: '12345678',
       order_index: 5
     },
     {
@@ -60,6 +65,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['M', 'F']
       },
       description: 'Género',
+      default_value: 'M',
       order_index: 7
     },
     {
@@ -67,6 +73,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Correo electrónico',
+      default_value: 'juan.rodriguez@email.com',
       order_index: 8
     },
     {
@@ -74,6 +81,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Teléfono de contacto',
+      default_value: '3001234567',
       order_index: 9
     },
     {
@@ -84,6 +92,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['Soltero', 'Casado', 'Divorciado', 'Viudo', 'Unión Libre']
       },
       description: 'Estado Civil',
+      default_value: 'Soltero',
       order_index: 10
     },
     {
@@ -91,6 +100,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'integer',
       required: false,
       description: 'Número de personas a cargo',
+      default_value: 0,
       order_index: 11
     }
   ],
@@ -102,6 +112,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Ciudad de residencia',
+      default_value: 'Bogotá',
       order_index: 1
     },
     {
@@ -109,6 +120,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Departamento de residencia',
+      default_value: 'Cundinamarca',
       order_index: 2
     },
     {
@@ -116,6 +128,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Dirección de residencia',
+      default_value: 'Calle 123 #45-67',
       order_index: 3
     },
     {
@@ -123,6 +136,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: false,
       description: 'Barrio',
+      default_value: 'Chapinero',
       order_index: 4
     },
     {
@@ -130,6 +144,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'integer',
       required: false,
       description: 'Estrato socioeconómico',
+      default_value: 3,
       order_index: 5
     },
     {
@@ -139,12 +154,19 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       description: 'Información del arrendador',
       list_values: {
         object_structure: [
-          { key: 'nombre', type: 'string', required: true, description: 'Nombre del arrendador' },
-          { key: 'telefono', type: 'string', required: true, description: 'Teléfono de contacto' },
-          { key: 'ciudad', type: 'string', required: false, description: 'Ciudad' },
-          { key: 'departamento', type: 'string', required: false, description: 'Departamento' },
-          { key: 'valor_mensual_arriendo', type: 'number', required: false, description: 'Valor mensual del arriendo' }
+          { key: 'nombre', type: 'string', required: true, description: 'Nombre del arrendador', default_value: 'María López' },
+          { key: 'telefono', type: 'string', required: true, description: 'Teléfono de contacto', default_value: '3009876543' },
+          { key: 'ciudad', type: 'string', required: false, description: 'Ciudad', default_value: 'Bogotá' },
+          { key: 'departamento', type: 'string', required: false, description: 'Departamento', default_value: 'Cundinamarca' },
+          { key: 'valor_mensual_arriendo', type: 'number', required: false, description: 'Valor mensual del arriendo', default_value: 1200000 }
         ]
+      },
+      default_value: {
+        nombre: 'María López',
+        telefono: '3009876543',
+        ciudad: 'Bogotá',
+        departamento: 'Cundinamarca',
+        valor_mensual_arriendo: 1200000
       },
       order_index: 6
     }
@@ -160,6 +182,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['empleado', 'independiente', 'pensionado', 'desempleado']
       },
       description: 'Tipo de actividad económica',
+      default_value: 'empleado',
       order_index: 1
     },
     {
@@ -170,6 +193,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['servicios', 'comercio', 'industria', 'agricultura', 'construccion', 'otros']
       },
       description: 'Sector económico',
+      default_value: 'servicios',
       order_index: 2
     },
     {
@@ -177,6 +201,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: false,
       description: 'Nombre de la empresa',
+      default_value: 'TechCorp SAS',
       order_index: 3
     },
     {
@@ -184,6 +209,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: false,
       description: 'Cargo actual',
+      default_value: 'Desarrollador Senior',
       order_index: 4
     },
     {
@@ -191,6 +217,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'integer',
       required: false,
       description: 'Antigüedad en meses',
+      default_value: 48,
       order_index: 5
     },
     {
@@ -198,6 +225,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Ingresos mensuales',
+      default_value: 4500000,
       order_index: 6
     }
   ],
@@ -209,6 +237,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: true,
       description: 'Total de ingresos mensuales',
+      default_value: 5000000,
       order_index: 1
     },
     {
@@ -216,6 +245,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: true,
       description: 'Total de egresos mensuales',
+      default_value: 2800000,
       order_index: 2
     },
     {
@@ -223,6 +253,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Total de activos',
+      default_value: 45000000,
       order_index: 3
     },
     {
@@ -230,6 +261,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Total de pasivos',
+      default_value: 2500000,
       order_index: 4
     },
     {
@@ -237,6 +269,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Otros ingresos mensuales',
+      default_value: 500000,
       order_index: 5
     },
     {
@@ -244,6 +277,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Gastos de vivienda',
+      default_value: 1200000,
       order_index: 6
     },
     {
@@ -251,6 +285,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Gastos de alimentación',
+      default_value: 600000,
       order_index: 7
     },
     {
@@ -258,9 +293,9 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Gastos de transporte',
+      default_value: 400000,
       order_index: 8
-    },
-
+    }
   ],
 
   // Esquema para referencias
@@ -273,6 +308,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['personal', 'familiar', 'laboral', 'comercial']
       },
       description: 'Tipo de referencia',
+      default_value: 'personal',
       order_index: 1
     },
     {
@@ -280,6 +316,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Nombre de la referencia',
+      default_value: 'Carlos Martínez',
       order_index: 2
     },
     {
@@ -287,6 +324,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: true,
       description: 'Teléfono de la referencia',
+      default_value: '3009876543',
       order_index: 3
     },
     {
@@ -294,6 +332,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'string',
       required: false,
       description: 'Parentesco o relación',
+      default_value: 'Amigo',
       order_index: 4
     }
   ],
@@ -305,6 +344,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: true,
       description: 'Monto solicitado',
+      default_value: 15000000,
       order_index: 1
     },
     {
@@ -312,6 +352,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'integer',
       required: true,
       description: 'Plazo en meses',
+      default_value: 36,
       order_index: 2
     },
     {
@@ -322,6 +363,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
         enum: ['Vivienda', 'Vehiculo', 'Negocio', 'Educación', 'Consumo', 'Otros']
       },
       description: 'Destino del crédito',
+      default_value: 'Vehiculo',
       order_index: 3
     },
     {
@@ -329,6 +371,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Cuota inicial',
+      default_value: 3000000,
       order_index: 4
     },
     {
@@ -336,6 +379,7 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       type: 'number',
       required: false,
       description: 'Valor del inmueble',
+      default_value: 0,
       order_index: 5
     }
   ]

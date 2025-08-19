@@ -33,7 +33,7 @@ const ObjectField: React.FC<{
               {subcampo.list_values && Array.isArray(subcampo.list_values) && subcampo.list_values.length > 0 ? (
                 // Si el subcampo tiene opciones, renderizar select
                 <select
-                  value={value[subcampo.key] || ''}
+                  value={value[subcampo.key] ?? subcampo.default_value ?? ''}
                   onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
                   required={subcampo.required}
                   disabled={disabled}
@@ -49,7 +49,7 @@ const ObjectField: React.FC<{
                 <input
                   type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
                   placeholder={subcampo.description || subcampo.key}
-                  value={value[subcampo.key] || ''}
+                  value={value[subcampo.key] ?? subcampo.default_value ?? ''}
                   onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
                   required={subcampo.required}
                   disabled={disabled}
@@ -87,6 +87,9 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   error,
   disabled = false
 }) => {
+  // Usar default_value si value es null/undefined/empty
+  const efectiveValue = value ?? campo.default_value ?? '';
+
   const handleChange = (newValue: any) => {
     onChange(campo.key, newValue);
   };
@@ -105,7 +108,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           const opciones = (campo.list_values as { enum: string[] }).enum;
           return (
             <select
-              value={value || ''}
+              value={efectiveValue || ''}
               onChange={(e) => handleChange(e.target.value)}
               className={baseClasses}
               required={campo.required}
@@ -125,7 +128,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           const opciones = campo.list_values as string[];
           return (
             <select
-              value={value || ''}
+              value={efectiveValue || ''}
               onChange={(e) => handleChange(e.target.value)}
               className={baseClasses}
               required={campo.required}
@@ -144,7 +147,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         return (
           <input
             type="text"
-            value={value || ''}
+            value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             className={baseClasses}
             required={campo.required}
@@ -158,7 +161,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         return (
           <input
             type="number"
-            value={value || ''}
+            value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             className={baseClasses}
             required={campo.required}
@@ -173,7 +176,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           <div className="flex items-center">
             <input
               type="checkbox"
-              checked={value || false}
+              checked={efectiveValue || false}
               onChange={(e) => handleChange(e.target.checked)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               required={campo.required}
@@ -189,7 +192,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         return (
           <input
             type="date"
-            value={value || ''}
+            value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             className={baseClasses}
             required={campo.required}
@@ -205,7 +208,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
             <ObjectField
               name={campo.description || campo.key}
               structure={estructura}
-              value={value || {}}
+              value={efectiveValue || {}}
               onChange={handleChange}
               disabled={disabled}
             />
@@ -224,7 +227,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           const opciones = (campo.list_values as { enum: string[] }).enum;
           return (
             <select
-              value={value || ''}
+              value={efectiveValue || ''}
               onChange={(e) => handleChange(e.target.value)}
               className={baseClasses}
               required={campo.required}
@@ -250,7 +253,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         return (
           <input
             type="text"
-            value={value || ''}
+            value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
             className={baseClasses}
             required={campo.required}
