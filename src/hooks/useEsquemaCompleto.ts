@@ -220,12 +220,36 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
               order_index: 8
             }
           ];
+        } else if (entidad === 'solicitud') {
+          camposFijos = [
+            {
+              key: 'estado',
+              type: 'string',
+              required: true,
+              description: 'Estado de la solicitud',
+              order_index: 1
+            }
+          ];
+        }
+
+        // Determinar el nombre de la columna JSON según la entidad
+        let jsonColumn = 'info_extra';
+        if (entidad === 'solicitud') {
+          jsonColumn = 'detalle_credito';
+        } else if (entidad === 'ubicacion') {
+          jsonColumn = 'detalle_direccion';
+        } else if (entidad === 'actividad_economica') {
+          jsonColumn = 'detalle_actividad';
+        } else if (entidad === 'informacion_financiera') {
+          jsonColumn = 'detalle_financiera';
+        } else if (entidad === 'referencia') {
+          jsonColumn = 'detalle_referencia';
         }
 
         const esquemaCompleto: EsquemaCompleto = {
           entidad: entidad,
           tabla: entidad,  // Mantener nombres originales como en la BD
-          json_column: 'info_extra',
+          json_column: jsonColumn,
           total_campos: camposFijos.length + esquemaTemporal.length,
           campos_fijos: camposFijos,
           campos_dinamicos: esquemaTemporal // Campos adicionales del JSON

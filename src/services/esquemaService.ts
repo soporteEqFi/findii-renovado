@@ -235,7 +235,7 @@ export const esquemaService = {
       const primerElemento = campo.list_values[0];
       if (primerElemento && typeof primerElemento === 'object' && 'key' in primerElemento) {
         const objetoCompleto: Record<string, any> = {};
-        (campo.list_values as EsquemaCampo[]).forEach((subcampo: EsquemaCampo) => {
+        (campo.list_values as unknown as EsquemaCampo[]).forEach((subcampo: EsquemaCampo) => {
           const valor = valores[`${campo.key}.${subcampo.key}`];
           if (valor !== undefined && valor !== null && valor !== '') {
             objetoCompleto[subcampo.key] = valor;
@@ -489,7 +489,7 @@ export const esquemaService = {
     }
   },
 
-  // Función auxiliar para extraer datos de una entidad específica
+    // Función auxiliar para extraer datos de una entidad específica
   extraerDatosEntidad(formData: Record<string, any>, esquema: any, entidad: string): Record<string, any> {
     if (!esquema) {
       console.warn(`⚠️ No hay esquema para ${entidad}`);
@@ -512,19 +512,68 @@ export const esquemaService = {
       // Determinar el nombre del objeto JSON según la entidad
       const jsonObjectName = this.getJsonObjectName(entidad);
 
-      if (!datos[jsonObjectName]) {
+      // Caso especial para detalle_credito: crear objeto detalle_credito con todos los campos
+      if (jsonObjectName === 'detalle_credito') {
+        // Crear el objeto detalle_credito
         datos[jsonObjectName] = {};
-      }
 
-      esquema.campos_dinamicos.forEach((campo: any) => {
-        if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
-          datos[jsonObjectName][campo.key] = formData[campo.key];
+        // Buscar campos dinámicos en el nivel superior
+        esquema.campos_dinamicos.forEach((campo: any) => {
+          const valor = formData[campo.key];
+          if (valor !== undefined && valor !== null && valor !== '') {
+            // Si el valor es un objeto, extraer sus campos al detalle_credito
+            if (typeof valor === 'object' && !Array.isArray(valor)) {
+              Object.keys(valor).forEach(subKey => {
+                const subValor = valor[subKey];
+                if (subValor !== undefined && subValor !== null && subValor !== '') {
+                  // Mapear nombre_banco a banco
+                  const keyFinal = subKey === 'nombre_banco' ? 'banco' : subKey;
+                  datos[jsonObjectName][keyFinal] = subValor;
+                }
+              });
+            } else {
+              // Para campos simples, agregarlos directamente al detalle_credito
+              datos[jsonObjectName][campo.key] = valor;
+            }
+          }
+        });
+
+        // Buscar CUALQUIER objeto anidado y extraer todos sus campos al detalle_credito
+        Object.keys(formData).forEach(key => {
+          const valor = formData[key];
+          if (valor && typeof valor === 'object' && !Array.isArray(valor)) {
+            // Extraer TODOS los campos del objeto anidado y ponerlos en detalle_credito
+            Object.keys(valor).forEach(subKey => {
+              const subValor = valor[subKey];
+              if (subValor !== undefined && subValor !== null && subValor !== '') {
+                // Mapear nombre_banco a banco
+                const keyFinal = subKey === 'nombre_banco' ? 'banco' : subKey;
+                datos[jsonObjectName][keyFinal] = subValor;
+              }
+            });
+          }
+        });
+
+        // Solo incluir detalle_credito si tiene campos
+        if (Object.keys(datos[jsonObjectName]).length === 0) {
+          delete datos[jsonObjectName];
         }
-      });
+      } else {
+        // Para otros campos JSON, mantener la estructura anidada
+        if (!datos[jsonObjectName]) {
+          datos[jsonObjectName] = {};
+        }
 
-      // Solo incluir el objeto JSON si tiene campos
-      if (Object.keys(datos[jsonObjectName]).length === 0) {
-        delete datos[jsonObjectName];
+        esquema.campos_dinamicos.forEach((campo: any) => {
+          if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
+            datos[jsonObjectName][campo.key] = formData[campo.key];
+          }
+        });
+
+        // Solo incluir el objeto JSON si tiene campos
+        if (Object.keys(datos[jsonObjectName]).length === 0) {
+          delete datos[jsonObjectName];
+        }
       }
     }
 
