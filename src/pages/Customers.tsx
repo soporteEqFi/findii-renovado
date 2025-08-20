@@ -87,46 +87,13 @@ const Customers = () => {
     setEditedCustomer({ ...editedCustomer, [field]: value });
   };
 
-  const handleStatusChange = async (customer: Customer, newStatus: string) => {
+    const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
-      // Obtener la cédula del asesor
-      const cedula = localStorage.getItem('cedula') || '';
+      const success = await updateStatus(customer, newStatus);
 
-      if (!cedula) {
-        throw new Error('No se encontró la información del asesor');
+      if (!success) {
+        console.error('Error al actualizar estado');
       }
-
-      console.log('Enviando cambio de estado al backend:', {
-        estado: newStatus,
-        solicitante_id: customer.id_solicitante,
-        numero_documento: customer.numero_documento,
-        cedula: cedula
-      });
-
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_STATUS), {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          estado: newStatus,
-          solicitante_id: customer.id_solicitante,
-          numero_documento: customer.numero_documento,
-          cedula: cedula
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('Error del servidor:', errorData);
-        throw new Error(`Error en la respuesta del servidor: ${response.status}`);
-      }
-
-      console.log('Estado actualizado exitosamente');
-
-      // Recargar los datos para reflejar el cambio
-      await loadCustomers();
     } catch (error) {
       console.error('Error al actualizar estado:', error);
       throw error;

@@ -20,7 +20,7 @@ export const useCustomers = () => {
 
       const empresaId = localStorage.getItem('empresa_id') || '1';
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`;
-      console.log('🌐 Llamando endpoint:', url);
+
 
       const response = await fetch(url, {
         headers: {
@@ -34,19 +34,6 @@ export const useCustomers = () => {
       }
 
       const responseData: ApiResponse = await response.json();
-      console.log('🔍 === DIAGNÓSTICO BACKEND ===');
-      console.log('📦 API Response raw:', responseData);
-      console.log('📊 Primer cliente (si existe):', responseData.data?.[0]);
-      console.log('📋 Estructura del primer cliente:');
-      if (responseData.data?.[0]) {
-        const cliente = responseData.data[0];
-        console.log('  - solicitante:', cliente.solicitante);
-        console.log('  - ubicacion:', cliente.ubicacion);
-        console.log('  - actividad_economica:', cliente.actividad_economica);
-        console.log('  - informacion_financiera:', cliente.informacion_financiera);
-        console.log('  - solicitud:', cliente.solicitud);
-      }
-      console.log('🔍 === FIN DIAGNÓSTICO BACKEND ===');
 
       // Handle the response structure
       if (!responseData.data || !Array.isArray(responseData.data)) {
@@ -55,20 +42,11 @@ export const useCustomers = () => {
 
       // Map the API response to the Customer type
       const mappedCustomers = responseData.data.map((item, index) => {
-        console.log(`🔍 Mapeando cliente ${index + 1}:`, item);
-
         const s = item.solicitante || {};
         const ue = item.ubicacion || {};
         const act = item.actividad_economica || {};
         const fin = item.informacion_financiera || {};
         const sol = item.solicitud || {};
-
-        console.log(`📊 Datos del cliente ${index + 1}:`);
-        console.log('  - Solicitante:', s);
-        console.log('  - Ubicación:', ue);
-        console.log('  - Actividad Económica:', act);
-        console.log('  - Información Financiera:', fin);
-        console.log('  - Solicitud:', sol);
 
         // Build full name from available name fields
         const fullName = [
@@ -81,6 +59,7 @@ export const useCustomers = () => {
           id: s.id || `temp-${Math.random().toString(36).substr(2, 9)}`,
           id_solicitante: s.id,
           solicitante_id: s.id,
+          id_solicitud: sol.id || sol.solicitud_id || item.id_solicitud || item.solicitud_id || item.solicitud?.id || item.solicitudes?.[0]?.id || item.id, // ID de la solicitud para actualizar estado
           nombre: fullName || 'Sin nombre',
           nombre_completo: fullName || 'Sin nombre',
           correo: s.correo || '',
@@ -130,17 +109,7 @@ export const useCustomers = () => {
           segundo_titular: ''
         } as Customer;
 
-        console.log(`✅ Cliente ${index + 1} mapeado:`, {
-          nombre_completo: fullName,
-          correo_electronico: s.correo,
-          numero_celular: ue.detalle_direccion?.celular || ue.celular,
-          tipo_credito: sol.tipo_credito,
-          banco: sol.banco,
-          estado: sol.estado,
-          ingresos: fin.total_ingresos_mensuales || fin.ingresos,
-          valor_inmueble: fin.valor_inmueble,
-          cuota_inicial: 0
-        });
+
       });
 
       setCustomers(mappedCustomers);
@@ -230,22 +199,29 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.EDIT_STATUS}`, {
-        method: 'PUT',
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.ACTUALIZAR_ESTADO}?empresa_id=1`;
+
+      const payload = {
+        id: customer.id_solicitud || customer.id, // Usar ID de solicitud si está disponible, sino el ID del cliente
+        estado: newStatus
+      };
+
+      const response = await fetch(url, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
-        body: JSON.stringify({
-          id: customer.id,
-          estado: newStatus
-        })
+        body: JSON.stringify(payload)
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || 'Error al actualizar el estado');
+        const errorText = await response.text();
+        console.error('❌ Error del servidor:', errorText);
+        throw new Error(`Error ${response.status}: ${errorText}`);
       }
+
+      const result = await response.json();
 
       // Update local state
       setCustomers(prev =>

@@ -104,6 +104,8 @@ export const columns = [
       const currentState = info.getValue() || 'Pendiente';
       const customer = info.row.original;
 
+
+
       // Función para mapear el estado visual al estado que se envía al backend
       const mapEstadoToBackend = (estadoVisual: string): string => {
         switch (estadoVisual.toLowerCase()) {
@@ -130,11 +132,6 @@ export const columns = [
 
       const handleStatusChange = async (newStatus: string) => {
         try {
-          console.log('Iniciando cambio de estado:', {
-            id_solicitante: customer.id_solicitante,
-            numero_documento: customer.numero_documento,
-            newStatus
-          });
           // Mapear el estado visual al estado que se envía al backend
           const estadoBackend = mapEstadoToBackend(newStatus);
           await info.table.options.meta?.updateStatus(customer, estadoBackend);
@@ -158,10 +155,13 @@ export const columns = [
       return (
         <div className="relative" onClick={(e) => e.stopPropagation()}>
           <button
-            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
+            className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
               colorClasses[currentState as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800'
             }`}
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsOpen(!isOpen);
+            }}
           >
             {info.getValue() || 'Pendiente'}
             <ChevronDown className={`w-4 h-4 ml-1 transition-transform duration-200 ${
@@ -174,10 +174,13 @@ export const columns = [
                 {estados.map((estado) => (
                   <button
                     key={estado}
-                    className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                    className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 cursor-pointer ${
                       estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50' : ''
                     }`}
-                    onClick={() => handleStatusChange(estado)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleStatusChange(estado);
+                    }}
                   >
                     {estado}
                   </button>

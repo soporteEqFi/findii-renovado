@@ -14,7 +14,7 @@ export const API_CONFIG = {
     ADD_RECORD: '/add-record/',
     EDIT_RECORD: '/edit-record/',
     DELETE_CUSTOMER: '/delete-customer',
-    EDIT_STATUS: '/editar-estado',
+    ACTUALIZAR_ESTADO: '/solicitudes/actualizar-estado',
     // Dashboard tabla nuevo origen de datos
     DASHBOARD_TABLA: '/dashboard/tabla',
 
