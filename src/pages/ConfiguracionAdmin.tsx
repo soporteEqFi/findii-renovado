@@ -1,44 +1,80 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Plus, RefreshCcw } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { FieldDefinition } from '../types/fieldDefinition';
 import { fieldConfigService } from '../services/fieldConfigService';
 import { toast } from 'react-hot-toast';
 import FieldForm from '../components/configuracion/FieldForm';
-import FieldTable from '../components/configuracion/FieldTable';
+
+interface EntityGroup {
+  entity: string;
+  jsonColumn: string;
+  displayName: string;
+  description: string;
+  fields: FieldDefinition[];
+  fieldCount: number;
+  isActive: boolean;
+}
 
 const ConfiguracionAdmin: React.FC = () => {
-  const [items, setItems] = useState<FieldDefinition[]>([]);
+  const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editing, setEditing] = useState<FieldDefinition | null>(null);
-  const [entity, setEntity] = useState<string>('solicitante');
-  const [jsonColumn, setJsonColumn] = useState<string>('info_extra');
+  const [selectedGroup, setSelectedGroup] = useState<EntityGroup | null>(null);
 
-  const entityOptions = useMemo(() => ([
-    'solicitante',
-    'ubicacion',
-    'actividad_economica',
-    'informacion_financiera',
-    'referencia',
-    'solicitud',
+  const entityConfig = useMemo(() => ([
+    {
+      entity: 'solicitante',
+      jsonColumn: 'info_extra',
+      displayName: 'Solicitante',
+      description: 'Configuración de campos personalizados para información del solicitante.'
+    },
+    {
+      entity: 'ubicacion',
+      jsonColumn: 'detalle_direccion',
+      displayName: 'Ubicación',
+      description: 'Configuración de campos personalizados para información de ubicación y direcciones.'
+    },
+    {
+      entity: 'actividad_economica',
+      jsonColumn: 'detalle_actividad',
+      displayName: 'Actividad Económica',
+      description: 'Configuración de campos personalizados para información de actividad económica.'
+    },
+    {
+      entity: 'informacion_financiera',
+      jsonColumn: 'detalle_financiera',
+      displayName: 'Información Financiera',
+      description: 'Configuración de campos personalizados para información financiera del solicitante.'
+    }
   ]), []);
 
-  const jsonColumnsByEntity: Record<string, string[]> = useMemo(() => ({
-    solicitante: ['info_extra'],
-    ubicacion: ['detalle_direccion'],
-    actividad_economica: ['detalle_actividad'],
-    informacion_financiera: ['detalle_financiera'],
-    referencia: ['detalle_referencia'],
-    solicitud: ['detalle_credito'],
-  }), []);
-
-  const load = async () => {
+  const loadAllGroups = async () => {
     setLoading(true);
     try {
-      const list = await fieldConfigService.listBy(entity, jsonColumn);
-      // Normalizar agregando entity/json_column al item por si backend no los incluye en cada definición
-      const normalized = list.map(it => ({ ...it, entity, json_column: jsonColumn } as FieldDefinition));
-      setItems(normalized);
+      const groups: EntityGroup[] = [];
+      
+      for (const config of entityConfig) {
+        try {
+          const fields = await fieldConfigService.listBy(config.entity, config.jsonColumn);
+          groups.push({
+            ...config,
+            fields: fields.map(field => ({ ...field, entity: config.entity, json_column: config.jsonColumn })),
+            fieldCount: fields.length,
+            isActive: true
+          });
+        } catch (e) {
+          // Si hay error cargando un grupo específico, agregarlo con 0 campos
+          groups.push({
+            ...config,
+            fields: [],
+            fieldCount: 0,
+            isActive: true
+          });
+        }
+      }
+      
+      setEntityGroups(groups);
     } catch (e: any) {
       toast.error(e.message || 'Error cargando configuración');
     } finally {
@@ -47,34 +83,36 @@ const ConfiguracionAdmin: React.FC = () => {
   };
 
   useEffect(() => {
-    // Ajustar jsonColumn cuando cambie entidad
-    const available = jsonColumnsByEntity[entity] || [];
-    if (!available.includes(jsonColumn)) {
-      setJsonColumn(available[0] || '');
-    }
-  }, [entity]);
-
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entity, jsonColumn]);
+    loadAllGroups();
+  }, []);
 
   const handleCreate = () => {
     setEditing(null);
     setShowForm(true);
   };
 
-  const handleEdit = (item: FieldDefinition) => {
-    setEditing(item);
+  const handleEdit = (group: EntityGroup) => {
+    setSelectedGroup(group);
+    setEditing(null);
     setShowForm(true);
   };
 
-  const handleDelete = async (item: FieldDefinition) => {
-    if (!confirm('¿Eliminar este campo?')) return;
+  const handleEditField = (field: FieldDefinition) => {
+    const group = entityGroups.find(g => g.entity === field.entity && g.jsonColumn === field.json_column);
+    setSelectedGroup(group || null);
+    setEditing(field);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (group: EntityGroup) => {
+    if (!confirm(`¿Eliminar toda la configuración de "${group.displayName}"?`)) return;
     try {
-      await fieldConfigService.delete(item.entity, item.json_column, item.key);
-      toast.success('Campo eliminado');
-      load();
+      // Eliminar todos los campos del grupo
+      for (const field of group.fields) {
+        await fieldConfigService.delete(field.entity, field.json_column, field.key);
+      }
+      toast.success('Configuración eliminada');
+      loadAllGroups();
     } catch (e: any) {
       toast.error(e.message || 'Error eliminando');
     }
@@ -82,77 +120,130 @@ const ConfiguracionAdmin: React.FC = () => {
 
   const handleSubmit = async (data: FieldDefinition) => {
     try {
-      // En ambos casos (crear/editar) usamos upsert por entidad/columna
+      const targetGroup = selectedGroup || entityGroups[0];
       const payload: FieldDefinition = {
         ...data,
-        entity,
-        json_column: jsonColumn,
+        entity: targetGroup.entity,
+        json_column: targetGroup.jsonColumn,
       };
-      await fieldConfigService.upsert(entity, jsonColumn, [payload]);
+      await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
       toast.success(editing ? 'Campo actualizado' : 'Campo creado');
       setShowForm(false);
       setEditing(null);
-      load();
+      setSelectedGroup(null);
+      loadAllGroups();
     } catch (e: any) {
       toast.error(e.message || 'Error guardando');
     }
   };
 
-  return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Configuración de Campos</h1>
-        <div className="flex gap-2 items-center">
-          <div className="flex items-center gap-2">
-            <label className="text-sm">Entidad</label>
-            <select
-              value={entity}
-              onChange={(e) => setEntity(e.target.value)}
-              className="border rounded px-2 py-1"
-            >
-              {entityOptions.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm">Columna JSON</label>
-            <select
-              value={jsonColumn}
-              onChange={(e) => setJsonColumn(e.target.value)}
-              className="border rounded px-2 py-1"
-            >
-              {(jsonColumnsByEntity[entity] || []).map(col => (
-                <option key={col} value={col}>{col}</option>
-              ))}
-            </select>
-          </div>
-          <button onClick={load} className="px-3 py-2 bg-slate-200 rounded hover:bg-slate-300 flex items-center gap-1">
-            <RefreshCcw size={16} /> Recargar
-          </button>
-          <button onClick={handleCreate} className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center gap-1">
-            <Plus size={16} /> Nuevo Campo
-          </button>
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Cargando configuración...</div>
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Configuración de Campos</h1>
+        <button 
+          onClick={handleCreate} 
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
+        >
+          <Plus size={16} />
+          Crear Nuevo
+        </button>
       </div>
 
       {showForm && (
-        <div className="mb-6 bg-white rounded shadow p-4">
-          <FieldForm
-            initial={editing || undefined}
-            onCancel={() => { setShowForm(false); setEditing(null); }}
-            onSubmit={handleSubmit}
-          />
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">
+                  {editing ? 'Editar Campo' : selectedGroup ? `Agregar Campo a ${selectedGroup.displayName}` : 'Crear Nuevo Campo'}
+                </h2>
+                <button 
+                  onClick={() => { setShowForm(false); setEditing(null); setSelectedGroup(null); }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <FieldForm
+                initial={editing || undefined}
+                selectedGroup={selectedGroup}
+                entityGroups={entityGroups}
+                onCancel={() => { setShowForm(false); setEditing(null); setSelectedGroup(null); }}
+                onSubmit={handleSubmit}
+              />
+            </div>
+          </div>
         </div>
       )}
 
-      <div className="bg-white rounded shadow">
-        <FieldTable
-          items={items}
-          loading={loading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
+      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <table className="min-w-full">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                NOMBRE
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                DESCRIPCIÓN
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                CAMPOS
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ESTADO
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ACCIONES
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {entityGroups.map((group, index) => (
+              <tr key={`${group.entity}-${group.jsonColumn}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm font-medium text-gray-900">{group.displayName}</div>
+                  <div className="text-xs text-gray-500">{group.entity}_{group.jsonColumn}</div>
+                </td>
+                <td className="px-6 py-4">
+                  <div className="text-sm text-gray-900 max-w-md">{group.description}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900">{group.fieldCount} campos</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Activo
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  <button 
+                    onClick={() => handleEdit(group)}
+                    className="text-blue-600 hover:text-blue-800 mr-4 font-medium"
+                  >
+                    Editar
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(group)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

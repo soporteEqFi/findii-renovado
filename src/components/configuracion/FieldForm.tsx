@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { FieldDefinition } from '../../types/fieldDefinition';
+import { Trash2, Plus } from 'lucide-react';
+
+interface EntityGroup {
+  entity: string;
+  jsonColumn: string;
+  displayName: string;
+  description: string;
+  fields: FieldDefinition[];
+  fieldCount: number;
+  isActive: boolean;
+}
 
 interface Props {
   initial?: FieldDefinition;
+  selectedGroup?: EntityGroup | null;
+  entityGroups?: EntityGroup[];
   onSubmit: (data: FieldDefinition) => void;
   onCancel: () => void;
 }
@@ -18,166 +31,468 @@ const defaultItem: FieldDefinition = {
   default_value: '',
 };
 
-const FieldForm: React.FC<Props> = ({ initial, onSubmit, onCancel }) => {
+const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSubmit, onCancel }) => {
   const [form, setForm] = useState<FieldDefinition>(initial || defaultItem);
-  const [listValuesText, setListValuesText] = useState<string>(''); // ✅ Estado local para el textarea
+  const [groupForm, setGroupForm] = useState({
+    displayName: selectedGroup?.displayName || '',
+    description: selectedGroup?.description || '',
+    isActive: selectedGroup?.isActive ?? true
+  });
+  const [newFieldForm, setNewFieldForm] = useState({
+    key: '',
+    displayName: '',
+    type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object',
+    required: false,
+    arrayOptions: [] as string[],
+    objectStructure: [] as { key: string; type: string; required: boolean }[]
+  });
+  const [showAddField, setShowAddField] = useState(false);
 
   useEffect(() => {
-    if (initial) setForm(initial);
-  }, [initial]);
-
-  const isObject = form.type === 'object';
-  const isArray = form.type === 'array';
-  const isString = form.type === 'string';
-
-  // ✅ Sincronizar el texto del textarea cuando cambie form.list_values desde fuera
-  useEffect(() => {
-    if (isObject) {
-      setListValuesText(form.list_values ? JSON.stringify(form.list_values, null, 2) : '');
-    } else if (isArray) {
-      const arr = (form.list_values && (form.list_values as any).enum) || [];
-      setListValuesText(Array.isArray(arr) ? arr.join(', ') : '');
-    } else if (isString) {
-      setListValuesText(Array.isArray(form.list_values) ? (form.list_values as any[]).join(', ') : '');
-    } else {
-      setListValuesText('');
+    if (initial) {
+      setForm(initial);
+    } else if (selectedGroup) {
+      setForm(prev => ({
+        ...prev,
+        entity: selectedGroup.entity,
+        json_column: selectedGroup.jsonColumn
+      }));
     }
-  }, [form.list_values, isObject, isArray, isString]);
+  }, [initial, selectedGroup]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+  useEffect(() => {
+    if (selectedGroup) {
+      setGroupForm({
+        displayName: selectedGroup.displayName,
+        description: selectedGroup.description,
+        isActive: selectedGroup.isActive
+      });
+    }
+  }, [selectedGroup]);
+
+  const handleGroupFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, checked } = e.target as any;
-    setForm(prev => ({
+    setGroupForm(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  // ✅ Solo actualizar el estado local del textarea (sin procesamiento inmediato)
-  const handleListValuesTextChange = (value: string) => {
-    setListValuesText(value);
+  const handleNewFieldChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target as any;
+    setNewFieldForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
-  // ✅ Procesar solo cuando se pierde el foco (onBlur)
-  const handleListValuesBlur = () => {
-    try {
-      if (isObject) {
-        const parsed = JSON.parse(listValuesText || 'null');
-        setForm(prev => ({ ...prev, list_values: parsed }));
-      } else if (isArray) {
-        const enumArr = listValuesText
-          .split(',')
-          .map(v => v.trim())
-          .filter(Boolean);
-        setForm(prev => ({ ...prev, list_values: { enum: enumArr } }));
-      } else if (isString) {
-        const arr = listValuesText
-          .split(',')
-          .map(v => v.trim())
-          .filter(Boolean);
-        setForm(prev => ({ ...prev, list_values: arr }));
-      } else {
-        setForm(prev => ({ ...prev, list_values: undefined }));
-      }
-    } catch (e) {
-      // En caso de error de parsing, mostrar un mensaje o mantener el valor
-      console.warn('Error parsing list values:', e);
+  const handleAddField = () => {
+    if (!newFieldForm.key || !newFieldForm.displayName) return;
+    
+    const newField: FieldDefinition = {
+      empresa_id: 1,
+      entity: selectedGroup?.entity || 'solicitante',
+      json_column: selectedGroup?.jsonColumn || 'info_extra',
+      key: newFieldForm.key,
+      type: newFieldForm.type as any,
+      required: newFieldForm.required,
+      description: newFieldForm.displayName,
+      default_value: '',
+    };
+    
+    // Add list_values for array and object types
+    if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
+      newField.list_values = { enum: newFieldForm.arrayOptions };
+    } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
+      newField.list_values = newFieldForm.objectStructure;
     }
+    
+    onSubmit(newField);
+    setNewFieldForm({ 
+      key: '', 
+      displayName: '', 
+      type: 'string', 
+      required: false,
+      arrayOptions: [],
+      objectStructure: []
+    });
+    setShowAddField(false);
+  };
+
+  const handleRemoveField = (field: FieldDefinition) => {
+    if (!confirm(`¿Eliminar el campo "${field.description || field.key}"?`)) return;
+    // This would need to be handled by the parent component
+    // For now, we'll just show a message
+    alert('Funcionalidad de eliminación pendiente de implementar');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.key) return;
-
-    // ✅ Asegurar que los list_values estén actualizados antes del submit
-    handleListValuesBlur();
-
-    // Dar un micro-delay para que se actualice el estado
-    setTimeout(() => {
+    if (initial) {
+      // Editing existing field
       onSubmit(form);
-    }, 10);
+    } else {
+      // This is handled by the add field functionality
+      alert('Use el botón "Agregar Campo" para añadir nuevos campos');
+    }
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium">Entidad</label>
-          <select name="entity" value={form.entity} onChange={handleChange} className="w-full border rounded px-3 py-2">
-            <option value="solicitante">solicitante</option>
-            <option value="ubicacion">ubicacion</option>
-            <option value="actividad_economica">actividad_economica</option>
-            <option value="informacion_financiera">informacion_financiera</option>
-            <option value="referencia">referencia</option>
-            <option value="solicitud">solicitud</option>
-          </select>
+  // If we're editing a specific field
+  if (initial) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
+            <input 
+              name="key" 
+              value={form.key} 
+              onChange={(e) => setForm(prev => ({ ...prev, key: e.target.value }))}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="credito_hipotecario"
+            />
+            <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
+            <input 
+              name="description" 
+              value={form.description || ''} 
+              onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="Crédito de vivienda"
+            />
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium">Columna JSON</label>
-          <select name="json_column" value={form.json_column} onChange={handleChange} className="w-full border rounded px-3 py-2">
-            <option value="info_extra">info_extra</option>
-            <option value="detalle_direccion">detalle_direccion</option>
-            <option value="detalle_actividad">detalle_actividad</option>
-            <option value="detalle_financiera">detalle_financiera</option>
-            <option value="detalle_referencia">detalle_referencia</option>
-            <option value="detalle_credito">detalle_credito</option>
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Clave (key)</label>
-          <input name="key" value={form.key} onChange={handleChange} className="w-full border rounded px-3 py-2" placeholder="ej: estado_civil" />
-        </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium">Tipo</label>
-          <select name="type" value={form.type} onChange={handleChange} className="w-full border rounded px-3 py-2">
-            <option value="string">string</option>
-            <option value="integer">integer</option>
-            <option value="number">number</option>
-            <option value="boolean">boolean</option>
-            <option value="date">date</option>
-            <option value="object">object</option>
-            <option value="array">array</option>
-          </select>
-        </div>
-        <div className="flex items-center gap-2">
-          <input id="required" type="checkbox" name="required" checked={form.required} onChange={handleChange} />
-          <label htmlFor="required" className="text-sm font-medium">Requerido</label>
-        </div>
-        <div>
-          <label className="block text-sm font-medium">Valor por defecto</label>
-          <input name="default_value" value={form.default_value ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Descripción</label>
-        <textarea name="description" value={form.description ?? ''} onChange={handleChange} className="w-full border rounded px-3 py-2" rows={2} />
-      </div>
-
-      {(isObject || isArray || isString) && (
-        <div>
-          <label className="block text-sm font-medium">
-            {isObject ? 'Estructura del objeto (JSON)' : isArray ? 'Opciones (comma-separated)' : 'Opciones para string (comma-separated)'}
-          </label>
-          <textarea
-            value={listValuesText}
-            onChange={(e) => handleListValuesTextChange(e.target.value)}
-            onBlur={handleListValuesBlur}
-            className="w-full border rounded px-3 py-2 font-mono"
-            rows={isObject ? 6 : 3}
-            placeholder={isObject ? '{"object_structure": [{"key":"subcampo","type":"string","required":false}]}' : 'opcion1, opcion2, opcion3'}
-            title="Escribe las opciones separadas por comas. El procesamiento se hace al salir del campo."
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea 
+            name="default_value" 
+            value={form.default_value || ''} 
+            onChange={(e) => setForm(prev => ({ ...prev, default_value: e.target.value }))}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            rows={3}
+            placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
         </div>
-      )}
 
-      <div className="flex justify-end gap-2">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded border">Cancelar</button>
-        <button type="submit" className="px-4 py-2 rounded bg-blue-600 text-white">Guardar</button>
+        <div className="flex items-center">
+          <input 
+            id="active" 
+            type="checkbox" 
+            checked={form.required}
+            onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">Activo</label>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+            Guardar Configuración
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  // If we're editing a group or creating new
+  return (
+    <div className="space-y-6">
+      {/* Group Information Section */}
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Información de la Entidad</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
+            <input 
+              value={selectedGroup?.entity || ''}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" 
+              placeholder="credito_hipotecario"
+              disabled
+            />
+            <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
+            <input 
+              name="displayName"
+              value={groupForm.displayName}
+              onChange={handleGroupFormChange}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              placeholder="Crédito de vivienda"
+            />
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <textarea 
+            name="description"
+            value={groupForm.description}
+            onChange={handleGroupFormChange}
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            rows={3}
+            placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
+          />
+        </div>
+
+        <div className="mt-4 flex items-center">
+          <input 
+            id="active" 
+            name="isActive"
+            type="checkbox" 
+            checked={groupForm.isActive}
+            onChange={handleGroupFormChange}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">Activo</label>
+        </div>
       </div>
-    </form>
+
+      {/* Fields Configuration Section */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Campos Personalizados</h3>
+        <div className="bg-gray-50 p-4 rounded-lg">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">Campos Configurados</h4>
+          
+          {selectedGroup && selectedGroup.fields.length > 0 ? (
+            <div className="space-y-2">
+              {selectedGroup.fields.map((field, index) => (
+                <div key={field.key} className="flex items-center justify-between bg-white p-3 rounded border">
+                  <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900">{field.description || field.key}</div>
+                    <div className="text-xs text-gray-500">
+                      {field.key} - Tipo: {field.type} {field.required ? '(Obligatorio)' : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      onClick={() => {
+                        setForm(field);
+                        // This would trigger edit mode
+                      }}
+                    >
+                      ✏️
+                    </button>
+                    <button
+                      type="button"
+                      className="text-red-600 hover:text-red-800 text-sm"
+                      onClick={() => handleRemoveField(field)}
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No hay campos configurados</p>
+          )}
+        </div>
+
+        {/* Add New Field Section */}
+        {showAddField ? (
+          <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-3">Agregar Nuevo Campo</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Nombre Interno</label>
+                <input 
+                  name="key"
+                  value={newFieldForm.key}
+                  onChange={handleNewFieldChange}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  placeholder="Sin espacios ni caracteres especiales"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Nombre para Mostrar</label>
+                <input 
+                  name="displayName"
+                  value={newFieldForm.displayName}
+                  onChange={handleNewFieldChange}
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center gap-4">
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Tipo de Campo</label>
+                <select 
+                  name="type"
+                  value={newFieldForm.type}
+                  onChange={handleNewFieldChange}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm"
+                >
+                  <option value="string">Texto</option>
+                  <option value="number">Número</option>
+                  <option value="integer">Entero</option>
+                  <option value="boolean">Sí/No</option>
+                  <option value="date">Fecha</option>
+                  <option value="array">Lista/Array</option>
+                  <option value="object">Objeto</option>
+                </select>
+              </div>
+              <div className="flex items-center mt-6">
+                <input 
+                  id="fieldRequired" 
+                  name="required"
+                  type="checkbox" 
+                  checked={newFieldForm.required}
+                  onChange={handleNewFieldChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="fieldRequired" className="ml-2 block text-sm text-gray-700">Campo obligatorio</label>
+              </div>
+            </div>
+
+            {/* Array Configuration */}
+            {newFieldForm.type === 'array' && (
+              <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+                  <textarea
+                    value={newFieldForm.arrayOptions.join('\n')}
+                    onChange={(e) => {
+                      const options = e.target.value.split('\n').filter(opt => opt.trim() !== '');
+                      setNewFieldForm(prev => ({ ...prev, arrayOptions: options }));
+                    }}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                    rows={4}
+                    placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Cada línea será una opción del array</p>
+                </div>
+              </div>
+            )}
+
+            {/* Object Configuration */}
+            {newFieldForm.type === 'object' && (
+              <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Objeto</h5>
+                <div className="space-y-3">
+                  {newFieldForm.objectStructure.map((field, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border">
+                      <input
+                        type="text"
+                        value={field.key}
+                        onChange={(e) => {
+                          const newStructure = [...newFieldForm.objectStructure];
+                          newStructure[index].key = e.target.value;
+                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                        }}
+                        placeholder="nombre_campo"
+                        className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                      />
+                      <select
+                        value={field.type}
+                        onChange={(e) => {
+                          const newStructure = [...newFieldForm.objectStructure];
+                          newStructure[index].type = e.target.value;
+                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                        }}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm"
+                      >
+                        <option value="string">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="integer">Entero</option>
+                        <option value="boolean">Sí/No</option>
+                        <option value="date">Fecha</option>
+                      </select>
+                      <label className="flex items-center text-sm">
+                        <input
+                          type="checkbox"
+                          checked={field.required}
+                          onChange={(e) => {
+                            const newStructure = [...newFieldForm.objectStructure];
+                            newStructure[index].required = e.target.checked;
+                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                          }}
+                          className="mr-1"
+                        />
+                        Req.
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newStructure = newFieldForm.objectStructure.filter((_, i) => i !== index);
+                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                        }}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newStructure = [...newFieldForm.objectStructure, { key: '', type: 'string', required: false }];
+                      setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                    }}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
+                  >
+                    <Plus size={14} />
+                    Agregar Campo al Objeto
+                  </button>
+                </div>
+              </div>
+            )}
+            <div className="mt-4 flex gap-2">
+              <button 
+                type="button"
+                onClick={handleAddField}
+                className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+              >
+                Agregar Campo
+              </button>
+              <button 
+                type="button"
+                onClick={() => setShowAddField(false)}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="mt-4">
+            <button 
+              type="button"
+              onClick={() => setShowAddField(true)}
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 flex items-center gap-2"
+            >
+              <Plus size={16} />
+              Agregar Nuevo Campo
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4 border-t">
+        <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          onClick={() => {
+            // Save group configuration
+            alert('Funcionalidad de guardado de grupo pendiente');
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+        >
+          Guardar Configuración
+        </button>
+      </div>
+    </div>
   );
 };
 
