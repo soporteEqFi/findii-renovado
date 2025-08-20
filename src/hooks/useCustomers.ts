@@ -19,7 +19,27 @@ export const useCustomers = () => {
       setError(null);
 
       const empresaId = localStorage.getItem('empresa_id') || '1';
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`;
+      let userId = localStorage.getItem('user_id') || '';
+
+      // Si no hay user_id directo, intentar obtenerlo del objeto user
+      if (!userId) {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          try {
+            const userObj = JSON.parse(userStr);
+            userId = userObj.id?.toString() || '';
+          } catch (error) {
+            console.error('Error parsing user object:', error);
+          }
+        }
+      }
+
+      console.log('🔍 Debug user_id:', { userId, exists: !!userId });
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}${userId ? `&user_id=${userId}` : ''}`;
+      console.log('🌐 URL final:', url);
+
+      const token = localStorage.getItem('access_token');
+      console.log('🔐 Token disponible:', { token: token ? 'SÍ' : 'NO', length: token?.length });
 
 
       const response = await fetch(url, {

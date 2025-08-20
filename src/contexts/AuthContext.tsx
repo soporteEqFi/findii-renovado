@@ -112,6 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('access_token', data.access_token || '');
       localStorage.setItem('user', JSON.stringify(userObj));
       localStorage.setItem('cedula', userObj.cedula);
+      localStorage.setItem('user_id', userObj.id.toString());
 
       // Objeto guardado en localStorage
 
@@ -124,6 +125,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('access_token');
       localStorage.removeItem('user');
       localStorage.removeItem('cedula');
+      localStorage.removeItem('user_id');
 
       // Re-throw the error with more specific message
       if (error instanceof Error) {
@@ -142,6 +144,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(null);
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('user_id');
   };
 
   // Valor del contexto
