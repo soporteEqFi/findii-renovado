@@ -451,7 +451,7 @@ export const esquemaService = {
       if (datosCompletos.solicitudes[0]) {
         datosCompletos.solicitudes[0].created_by_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
-        datosCompletos.solicitudes[0].estado = 'abierta';
+        datosCompletos.solicitudes[0].estado = 'Pendiente';
       }
 
       console.log('📤 Datos estructurados para enviar:', datosCompletos);
