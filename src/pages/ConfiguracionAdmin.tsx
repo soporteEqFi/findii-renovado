@@ -104,6 +104,30 @@ const ConfiguracionAdmin: React.FC = () => {
     setShowForm(true);
   };
 
+  const handleDeleteField = async (field: FieldDefinition) => {
+    if (!confirm(`¿Eliminar el campo "${field.description || field.key}"?`)) return;
+    try {
+      await fieldConfigService.delete(field.entity, field.json_column, field.key);
+      toast.success('Campo eliminado');
+      
+      // Update only the selected group's fields without closing modal
+      if (selectedGroup) {
+        const updatedFields = selectedGroup.fields.filter(f => f.key !== field.key);
+        const updatedGroup = { ...selectedGroup, fields: updatedFields, fieldCount: updatedFields.length };
+        setSelectedGroup(updatedGroup);
+        
+        // Update the entityGroups state
+        setEntityGroups(prev => prev.map(group => 
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
+            ? updatedGroup 
+            : group
+        ));
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Error eliminando campo');
+    }
+  };
+
   const handleDelete = async (group: EntityGroup) => {
     if (!confirm(`¿Eliminar toda la configuración de "${group.displayName}"?`)) return;
     try {
@@ -128,12 +152,65 @@ const ConfiguracionAdmin: React.FC = () => {
       };
       await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
       toast.success(editing ? 'Campo actualizado' : 'Campo creado');
-      setShowForm(false);
+      
+      // Update the selected group's fields without closing modal
+      if (selectedGroup) {
+        let updatedFields;
+        if (editing) {
+          // Update existing field
+          updatedFields = selectedGroup.fields.map(f => f.key === data.key ? payload : f);
+        } else {
+          // Add new field
+          updatedFields = [...selectedGroup.fields, payload];
+        }
+        
+        const updatedGroup = { ...selectedGroup, fields: updatedFields, fieldCount: updatedFields.length };
+        setSelectedGroup(updatedGroup);
+        
+        // Update the entityGroups state
+        setEntityGroups(prev => prev.map(group => 
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
+            ? updatedGroup 
+            : group
+        ));
+      }
+      
+      // Only reset editing state, keep modal open
       setEditing(null);
-      setSelectedGroup(null);
-      loadAllGroups();
     } catch (e: any) {
       toast.error(e.message || 'Error guardando');
+    }
+  };
+
+  const handleSaveGroupConfiguration = async (groupData: { displayName: string; description: string; isActive: boolean }) => {
+    try {
+      // Here you would implement the group configuration save logic
+      // For now, we'll just update the local state and show a success message
+      if (selectedGroup) {
+        const updatedGroup = { 
+          ...selectedGroup, 
+          displayName: groupData.displayName,
+          description: groupData.description,
+          isActive: groupData.isActive
+        };
+        setSelectedGroup(updatedGroup);
+        
+        // Update the entityGroups state
+        setEntityGroups(prev => prev.map(group => 
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
+            ? updatedGroup 
+            : group
+        ));
+        
+        toast.success('Configuración guardada exitosamente');
+        
+        // Close modal after saving
+        setShowForm(false);
+        setEditing(null);
+        setSelectedGroup(null);
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'Error guardando configuración del grupo');
     }
   };
 
@@ -181,6 +258,9 @@ const ConfiguracionAdmin: React.FC = () => {
                 entityGroups={entityGroups}
                 onCancel={() => { setShowForm(false); setEditing(null); setSelectedGroup(null); }}
                 onSubmit={handleSubmit}
+                onEditField={handleEditField}
+                onDeleteField={handleDeleteField}
+                onSaveGroupConfiguration={handleSaveGroupConfiguration}
               />
             </div>
           </div>

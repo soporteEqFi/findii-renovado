@@ -169,13 +169,13 @@ export const columns = [
             }`} />
           </button>
           {isOpen && (
-            <div className="absolute right-0 z-10 mt-1 w-36 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5">
+            <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-200">
               <div className="py-1">
                 {estados.map((estado) => (
                   <button
                     key={estado}
-                    className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 cursor-pointer ${
-                      estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50' : ''
+                    className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 cursor-pointer transition-colors ${
+                      estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50 font-medium' : ''
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();

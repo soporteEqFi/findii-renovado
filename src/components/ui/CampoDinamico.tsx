@@ -28,7 +28,7 @@ const ObjectField: React.FC<{
           {structure.map(subcampo => (
             <div key={subcampo.key} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
+                {subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
               </label>
               {subcampo.list_values && Array.isArray(subcampo.list_values) && subcampo.list_values.length > 0 ? (
                 // Si el subcampo tiene opciones, renderizar select

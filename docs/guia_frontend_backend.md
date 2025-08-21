@@ -31,6 +31,40 @@ const url = `${API_BASE}/endpoint/?empresa_id=${empresaId}`
 
 ---
 
+## Catálogo json_field_definition (Endpoints)
+
+Estos endpoints exponen las definiciones configuradas en la tabla `json_field_definition` para que el frontend construya formularios dinámicos.
+
+- GET `/schema/{entidad}?empresa_id={id}`
+  - Recomendado. Devuelve esquema completo agrupado por entidad: campos fijos + dinámicos del JSON asociado a esa entidad.
+  - Ej.: `/schema/solicitante?empresa_id=1`.
+
+- GET `/json/schema/{entidad}/{json_column}?empresa_id={id}`
+  - Legacy/directo a `json_field_definition`. Devuelve solo los campos dinámicos de una columna JSON específica.
+  - Ej.: `/json/schema/solicitante/info_extra?empresa_id=1`.
+
+Respuesta típica (resumida):
+```json
+// /schema/ubicacion?empresa_id=1
+{
+  "ok": true,
+  "data": {
+    "entidad": "ubicacion",
+    "tabla": "ubicacion",
+    "json_column": "detalle_direccion",
+    "campos_fijos": [...],
+    "campos_dinamicos": [
+      {"key":"direccion_residencia","type":"string","required":true},
+      {"key":"tipo_vivienda","type":"string","list_values":["propia","familiar","arrendada"]}
+    ]
+  }
+}
+```
+
+Notas:
+- Debes enviar `empresa_id` en header `X-Empresa-Id` o como query param.
+- El endpoint `/schema/{entidad}` usa el mapeo interno entidad→json_column para agrupar automáticamente por entidad.
+
 ## Estrategia: Formularios Dinámicos
 
 ### 1. Frontend Consulta Esquema Completo (Fijos + Dinámicos)
@@ -1273,19 +1307,22 @@ GET http://localhost:5000/schema/solicitud?empresa_id=1
 {
   "ok": true,
   "data": {
-    "entidad": "solicitante",
-    "tabla": "solicitantes",
-    "json_column": "info_extra",
-    "total_campos": 10,
+    "entidad": "ubicacion",
+    "tabla": "ubicacion",
+    "json_column": "detalle_direccion",
+    "total_campos": 8,
     "campos_fijos": [
-      {"key": "primer_nombre", "type": "string", "required": true, "description": "Primer nombre"},
-      {"key": "primer_apellido", "type": "string", "required": true, "description": "Primer apellido"},
-      {"key": "numero_documento", "type": "string", "required": true, "description": "Número de documento"}
+      {"key": "direccion", "type": "string", "required": true, "description": "Dirección principal"},
+      {"key": "ciudad", "type": "string", "required": true, "description": "Ciudad"},
+      {"key": "departamento", "type": "string", "required": true, "description": "Departamento"}
     ],
     "campos_dinamicos": [
-      {"key": "fecha_expedicion", "type": "string", "required": true, "description": "Fecha expedición"},
-      {"key": "estado_civil", "type": "string", "required": true, "list_values": ["soltero", "casado", "viudo"]},
-      {"key": "segundo_titular", "type": "object", "required": false, "list_values": [...]}
+      {"key": "direccion_residencia", "type": "string", "required": true, "description": "Dirección completa"},
+      {"key": "tipo_vivienda", "type": "string", "required": true, "list_values": ["propia", "familiar", "arrendada"]},
+      {"key": "arrendador", "type": "object", "required": false, "list_values": [
+        {"key": "nombre", "type": "string", "required": true, "description": "Nombre del arrendador"},
+        {"key": "telefono", "type": "string", "required": true, "description": "Teléfono contacto"}
+      ]}
     ]
   }
 }
@@ -1296,6 +1333,15 @@ GET http://localhost:5000/schema/solicitud?empresa_id=1
 ✅ **Campos fijos + dinámicos** combinados
 ✅ **Metadata completa** (tabla, json_column, totales)
 ✅ **Información estructurada** para el frontend
+✅ **Solo campos editables** (excluye IDs automáticos)
+
+### **Campos Excluidos (Manejados por Backend):**
+❌ `id` - Primary key autoincremental
+❌ `empresa_id` - Se obtiene del query param
+❌ `solicitante_id` - Foreign key (se maneja en contexto)
+❌ `created_by_user_id` - Se obtiene del JWT
+❌ `assigned_to_user_id` - Se maneja por lógica de negocio
+❌ `created_at` / `updated_at` - Timestamps automáticos
 
 ---
 

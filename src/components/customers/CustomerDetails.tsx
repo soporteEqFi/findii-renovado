@@ -4,6 +4,7 @@ import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Up
 import { usePermissions } from '../../utils/permissions';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
+import { documentService } from '../../services/documentService';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -34,9 +35,15 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 }) => {
   const { canEditCustomer, canDeleteCustomer } = usePermissions();
 
-  // Usar el nuevo hook para obtener datos completos del solicitante
+  // Extraer el solicitante_id del cliente seleccionado para editar
   const solicitanteId = customer.id_solicitante || customer.solicitante_id || customer.id;
   const solicitanteIdNumber = typeof solicitanteId === 'number' ? solicitanteId : parseInt(solicitanteId as string, 10);
+
+  console.log('🔍 === EXTRACCIÓN DE SOLICITANTE_ID PARA DOCUMENTOS ===');
+  console.log('📊 Customer completo:', customer);
+  console.log('🆔 ID extraído (raw):', solicitanteId);
+  console.log('🔢 ID convertido a número:', solicitanteIdNumber);
+  console.log('✅ ID válido para documentos:', !isNaN(solicitanteIdNumber) && solicitanteIdNumber > 0);
 
   const { datos: datosCompletos, datosMapeados, loading: loadingCompletos, error: errorCompletos } = useSolicitanteCompleto(
     isNaN(solicitanteIdNumber) || solicitanteIdNumber <= 0 ? null : solicitanteIdNumber
@@ -47,8 +54,39 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [apiError, setApiError] = useState<string | null>(error);
   // const [productInfo, setProductInfo] = useState<Record<string, string>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [filesToDelete, setFilesToDelete] = useState<string[]>([]);
+  const [filesToDelete, setFilesToDelete] = useState<number[]>([]);
+  const [customerDocuments, setCustomerDocuments] = useState<any[]>([]);
+  const [loadingDocuments, setLoadingDocuments] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Cargar documentos del cliente cuando se obtiene el solicitante_id
+  useEffect(() => {
+    const loadCustomerDocuments = async () => {
+      if (solicitanteIdNumber && !isNaN(solicitanteIdNumber) && solicitanteIdNumber > 0) {
+        setLoadingDocuments(true);
+        try {
+          console.log('📥 === CARGANDO DOCUMENTOS DEL CLIENTE SELECCIONADO ===');
+          console.log('🆔 Solicitante ID del cliente seleccionado para editar:', solicitanteIdNumber);
+          console.log('🌐 URL que se llamará: GET /documentos/?solicitante_id=' + solicitanteIdNumber);
+          
+          const documents = await documentService.getDocuments(solicitanteIdNumber);
+          setCustomerDocuments(documents);
+          
+          console.log('✅ Documentos cargados para el cliente:', documents);
+          console.log('📊 Total documentos encontrados:', documents.length);
+        } catch (error) {
+          console.error('❌ Error al cargar documentos del cliente:', error);
+          setCustomerDocuments([]);
+        } finally {
+          setLoadingDocuments(false);
+        }
+      } else {
+        console.warn('⚠️ No se puede cargar documentos - solicitante_id inválido:', solicitanteIdNumber);
+      }
+    };
+
+    loadCustomerDocuments();
+  }, [solicitanteIdNumber]);
 
   // Mostrar loading si se están cargando los datos completos
   // MOVER ESTO DESPUÉS DE TODOS LOS HOOKS
@@ -187,8 +225,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleDeleteExistingFile = (fileUrl: string) => {
-    setFilesToDelete(prev => [...prev, fileUrl]);
+  const handleDeleteExistingFile = (documentId: number) => {
+    setFilesToDelete(prev => [...prev, documentId]);
   };
 
   const triggerFileInput = () => {
@@ -218,45 +256,45 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('No se encontró la información del asesor');
       }
 
-      // Primero, enviar los archivos si hay nuevos o para eliminar
-      if (selectedFiles.length > 0 || filesToDelete.length > 0) {
-        const fileFormData = new FormData();
-
-        // Agregar los archivos a eliminar
-        filesToDelete.forEach(fileUrl => {
-          fileFormData.append('files_to_delete', fileUrl);
-        });
-
-        // Agregar los nuevos archivos
-        selectedFiles.forEach(file => {
-          fileFormData.append('archivos', file);
-        });
-
-        // Agregar el ID del solicitante
-        fileFormData.append('solicitante_id', editedCustomer.id_solicitante.toString());
-
-        // Agregar la cédula del asesor
-        fileFormData.append('cedula', cedula);
-
-        console.log('Enviando archivos:', {
-          filesToDelete,
-          selectedFiles: selectedFiles.map(f => f.name),
-          solicitante_id: editedCustomer.id_solicitante,
-          cedula: cedula
-        });
-
-        const fileResponse = await fetch(buildApiUrl('/update-files/'), {
-          method: 'POST',
-          body: fileFormData,
-        });
-
-        if (!fileResponse.ok) {
-          const errorData = await fileResponse.json();
-          throw new Error(errorData.message || errorData.error || 'Error al actualizar los archivos');
+      // Gestionar archivos: eliminar y subir nuevos
+      if (filesToDelete.length > 0 || selectedFiles.length > 0) {
+        console.log('🔄 === GESTIONANDO ARCHIVOS ===');
+        
+        // Eliminar archivos marcados para eliminación
+        if (filesToDelete.length > 0) {
+          console.log('🗑️ Eliminando archivos:', filesToDelete);
+          for (const documentId of filesToDelete) {
+            try {
+              await documentService.deleteDocument(documentId);
+              console.log('✅ Documento eliminado:', documentId);
+            } catch (error) {
+              console.error('❌ Error al eliminar documento:', documentId, error);
+            }
+          }
         }
 
-        const fileResult = await fileResponse.json();
-        console.log('Respuesta de archivos:', fileResult);
+        // Subir nuevos archivos
+        if (selectedFiles.length > 0) {
+          console.log('📤 Subiendo nuevos archivos:', selectedFiles.map(f => f.name));
+          try {
+            const uploadResults = await documentService.uploadMultipleDocuments(
+              selectedFiles,
+              editedCustomer.id_solicitante
+            );
+            console.log('✅ Archivos subidos exitosamente:', uploadResults);
+          } catch (error) {
+            console.error('❌ Error al subir archivos:', error);
+            throw new Error('Error al subir los nuevos archivos');
+          }
+        }
+
+        // Recargar documentos después de los cambios
+        try {
+          const updatedDocuments = await documentService.getDocuments(editedCustomer.id_solicitante);
+          setCustomerDocuments(updatedDocuments);
+        } catch (error) {
+          console.error('❌ Error al recargar documentos:', error);
+        }
       }
 
       // Los campos JSON ya no son necesarios para la versión simplificada
@@ -339,25 +377,46 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
 
     if (key === 'archivos') {
-      // Combinar archivos existentes (excluyendo los marcados para eliminar) con los nuevos
-      const existingFilesRaw = Array.isArray(value) ? value : (value ? [value] : []);
-      const existingFiles = existingFilesRaw.filter((f: any): f is string => typeof f === 'string' && f.length > 0);
-      const filteredExistingFiles = existingFiles.filter(file => !filesToDelete.includes(file));
+      // Usar documentos del servicio de documentos en lugar de customer.archivos
+      // Asegurar que customerDocuments sea siempre un array
+      const documentsArray = Array.isArray(customerDocuments) ? customerDocuments : [];
+      const filteredDocuments = documentsArray.filter(doc => !filesToDelete.includes(doc.id));
+
+      console.log('🗂️ === DEBUG ARCHIVOS FIELD ===');
+      console.log('📊 customerDocuments:', customerDocuments);
+      console.log('📋 documentsArray:', documentsArray);
+      console.log('🔍 filteredDocuments:', filteredDocuments);
+      console.log('⏳ loadingDocuments:', loadingDocuments);
+      console.log('🗑️ filesToDelete:', filesToDelete);
 
       return (
         <div key={key} className="col-span-full">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Archivos</h3>
+          
+          {loadingDocuments && (
+            <div className="flex items-center mb-4">
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              <span className="text-sm text-gray-600">Cargando documentos...</span>
+            </div>
+          )}
+
+          {!loadingDocuments && documentsArray.length === 0 && (
+            <div className="text-gray-500 text-sm mb-4">
+              No hay documentos disponibles para este cliente.
+            </div>
+          )}
+          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Mostrar archivos existentes */}
-            {filteredExistingFiles.map((fileUrl, index) => {
-              const isImage = typeof fileUrl === 'string' && fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-              const fileName = typeof fileUrl === 'string'
-                ? (fileUrl.split('/').pop()?.split('?')[0] || `Archivo ${index + 1}`)
-                : `Archivo ${index + 1}`;
+            {/* Mostrar documentos existentes desde el API */}
+            {filteredDocuments.map((document, index) => {
+              const isImage = document.filename && document.filename.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+              const fileName = document.filename || document.original_filename || `Documento ${index + 1}`;
+              const fileUrl = document.url || document.file_path;
 
               return (
-                <div key={`existing-${index}`} className="mb-4">
+                <div key={`document-${document.id}`} className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Archivo {index + 1}
+                    {fileName}
                   </label>
                   <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 flex items-center justify-between">
                     <div className="flex items-center">
@@ -367,20 +426,27 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                         <File className="w-4 h-4 mr-2 text-gray-500" />
                       )}
                       <span className="truncate max-w-[200px]">{fileName}</span>
+                      {document.file_size && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          ({(document.file_size / 1024).toFixed(1)} KB)
+                        </span>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
-                      <a
-                        href={fileUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700"
-                        download
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
+                      {fileUrl && (
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700"
+                          download
+                        >
+                          <Download className="w-4 h-4" />
+                        </a>
+                      )}
                       {isEditing && canEditCustomer() && (
                         <button
-                          onClick={() => handleDeleteExistingFile(fileUrl)}
+                          onClick={() => handleDeleteExistingFile(document.id)}
                           className="text-red-500 hover:text-red-700"
                         >
                           <XIcon className="w-4 h-4" />
@@ -435,6 +501,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 <Upload className="w-4 h-4 mr-2" />
                 Agregar Archivos
               </button>
+              
+              {(customerDocuments.length > 0 || selectedFiles.length > 0) && (
+                <div className="ml-4 text-sm text-gray-600">
+                  Total: {customerDocuments.length} documento(s) + {selectedFiles.length} nuevo(s)
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -589,7 +661,133 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
        ]} customer={editedCustomer} renderField={renderField} />
 
        {/* Archivos */}
-       <Section title="Archivos" keys={['archivos']} customer={editedCustomer} renderField={renderField} />
+      <div className="md:col-span-2">
+        <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos</h3>
+        
+        {loadingDocuments && (
+          <div className="flex items-center mb-4">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            <span className="text-sm text-gray-600">Cargando documentos...</span>
+          </div>
+        )}
+
+        {(() => {
+          // Parsear customerDocuments si es string
+          let documentsArray = [];
+          try {
+            if (typeof customerDocuments === 'string') {
+              const parsed = JSON.parse(customerDocuments);
+              documentsArray = parsed.data || [];
+            } else if (Array.isArray(customerDocuments)) {
+              documentsArray = customerDocuments;
+            }
+          } catch (error) {
+            console.error('Error parsing customerDocuments:', error);
+            documentsArray = [];
+          }
+
+          console.log('📋 Documentos procesados:', documentsArray);
+
+          if (!loadingDocuments && documentsArray.length === 0) {
+            return (
+              <div className="text-gray-500 text-sm mb-4">
+                No hay documentos disponibles para este cliente.
+              </div>
+            );
+          }
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {documentsArray.map((doc, index) => {
+                const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
+                const fileUrl = doc.documento_url || doc.url || doc.file_path;
+                const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                
+                return (
+                  <div key={doc.id || index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        {isImage ? (
+                          <Image className="w-8 h-8 text-blue-500" />
+                        ) : (
+                          <File className="w-8 h-8 text-gray-500" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                          {fileName}
+                        </h4>
+                        {doc.file_size && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {(doc.file_size / 1024).toFixed(1)} KB
+                          </p>
+                        )}
+                        {fileUrl && (
+                          <a
+                            href={fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Abrir archivo
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })()}
+
+        {isEditing && canEditCustomer() && (
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              className="hidden"
+              multiple
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+            />
+            <button
+              type="button"
+              onClick={triggerFileInput}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Agregar Archivos
+            </button>
+            
+            {selectedFiles.length > 0 && (
+              <div className="mt-4">
+                <h5 className="text-sm font-medium text-gray-700 mb-2">Archivos seleccionados:</h5>
+                <div className="space-y-2">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                      <div className="flex items-center">
+                        <File className="w-4 h-4 mr-2 text-gray-500" />
+                        <span className="text-sm text-gray-700">{file.name}</span>
+                        <span className="ml-2 text-xs text-gray-500">
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleRemoveFile(index)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <XIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
        {/* Datos Completos (Solo en desarrollo) */}
        {process.env.NODE_ENV === 'development' && datosCompletos && (

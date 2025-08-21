@@ -5,6 +5,7 @@ import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
 import { FormularioCompleto } from '../ui/FormularioCompleto';
 import { esquemaService } from '../../services/esquemaService';
 import { CampoDinamico } from '../ui/CampoDinamico';
+import { documentService } from '../../services/documentService';
 
 interface CustomerFormDinamicoProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -100,6 +101,19 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Log cuando cambian los archivos seleccionados
+  React.useEffect(() => {
+    console.log('📁 === ARCHIVOS SELECCIONADOS ACTUALIZADOS ===');
+    console.log('📂 Total archivos:', selectedFiles.length);
+    selectedFiles.forEach((file, index) => {
+      console.log(`📄 Archivo ${index + 1}:`, {
+        nombre: file.name,
+        tamaño: `${(file.size / 1024).toFixed(2)} KB`,
+        tipo: file.type
+      });
+    });
+  }, [selectedFiles]);
 
 
 
@@ -372,7 +386,91 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');
       console.log('📊 Resultado:', resultado);
 
-      toast.success('Solicitud creada exitosamente');
+      // Extraer solicitante_id del registro creado en la respuesta del API
+      let solicitanteId = null;
+      
+      console.log('🔍 === EXTRACCIÓN DE SOLICITANTE_ID ===');
+      console.log('📊 Resultado completo:', resultado);
+      console.log('📊 Estructura de data:', resultado?.data);
+      
+      // El solicitante_id debe estar en resultado.data donde se almacenan los registros creados
+      if (resultado?.data?.solicitante_id) {
+        solicitanteId = resultado.data.solicitante_id;
+        console.log('✅ Solicitante ID encontrado en data.solicitante_id:', solicitanteId);
+      } else if (resultado?.data?.solicitante?.id) {
+        solicitanteId = resultado.data.solicitante.id;
+        console.log('✅ Solicitante ID encontrado en data.solicitante.id:', solicitanteId);
+      } else if (resultado?.data?.id) {
+        solicitanteId = resultado.data.id;
+        console.log('✅ Solicitante ID encontrado en data.id:', solicitanteId);
+      } else {
+        console.error('❌ No se pudo encontrar solicitante_id en la respuesta');
+        console.log('🔍 Claves disponibles en data:', Object.keys(resultado?.data || {}));
+      }
+      
+      console.log('🆔 Solicitante ID final:', solicitanteId);
+
+      // Subir archivos si hay archivos seleccionados y se obtuvo el solicitante_id
+      if (selectedFiles.length > 0 && solicitanteId) {
+        console.log('🚀 === INICIANDO PROCESO DE SUBIDA DE ARCHIVOS ===');
+        console.log('📁 Solicitante ID obtenido:', solicitanteId);
+        console.log('📂 Número de archivos a subir:', selectedFiles.length);
+        
+        // Log detallado de cada archivo
+        selectedFiles.forEach((file, index) => {
+          console.log(`📄 Archivo ${index + 1}:`, {
+            nombre: file.name,
+            tamaño: `${(file.size / 1024).toFixed(2)} KB`,
+            tipo: file.type,
+            lastModified: new Date(file.lastModified).toLocaleString()
+          });
+        });
+        
+        try {
+          console.log('🔄 Llamando documentService.uploadMultipleDocuments...');
+          console.log('📤 Parámetros de subida:', {
+            archivos: selectedFiles.map(f => ({ nombre: f.name, tamaño: f.size })),
+            solicitante_id: solicitanteId
+          });
+          
+          const uploadResults = await documentService.uploadMultipleDocuments(
+            selectedFiles,
+            solicitanteId
+          );
+          
+          console.log('✅ === ARCHIVOS SUBIDOS EXITOSAMENTE ===');
+          console.log('📊 Resultados de subida:', uploadResults);
+          console.log('📈 Total archivos procesados:', uploadResults.length);
+          
+          toast.success(`Solicitud creada y ${selectedFiles.length} archivo(s) subido(s) exitosamente`);
+        } catch (uploadError) {
+          console.error('❌ === ERROR EN SUBIDA DE ARCHIVOS ===');
+          console.error('🔍 Tipo de error:', typeof uploadError);
+          console.error('📋 Error completo:', uploadError);
+          
+          if (uploadError instanceof Error) {
+            console.error('📝 Mensaje del error:', uploadError.message);
+            console.error('📚 Stack trace:', uploadError.stack);
+          }
+          
+          // Si es un error de fetch, intentar obtener más detalles
+          if (uploadError && typeof uploadError === 'object' && 'response' in uploadError) {
+            console.error('🌐 Respuesta del servidor:', uploadError.response);
+          }
+          
+          toast.error('Solicitud creada pero hubo un error al subir los archivos');
+        }
+      } else if (selectedFiles.length > 0 && !resultado?.solicitante?.id) {
+        console.warn('⚠️ === ARCHIVOS SELECCIONADOS PERO SIN SOLICITANTE_ID ===');
+        console.warn('📂 Archivos seleccionados:', selectedFiles.length);
+        console.warn('🆔 Resultado completo:', resultado);
+        console.warn('🔍 Estructura del resultado:', Object.keys(resultado || {}));
+        toast.error('Solicitud creada pero no se pudo obtener el ID para subir archivos');
+      } else {
+        console.log('ℹ️ No hay archivos para subir');
+        toast.success('Solicitud creada exitosamente');
+      }
+
       await onSubmit(e);
 
     } catch (error) {

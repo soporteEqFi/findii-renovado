@@ -18,6 +18,9 @@ interface Props {
   entityGroups?: EntityGroup[];
   onSubmit: (data: FieldDefinition) => void;
   onCancel: () => void;
+  onEditField?: (field: FieldDefinition) => void;
+  onDeleteField?: (field: FieldDefinition) => void;
+  onSaveGroupConfiguration?: (groupData: { displayName: string; description: string; isActive: boolean }) => void;
 }
 
 const defaultItem: FieldDefinition = {
@@ -31,7 +34,7 @@ const defaultItem: FieldDefinition = {
   default_value: '',
 };
 
-const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSubmit, onCancel }) => {
+const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel, onEditField, onDeleteField, onSaveGroupConfiguration }) => {
   const [form, setForm] = useState<FieldDefinition>(initial || defaultItem);
   const [groupForm, setGroupForm] = useState({
     displayName: selectedGroup?.displayName || '',
@@ -44,7 +47,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
     type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object',
     required: false,
     arrayOptions: [] as string[],
-    objectStructure: [] as { key: string; type: string; required: boolean }[]
+    objectStructure: [] as { key: string; type: string; required: boolean; description: string }[]
   });
   const [showAddField, setShowAddField] = useState(false);
 
@@ -104,7 +107,18 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
     if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
       newField.list_values = { enum: newFieldForm.arrayOptions };
     } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
-      newField.list_values = newFieldForm.objectStructure;
+      // Clean object structure
+      const cleanedStructure = newFieldForm.objectStructure.map(field => ({
+        key: field.key,
+        type: field.type,
+        required: field.required,
+        description: field.description
+      }));
+      
+      newField.list_values = {
+        array_type: 'object',
+        object_structure: cleanedStructure
+      };
     }
     
     onSubmit(newField);
@@ -120,10 +134,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
   };
 
   const handleRemoveField = (field: FieldDefinition) => {
-    if (!confirm(`¿Eliminar el campo "${field.description || field.key}"?`)) return;
-    // This would need to be handled by the parent component
-    // For now, we'll just show a message
-    alert('Funcionalidad de eliminación pendiente de implementar');
+    if (onDeleteField) {
+      onDeleteField(field);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -262,7 +275,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
           
           {selectedGroup && selectedGroup.fields.length > 0 ? (
             <div className="space-y-2">
-              {selectedGroup.fields.map((field, index) => (
+              {selectedGroup.fields.map((field) => (
                 <div key={field.key} className="flex items-center justify-between bg-white p-3 rounded border">
                   <div className="flex-1">
                     <div className="text-sm font-medium text-gray-900">{field.description || field.key}</div>
@@ -275,8 +288,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
                       type="button"
                       className="text-blue-600 hover:text-blue-800 text-sm"
                       onClick={() => {
-                        setForm(field);
-                        // This would trigger edit mode
+                        if (onEditField) {
+                          onEditField(field);
+                        }
                       }}
                     >
                       ✏️
@@ -380,62 +394,77 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
                 <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Objeto</h5>
                 <div className="space-y-3">
                   {newFieldForm.objectStructure.map((field, index) => (
-                    <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border">
-                      <input
-                        type="text"
-                        value={field.key}
-                        onChange={(e) => {
-                          const newStructure = [...newFieldForm.objectStructure];
-                          newStructure[index].key = e.target.value;
-                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                        }}
-                        placeholder="nombre_campo"
-                        className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
-                      />
-                      <select
-                        value={field.type}
-                        onChange={(e) => {
-                          const newStructure = [...newFieldForm.objectStructure];
-                          newStructure[index].type = e.target.value;
-                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                        }}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm"
-                      >
-                        <option value="string">Texto</option>
-                        <option value="number">Número</option>
-                        <option value="integer">Entero</option>
-                        <option value="boolean">Sí/No</option>
-                        <option value="date">Fecha</option>
-                      </select>
-                      <label className="flex items-center text-sm">
+                    <div key={index} className="p-3 bg-white rounded border space-y-2">
+                      <div className="grid grid-cols-2 gap-2">
                         <input
-                          type="checkbox"
-                          checked={field.required}
+                          type="text"
+                          value={field.key}
                           onChange={(e) => {
                             const newStructure = [...newFieldForm.objectStructure];
-                            newStructure[index].required = e.target.checked;
+                            newStructure[index].key = e.target.value;
                             setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
                           }}
-                          className="mr-1"
+                          placeholder="nombre_campo"
+                          className="border border-gray-300 rounded px-2 py-1 text-sm"
                         />
-                        Req.
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newStructure = newFieldForm.objectStructure.filter((_, i) => i !== index);
-                          setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                        }}
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                        <input
+                          type="text"
+                          value={field.description || ''}
+                          onChange={(e) => {
+                            const newStructure = [...newFieldForm.objectStructure];
+                            newStructure[index].description = e.target.value;
+                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                          }}
+                          placeholder="Descripción del campo"
+                          className="border border-gray-300 rounded px-2 py-1 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={field.type}
+                          onChange={(e) => {
+                            const newStructure = [...newFieldForm.objectStructure];
+                            newStructure[index].type = e.target.value;
+                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                          }}
+                          className="border border-gray-300 rounded px-2 py-1 text-sm"
+                        >
+                          <option value="string">Texto</option>
+                          <option value="number">Número</option>
+                          <option value="integer">Entero</option>
+                          <option value="boolean">Sí/No</option>
+                          <option value="date">Fecha</option>
+                        </select>
+                        <label className="flex items-center text-sm">
+                          <input
+                            type="checkbox"
+                            checked={field.required}
+                            onChange={(e) => {
+                              const newStructure = [...newFieldForm.objectStructure];
+                              newStructure[index].required = e.target.checked;
+                              setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                            }}
+                            className="mr-1"
+                          />
+                          Req.
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newStructure = newFieldForm.objectStructure.filter((_, i) => i !== index);
+                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
+                          }}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                   <button
                     type="button"
                     onClick={() => {
-                      const newStructure = [...newFieldForm.objectStructure, { key: '', type: 'string', required: false }];
+                      const newStructure = [...newFieldForm.objectStructure, { key: '', type: 'string', required: false, description: '' }];
                       setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
                     }}
                     className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
@@ -484,8 +513,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, entityGroups, onSu
         <button 
           type="button" 
           onClick={() => {
-            // Save group configuration
-            alert('Funcionalidad de guardado de grupo pendiente');
+            if (onSaveGroupConfiguration) {
+              onSaveGroupConfiguration(groupForm);
+            }
           }}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
         >

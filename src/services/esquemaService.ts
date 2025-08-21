@@ -507,6 +507,19 @@ export const esquemaService = {
       });
     }
 
+    // Para referencias, asegurar que tipo_referencia esté presente
+    if (entidad === 'referencia') {
+      // Si tipo_referencia no está en campos fijos, agregarlo manualmente
+      if (!datos.tipo_referencia && formData.tipo_referencia) {
+        datos.tipo_referencia = formData.tipo_referencia;
+      }
+      // Si aún no está presente, usar un valor por defecto
+      if (!datos.tipo_referencia) {
+        datos.tipo_referencia = 'personal';
+        console.warn('⚠️ tipo_referencia no encontrado, usando valor por defecto: personal');
+      }
+    }
+
     // Extraer campos dinámicos (van al objeto JSON correspondiente)
     if (esquema.campos_dinamicos && esquema.campos_dinamicos.length > 0) {
       // Determinar el nombre del objeto JSON según la entidad
