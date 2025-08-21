@@ -253,7 +253,11 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   };
 
   const handleRemoveField = (field: FieldDefinition) => {
-    if (onDeleteField) {
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que quieres eliminar el campo "${field.description || field.key}"?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (confirmDelete && onDeleteField) {
       onDeleteField(field);
     }
   };
