@@ -2,6 +2,125 @@ import React, { useEffect, useState } from 'react';
 import { FieldDefinition } from '../../types/fieldDefinition';
 import { Trash2, Plus } from 'lucide-react';
 
+// Componente reutilizable para configuración de Array
+const ArrayConfiguration: React.FC<{
+  value: string[];
+  onChange: (options: string[]) => void;
+  isEditing?: boolean;
+}> = ({ value, onChange, isEditing = false }) => (
+  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+    <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
+    <div>
+      <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+      <textarea
+        value={value.join('\n')}
+        onChange={(e) => {
+          const options = e.target.value.split('\n').filter(opt => opt.trim() !== '');
+          onChange(options);
+        }}
+        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+        rows={4}
+        placeholder="Opción 1
+Opción 2
+Opción 3"
+      />
+      <p className="text-xs text-gray-500 mt-1">Cada línea será una opción del array</p>
+    </div>
+  </div>
+);
+
+// Componente reutilizable para configuración de Objeto
+const ObjectConfiguration: React.FC<{
+  structure: { key: string; type: string; required: boolean; description: string }[];
+  onChange: (structure: { key: string; type: string; required: boolean; description: string }[]) => void;
+  isEditing?: boolean;
+}> = ({ structure, onChange, isEditing = false }) => (
+  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+    <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Objeto</h5>
+    <div className="space-y-3">
+      {structure.map((field, index) => (
+        <div key={index} className="p-3 bg-white rounded border space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="text"
+              value={field.key}
+              onChange={(e) => {
+                const newStructure = [...structure];
+                newStructure[index].key = e.target.value;
+                onChange(newStructure);
+              }}
+              placeholder="nombre_campo"
+              className="border border-gray-300 rounded px-2 py-1 text-sm"
+            />
+            <input
+              type="text"
+              value={field.description || ''}
+              onChange={(e) => {
+                const newStructure = [...structure];
+                newStructure[index].description = e.target.value;
+                onChange(newStructure);
+              }}
+              placeholder="Descripción del campo"
+              className="border border-gray-300 rounded px-2 py-1 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={field.type}
+              onChange={(e) => {
+                const newStructure = [...structure];
+                newStructure[index].type = e.target.value;
+                onChange(newStructure);
+              }}
+              className="border border-gray-300 rounded px-2 py-1 text-sm"
+            >
+              <option value="string">Texto</option>
+              <option value="number">Número</option>
+              <option value="integer">Entero</option>
+              <option value="boolean">Sí/No</option>
+              <option value="date">Fecha</option>
+            </select>
+            <label className="flex items-center text-sm">
+              <input
+                type="checkbox"
+                checked={field.required}
+                onChange={(e) => {
+                  const newStructure = [...structure];
+                  newStructure[index].required = e.target.checked;
+                  onChange(newStructure);
+                }}
+                className="mr-1"
+              />
+              Req.
+            </label>
+            <button
+              type="button"
+              onClick={() => {
+                const newStructure = structure.filter((_, i) => i !== index);
+                onChange(newStructure);
+              }}
+              className="text-red-600 hover:text-red-800"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() => {
+          const newStructure = [...structure, { key: '', type: 'string', required: false, description: '' }];
+          onChange(newStructure);
+        }}
+        className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
+      >
+        <Plus size={14} />
+        Agregar Campo al Objeto
+      </button>
+    </div>
+  </div>
+);
+
 interface EntityGroup {
   entity: string;
   jsonColumn: string;
@@ -91,7 +210,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
   const handleAddField = () => {
     if (!newFieldForm.key || !newFieldForm.displayName) return;
-    
+
     const newField: FieldDefinition = {
       empresa_id: 1,
       entity: selectedGroup?.entity || 'solicitante',
@@ -102,7 +221,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
       description: newFieldForm.displayName,
       default_value: '',
     };
-    
+
     // Add list_values for array and object types
     if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
       newField.list_values = { enum: newFieldForm.arrayOptions };
@@ -114,18 +233,18 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         required: field.required,
         description: field.description
       }));
-      
+
       newField.list_values = {
         array_type: 'object',
         object_structure: cleanedStructure
       };
     }
-    
+
     onSubmit(newField);
-    setNewFieldForm({ 
-      key: '', 
-      displayName: '', 
-      type: 'string', 
+    setNewFieldForm({
+      key: '',
+      displayName: '',
+      type: 'string',
       required: false,
       arrayOptions: [],
       objectStructure: []
@@ -157,22 +276,22 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
-            <input 
-              name="key" 
-              value={form.key} 
+            <input
+              name="key"
+              value={form.key}
               onChange={(e) => setForm(prev => ({ ...prev, key: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="credito_hipotecario"
             />
             <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
-            <input 
-              name="description" 
-              value={form.description || ''} 
+            <input
+              name="description"
+              value={form.description || ''}
               onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Crédito de vivienda"
             />
           </div>
@@ -180,26 +299,49 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea 
-            name="default_value" 
-            value={form.default_value || ''} 
+          <textarea
+            name="default_value"
+            value={form.default_value || ''}
             onChange={(e) => setForm(prev => ({ ...prev, default_value: e.target.value }))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             rows={3}
             placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
         </div>
 
         <div className="flex items-center">
-          <input 
-            id="active" 
-            type="checkbox" 
+          <input
+            id="active"
+            type="checkbox"
             checked={form.required}
             onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
           <label htmlFor="active" className="ml-2 block text-sm text-gray-700">Activo</label>
         </div>
+
+        {/* Configuración específica según el tipo de campo */}
+        {form.type === 'array' && form.list_values?.enum && (
+          <ArrayConfiguration
+            value={form.list_values.enum}
+            onChange={(options) => setForm(prev => ({
+              ...prev,
+              list_values: { ...prev.list_values, enum: options }
+            }))}
+            isEditing={true}
+          />
+        )}
+
+        {form.type === 'object' && form.list_values?.object_structure && (
+          <ObjectConfiguration
+            structure={form.list_values.object_structure}
+            onChange={(structure) => setForm(prev => ({
+              ...prev,
+              list_values: { ...prev.list_values, object_structure: structure }
+            }))}
+            isEditing={true}
+          />
+        )}
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
@@ -222,9 +364,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
-            <input 
+            <input
               value={selectedGroup?.entity || ''}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100" 
+              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
               placeholder="credito_hipotecario"
               disabled
             />
@@ -232,11 +374,11 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
-            <input 
+            <input
               name="displayName"
               value={groupForm.displayName}
               onChange={handleGroupFormChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Crédito de vivienda"
             />
           </div>
@@ -244,21 +386,21 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-          <textarea 
+          <textarea
             name="description"
             value={groupForm.description}
             onChange={handleGroupFormChange}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             rows={3}
             placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
         </div>
 
         <div className="mt-4 flex items-center">
-          <input 
-            id="active" 
+          <input
+            id="active"
             name="isActive"
-            type="checkbox" 
+            type="checkbox"
             checked={groupForm.isActive}
             onChange={handleGroupFormChange}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -272,7 +414,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         <h3 className="text-lg font-medium text-gray-900 mb-4">Campos Personalizados</h3>
         <div className="bg-gray-50 p-4 rounded-lg">
           <h4 className="text-sm font-medium text-gray-700 mb-3">Campos Configurados</h4>
-          
+
           {selectedGroup && selectedGroup.fields.length > 0 ? (
             <div className="space-y-2">
               {selectedGroup.fields.map((field) => (
@@ -318,7 +460,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Nombre Interno</label>
-                <input 
+                <input
                   name="key"
                   value={newFieldForm.key}
                   onChange={handleNewFieldChange}
@@ -328,7 +470,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               </div>
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Nombre para Mostrar</label>
-                <input 
+                <input
                   name="displayName"
                   value={newFieldForm.displayName}
                   onChange={handleNewFieldChange}
@@ -339,7 +481,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             <div className="mt-3 flex items-center gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Tipo de Campo</label>
-                <select 
+                <select
                   name="type"
                   value={newFieldForm.type}
                   onChange={handleNewFieldChange}
@@ -355,10 +497,10 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                 </select>
               </div>
               <div className="flex items-center mt-6">
-                <input 
-                  id="fieldRequired" 
+                <input
+                  id="fieldRequired"
                   name="required"
-                  type="checkbox" 
+                  type="checkbox"
                   checked={newFieldForm.required}
                   onChange={handleNewFieldChange}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -369,121 +511,28 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
             {/* Array Configuration */}
             {newFieldForm.type === 'array' && (
-              <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
-                  <textarea
-                    value={newFieldForm.arrayOptions.join('\n')}
-                    onChange={(e) => {
-                      const options = e.target.value.split('\n').filter(opt => opt.trim() !== '');
-                      setNewFieldForm(prev => ({ ...prev, arrayOptions: options }));
-                    }}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-                    rows={4}
-                    placeholder="Opción 1&#10;Opción 2&#10;Opción 3"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Cada línea será una opción del array</p>
-                </div>
-              </div>
+              <ArrayConfiguration
+                value={newFieldForm.arrayOptions}
+                onChange={(options) => setNewFieldForm(prev => ({ ...prev, arrayOptions: options }))}
+              />
             )}
 
             {/* Object Configuration */}
             {newFieldForm.type === 'object' && (
-              <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Objeto</h5>
-                <div className="space-y-3">
-                  {newFieldForm.objectStructure.map((field, index) => (
-                    <div key={index} className="p-3 bg-white rounded border space-y-2">
-                      <div className="grid grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          value={field.key}
-                          onChange={(e) => {
-                            const newStructure = [...newFieldForm.objectStructure];
-                            newStructure[index].key = e.target.value;
-                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                          }}
-                          placeholder="nombre_campo"
-                          className="border border-gray-300 rounded px-2 py-1 text-sm"
-                        />
-                        <input
-                          type="text"
-                          value={field.description || ''}
-                          onChange={(e) => {
-                            const newStructure = [...newFieldForm.objectStructure];
-                            newStructure[index].description = e.target.value;
-                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                          }}
-                          placeholder="Descripción del campo"
-                          className="border border-gray-300 rounded px-2 py-1 text-sm"
-                        />
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <select
-                          value={field.type}
-                          onChange={(e) => {
-                            const newStructure = [...newFieldForm.objectStructure];
-                            newStructure[index].type = e.target.value;
-                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                          }}
-                          className="border border-gray-300 rounded px-2 py-1 text-sm"
-                        >
-                          <option value="string">Texto</option>
-                          <option value="number">Número</option>
-                          <option value="integer">Entero</option>
-                          <option value="boolean">Sí/No</option>
-                          <option value="date">Fecha</option>
-                        </select>
-                        <label className="flex items-center text-sm">
-                          <input
-                            type="checkbox"
-                            checked={field.required}
-                            onChange={(e) => {
-                              const newStructure = [...newFieldForm.objectStructure];
-                              newStructure[index].required = e.target.checked;
-                              setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                            }}
-                            className="mr-1"
-                          />
-                          Req.
-                        </label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newStructure = newFieldForm.objectStructure.filter((_, i) => i !== index);
-                            setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                          }}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newStructure = [...newFieldForm.objectStructure, { key: '', type: 'string', required: false, description: '' }];
-                      setNewFieldForm(prev => ({ ...prev, objectStructure: newStructure }));
-                    }}
-                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
-                  >
-                    <Plus size={14} />
-                    Agregar Campo al Objeto
-                  </button>
-                </div>
-              </div>
+              <ObjectConfiguration
+                structure={newFieldForm.objectStructure}
+                onChange={(structure) => setNewFieldForm(prev => ({ ...prev, objectStructure: structure }))}
+              />
             )}
             <div className="mt-4 flex gap-2">
-              <button 
+              <button
                 type="button"
                 onClick={handleAddField}
                 className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
               >
                 Agregar Campo
               </button>
-              <button 
+              <button
                 type="button"
                 onClick={() => setShowAddField(false)}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
@@ -494,7 +543,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           </div>
         ) : (
           <div className="mt-4">
-            <button 
+            <button
               type="button"
               onClick={() => setShowAddField(true)}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 flex items-center gap-2"
@@ -510,8 +559,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
           Cancelar
         </button>
-        <button 
-          type="button" 
+        <button
+          type="button"
           onClick={() => {
             if (onSaveGroupConfiguration) {
               onSaveGroupConfiguration(groupForm);
