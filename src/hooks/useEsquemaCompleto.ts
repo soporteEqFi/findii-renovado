@@ -228,6 +228,130 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
               required: true,
               description: 'Estado de la solicitud',
               order_index: 1
+            },
+            {
+              key: 'banco_nombre',
+              type: 'string',
+              required: false,
+              description: 'Nombre del banco',
+              order_index: 2
+            }
+          ];
+        } else if (entidad === 'actividad_economica') {
+          camposFijos = [
+            {
+              key: 'tipo_actividad',
+              type: 'string',
+              required: true,
+              description: 'Tipo de actividad económica',
+              order_index: 1
+            },
+            {
+              key: 'sector_economico',
+              type: 'string',
+              required: true,
+              description: 'Sector económico',
+              order_index: 2
+            },
+            {
+              key: 'codigo_ciiu',
+              type: 'string',
+              required: false,
+              description: 'Código CIUU',
+              order_index: 3
+            },
+            {
+              key: 'departamento_empresa',
+              type: 'string',
+              required: false,
+              description: 'Departamento de la empresa',
+              order_index: 4
+            },
+            {
+              key: 'ciudad_empresa',
+              type: 'string',
+              required: false,
+              description: 'Ciudad de la empresa',
+              order_index: 5
+            },
+            {
+              key: 'telefono_empresa',
+              type: 'string',
+              required: false,
+              description: 'Teléfono de la empresa',
+              order_index: 6
+            },
+            {
+              key: 'correo_oficina',
+              type: 'string',
+              required: false,
+              description: 'Correo electrónico de la empresa',
+              order_index: 7
+            },
+            {
+              key: 'nit',
+              type: 'string',
+              required: false,
+              description: 'NIT de la empresa',
+              order_index: 8
+            }
+          ];
+        } else if (entidad === 'ubicacion') {
+          camposFijos = [
+            {
+              key: 'ciudad_residencia',
+              type: 'string',
+              required: true,
+              description: 'Ciudad de residencia',
+              order_index: 1
+            },
+            {
+              key: 'departamento_residencia',
+              type: 'string',
+              required: true,
+              description: 'Departamento de residencia',
+              order_index: 2
+            }
+          ];
+        } else if (entidad === 'informacion_financiera') {
+          camposFijos = [
+            {
+              key: 'total_ingresos_mensuales',
+              type: 'number',
+              required: true,
+              description: 'Total de ingresos mensuales',
+              order_index: 1
+            },
+            {
+              key: 'total_egresos_mensuales',
+              type: 'number',
+              required: true,
+              description: 'Total de egresos mensuales',
+              order_index: 2
+            },
+            {
+              key: 'total_activos',
+              type: 'number',
+              required: false,
+              description: 'Total de activos',
+              order_index: 3
+            },
+            {
+              key: 'total_pasivos',
+              type: 'number',
+              required: false,
+              description: 'Total de pasivos',
+              order_index: 4
+            }
+          ];
+        } else if (entidad === 'referencia') {
+          camposFijos = [
+            {
+              key: 'tipo_referencia',
+              type: 'string',
+              required: true,
+              description: 'Tipo de referencia',
+              order_index: 1
             }
           ];
         }

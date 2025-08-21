@@ -31,11 +31,13 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     telefono: '3001234567',
     estado_civil: 'Soltero',
     personas_a_cargo: 2,
+    fecha_nacimiento: '1990-01-01',
 
     // ===== UBICACIÓN =====
     direccion: 'Calle 123 #45-67',
-    ciudad: 'Bogotá',
-    departamento: 'Cundinamarca',
+    ciudad_residencia: 'Bogotá',
+    departamento_residencia: 'Cundinamarca',
+    direccion_residencia: 'Cra 50 # 12-34',
     tipo_direccion: 'residencia',
     barrio: 'Chapinero',
     estrato: 3,
@@ -388,11 +390,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
       // Extraer solicitante_id del registro creado en la respuesta del API
       let solicitanteId = null;
-      
+
       console.log('🔍 === EXTRACCIÓN DE SOLICITANTE_ID ===');
       console.log('📊 Resultado completo:', resultado);
       console.log('📊 Estructura de data:', resultado?.data);
-      
+
       // El solicitante_id debe estar en resultado.data donde se almacenan los registros creados
       if (resultado?.data?.solicitante_id) {
         solicitanteId = resultado.data.solicitante_id;
@@ -407,7 +409,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         console.error('❌ No se pudo encontrar solicitante_id en la respuesta');
         console.log('🔍 Claves disponibles en data:', Object.keys(resultado?.data || {}));
       }
-      
+
       console.log('🆔 Solicitante ID final:', solicitanteId);
 
       // Subir archivos si hay archivos seleccionados y se obtuvo el solicitante_id
@@ -415,7 +417,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         console.log('🚀 === INICIANDO PROCESO DE SUBIDA DE ARCHIVOS ===');
         console.log('📁 Solicitante ID obtenido:', solicitanteId);
         console.log('📂 Número de archivos a subir:', selectedFiles.length);
-        
+
         // Log detallado de cada archivo
         selectedFiles.forEach((file, index) => {
           console.log(`📄 Archivo ${index + 1}:`, {
@@ -425,39 +427,39 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             lastModified: new Date(file.lastModified).toLocaleString()
           });
         });
-        
+
         try {
           console.log('🔄 Llamando documentService.uploadMultipleDocuments...');
           console.log('📤 Parámetros de subida:', {
             archivos: selectedFiles.map(f => ({ nombre: f.name, tamaño: f.size })),
             solicitante_id: solicitanteId
           });
-          
+
           const uploadResults = await documentService.uploadMultipleDocuments(
             selectedFiles,
             solicitanteId
           );
-          
+
           console.log('✅ === ARCHIVOS SUBIDOS EXITOSAMENTE ===');
           console.log('📊 Resultados de subida:', uploadResults);
           console.log('📈 Total archivos procesados:', uploadResults.length);
-          
+
           toast.success(`Solicitud creada y ${selectedFiles.length} archivo(s) subido(s) exitosamente`);
         } catch (uploadError) {
           console.error('❌ === ERROR EN SUBIDA DE ARCHIVOS ===');
           console.error('🔍 Tipo de error:', typeof uploadError);
           console.error('📋 Error completo:', uploadError);
-          
+
           if (uploadError instanceof Error) {
             console.error('📝 Mensaje del error:', uploadError.message);
             console.error('📚 Stack trace:', uploadError.stack);
           }
-          
+
           // Si es un error de fetch, intentar obtener más detalles
           if (uploadError && typeof uploadError === 'object' && 'response' in uploadError) {
             console.error('🌐 Respuesta del servidor:', uploadError.response);
           }
-          
+
           toast.error('Solicitud creada pero hubo un error al subir los archivos');
         }
       } else if (selectedFiles.length > 0 && !resultado?.solicitante?.id) {
