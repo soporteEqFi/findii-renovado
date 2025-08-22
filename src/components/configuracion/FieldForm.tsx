@@ -7,32 +7,106 @@ const ArrayConfiguration: React.FC<{
   value: string[];
   onChange: (options: string[]) => void;
   isEditing?: boolean;
-}> = ({ value, onChange, isEditing = false }) => (
-  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-    <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
-    <div>
+}> = ({ value, onChange, isEditing = false }) => {
+  const [localValue, setLocalValue] = useState(value.join('\n'));
+
+  // Actualizar el valor local cuando cambia el prop value
+  useEffect(() => {
+    setLocalValue(value.join('\n'));
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalValue(e.target.value);
+  };
+
+  const handleBlur = () => {
+    const options = localValue.split('\n').filter(opt => opt.trim() !== '');
+    onChange(options);
+  };
+
+  return (
+    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+      <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
+      <div>
+        <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+        <textarea
+          value={localValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          rows={6}
+          placeholder="Opción 1
+Opción 2
+Opción 3
+Opción 4
+Opción 5
+Opción 6"
+        />
+        <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+      </div>
+    </div>
+  );
+};
+
+// Componente para configuración de Array anidado (dentro de objetos)
+const NestedArrayConfiguration: React.FC<{
+  value: string[];
+  onChange: (options: string[]) => void;
+}> = ({ value, onChange }) => {
+  const [localValue, setLocalValue] = useState(value.join('\n'));
+
+  // Actualizar el valor local cuando cambia el prop value
+  useEffect(() => {
+    setLocalValue(value.join('\n'));
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalValue(e.target.value);
+  };
+
+  const handleBlur = () => {
+    const options = localValue.split('\n').filter(opt => opt.trim() !== '');
+    onChange(options);
+  };
+
+  return (
+    <div className="mt-3 p-3 bg-gray-50 rounded border">
       <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
       <textarea
-        value={value.join('\n')}
-        onChange={(e) => {
-          const options = e.target.value.split('\n').filter(opt => opt.trim() !== '');
-          onChange(options);
-        }}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-        rows={4}
+        value={localValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+        rows={5}
         placeholder="Opción 1
 Opción 2
-Opción 3"
+Opción 3
+Opción 4
+Opción 5"
       />
-      <p className="text-xs text-gray-500 mt-1">Cada línea será una opción del array</p>
+      <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
     </div>
-  </div>
-);
+  );
+};
 
 // Componente reutilizable para configuración de Objeto
 const ObjectConfiguration: React.FC<{
-  structure: { key: string; type: string; required: boolean; description: string }[];
-  onChange: (structure: { key: string; type: string; required: boolean; description: string }[]) => void;
+  structure: {
+    key: string;
+    type: string;
+    required: boolean;
+    description: string;
+    arrayOptions?: string[];
+    objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+  }[];
+  onChange: (structure: {
+    key: string;
+    type: string;
+    required: boolean;
+    description: string;
+    arrayOptions?: string[];
+    objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+  }[]) => void;
   isEditing?: boolean;
 }> = ({ structure, onChange, isEditing = false }) => (
   <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
@@ -70,6 +144,13 @@ const ObjectConfiguration: React.FC<{
               onChange={(e) => {
                 const newStructure = [...structure];
                 newStructure[index].type = e.target.value;
+                // Reset nested configuration when type changes
+                if (e.target.value !== 'array') {
+                  delete newStructure[index].arrayOptions;
+                }
+                if (e.target.value !== 'object') {
+                  delete newStructure[index].objectStructure;
+                }
                 onChange(newStructure);
               }}
               className="border border-gray-300 rounded px-2 py-1 text-sm"
@@ -79,6 +160,8 @@ const ObjectConfiguration: React.FC<{
               <option value="integer">Entero</option>
               <option value="boolean">Sí/No</option>
               <option value="date">Fecha</option>
+              <option value="array">Lista/Array</option>
+              <option value="object">Objeto</option>
             </select>
             <label className="flex items-center text-sm">
               <input
@@ -104,6 +187,124 @@ const ObjectConfiguration: React.FC<{
               <Trash2 size={14} />
             </button>
           </div>
+
+                     {/* Configuración de Array anidado */}
+                       {field.type === 'array' && (
+              <NestedArrayConfiguration
+                value={field.arrayOptions || []}
+                onChange={(options) => {
+                  const newStructure = [...structure];
+                  newStructure[index].arrayOptions = options;
+                  onChange(newStructure);
+                }}
+              />
+            )}
+
+          {/* Configuración de Objeto anidado */}
+          {field.type === 'object' && (
+            <div className="mt-3 p-3 bg-gray-50 rounded border">
+              <label className="block text-sm text-gray-600 mb-2">Sub-campos del Objeto</label>
+              <div className="space-y-2">
+                {(field.objectStructure || []).map((subField, subIndex) => (
+                  <div key={subIndex} className="p-2 bg-white rounded border space-y-1">
+                    <div className="grid grid-cols-2 gap-1">
+                      <input
+                        type="text"
+                        value={subField.key}
+                        onChange={(e) => {
+                          const newStructure = [...structure];
+                          const newSubStructure = [...(newStructure[index].objectStructure || [])];
+                          newSubStructure[subIndex].key = e.target.value;
+                          newStructure[index].objectStructure = newSubStructure;
+                          onChange(newStructure);
+                        }}
+                        placeholder="nombre_subcampo"
+                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                      />
+                      <input
+                        type="text"
+                        value={subField.description || ''}
+                        onChange={(e) => {
+                          const newStructure = [...structure];
+                          const newSubStructure = [...(newStructure[index].objectStructure || [])];
+                          newSubStructure[subIndex].description = e.target.value;
+                          newStructure[index].objectStructure = newSubStructure;
+                          onChange(newStructure);
+                        }}
+                        placeholder="Descripción"
+                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <select
+                        value={subField.type}
+                        onChange={(e) => {
+                          const newStructure = [...structure];
+                          const newSubStructure = [...(newStructure[index].objectStructure || [])];
+                          newSubStructure[subIndex].type = e.target.value;
+                          newStructure[index].objectStructure = newSubStructure;
+                          onChange(newStructure);
+                        }}
+                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                      >
+                        <option value="string">Texto</option>
+                        <option value="number">Número</option>
+                        <option value="integer">Entero</option>
+                        <option value="boolean">Sí/No</option>
+                        <option value="date">Fecha</option>
+                      </select>
+                      <label className="flex items-center text-xs">
+                        <input
+                          type="checkbox"
+                          checked={subField.required}
+                          onChange={(e) => {
+                            const newStructure = [...structure];
+                            const newSubStructure = [...(newStructure[index].objectStructure || [])];
+                            newSubStructure[subIndex].required = e.target.checked;
+                            newStructure[index].objectStructure = newSubStructure;
+                            onChange(newStructure);
+                          }}
+                          className="mr-1"
+                        />
+                        Req.
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const confirmDelete = window.confirm(
+                            `¿Estás seguro de que quieres eliminar el sub-campo "${subField.description || subField.key}"?\n\nEsta acción no se puede deshacer.`
+                          );
+
+                          if (confirmDelete) {
+                            const newStructure = [...structure];
+                            const newSubStructure = (newStructure[index].objectStructure || []).filter((_, i) => i !== subIndex);
+                            newStructure[index].objectStructure = newSubStructure;
+                            onChange(newStructure);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-800 text-xs"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newStructure = [...structure];
+                    const newSubStructure = [...(newStructure[index].objectStructure || []), { key: '', type: 'string', required: false, description: '' }];
+                    newStructure[index].objectStructure = newSubStructure;
+                    onChange(newStructure);
+                  }}
+                  className="w-full px-2 py-1 border border-dashed border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
+                >
+                  <Plus size={12} />
+                  Agregar Sub-campo
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ))}
       <button
@@ -166,7 +367,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object',
     required: false,
     arrayOptions: [] as string[],
-    objectStructure: [] as { key: string; type: string; required: boolean; description: string }[]
+    objectStructure: [] as {
+      key: string;
+      type: string;
+      required: boolean;
+      description: string;
+      arrayOptions?: string[];
+      objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+    }[]
   });
   const [showAddField, setShowAddField] = useState(false);
 
@@ -208,8 +416,106 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     }));
   };
 
+  // Función para limpiar y validar la estructura de datos
+  const cleanAndValidateStructure = (structure: any[]): any[] => {
+    return structure.map(field => {
+      const cleanedField: any = {
+        key: field.key,
+        type: field.type,
+        required: field.required,
+        description: field.description
+      };
+
+             // Validar y limpiar configuración de array
+       if (field.type === 'array' && field.arrayOptions && field.arrayOptions.length > 0) {
+         // Filtrar líneas vacías solo al guardar
+         const filteredOptions = field.arrayOptions.filter((opt: string) => opt.trim() !== '');
+         cleanedField.list_values = { enum: filteredOptions };
+         // Eliminar arrayOptions ya que no debe existir en la estructura final
+         delete cleanedField.arrayOptions;
+       }
+
+      // Validar y limpiar configuración de objeto anidado
+      if (field.type === 'object' && field.objectStructure && field.objectStructure.length > 0) {
+        const nestedStructure = field.objectStructure.map((subField: any) => {
+          const nestedField: any = {
+            key: subField.key,
+            type: subField.type,
+            required: subField.required,
+            description: subField.description
+          };
+
+                     // Para sub-campos de tipo array, agregar list_values.enum y eliminar arrayOptions
+           if (subField.type === 'array' && subField.arrayOptions && subField.arrayOptions.length > 0) {
+             // Filtrar líneas vacías solo al guardar
+             const filteredOptions = subField.arrayOptions.filter((opt: string) => opt.trim() !== '');
+             nestedField.list_values = { enum: filteredOptions };
+             delete nestedField.arrayOptions;
+           }
+
+          return nestedField;
+        });
+
+        cleanedField.list_values = {
+          array_type: 'object',
+          object_structure: nestedStructure
+        };
+        // Eliminar objectStructure ya que está dentro de list_values
+        delete cleanedField.objectStructure;
+      }
+
+      return cleanedField;
+    });
+  };
+
+  // Función para validar que los tipos sean correctos
+  const validateFieldTypes = (structure: any[]): boolean => {
+    for (const field of structure) {
+      // Validar tipo básico
+      const validTypes = ['string', 'number', 'integer', 'boolean', 'date', 'array', 'object'];
+      if (!validTypes.includes(field.type)) {
+        alert(`Tipo inválido "${field.type}" en el campo "${field.description || field.key}". Tipos válidos: ${validTypes.join(', ')}`);
+        return false;
+      }
+
+      // Validar configuración de array
+      if (field.type === 'array') {
+        if (!field.arrayOptions || field.arrayOptions.length === 0) {
+          alert(`El campo "${field.description || field.key}" es de tipo array pero no tiene opciones configuradas.`);
+          return false;
+        }
+      }
+
+      // Validar configuración de objeto
+      if (field.type === 'object') {
+        if (!field.objectStructure || field.objectStructure.length === 0) {
+          alert(`El campo "${field.description || field.key}" es de tipo objeto pero no tiene sub-campos configurados.`);
+          return false;
+        }
+
+        // Validar sub-campos recursivamente
+        if (!validateFieldTypes(field.objectStructure)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
+
   const handleAddField = () => {
     if (!newFieldForm.key || !newFieldForm.displayName) return;
+
+    // Validar tipos antes de crear el campo
+    if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length === 0) {
+      alert('El campo es de tipo array pero no tiene opciones configuradas.');
+      return;
+    }
+
+    if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
+      if (!validateFieldTypes(newFieldForm.objectStructure)) {
+        return;
+      }
+    }
 
     const newField: FieldDefinition = {
       empresa_id: 1,
@@ -226,13 +532,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
       newField.list_values = { enum: newFieldForm.arrayOptions };
     } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
-      // Clean object structure
-      const cleanedStructure = newFieldForm.objectStructure.map(field => ({
-        key: field.key,
-        type: field.type,
-        required: field.required,
-        description: field.description
-      }));
+      // Usar la función de limpieza y validación
+      const cleanedStructure = cleanAndValidateStructure(newFieldForm.objectStructure);
 
       newField.list_values = {
         array_type: 'object',
@@ -253,25 +554,37 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   };
 
   const handleRemoveField = (field: FieldDefinition) => {
-    const confirmDelete = window.confirm(
-      `¿Estás seguro de que quieres eliminar el campo "${field.description || field.key}"?\n\nEsta acción no se puede deshacer.`
-    );
-
-    if (confirmDelete && onDeleteField) {
+    if (onDeleteField) {
       onDeleteField(field);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (initial) {
-      // Editing existing field
-      onSubmit(form);
-    } else {
-      // This is handled by the add field functionality
-      alert('Use el botón "Agregar Campo" para añadir nuevos campos');
-    }
-  };
+     const handleSubmit = (e: React.FormEvent) => {
+     e.preventDefault();
+     if (initial) {
+       // Editing existing field - limpiar estructura antes de enviar
+       const cleanedForm = { ...form };
+
+       // Si es un campo de tipo objeto, limpiar la estructura
+       if (cleanedForm.type === 'object' && cleanedForm.list_values?.object_structure) {
+         cleanedForm.list_values = {
+           ...cleanedForm.list_values,
+           object_structure: cleanAndValidateStructure(cleanedForm.list_values.object_structure)
+         };
+       }
+
+       // Si es un campo de tipo array, asegurar que no tenga arrayOptions
+       if (cleanedForm.type === 'array' && cleanedForm.list_values?.enum) {
+         // arrayOptions ya debería estar limpio, pero por seguridad
+         delete (cleanedForm as any).arrayOptions;
+       }
+
+       onSubmit(cleanedForm);
+     } else {
+       // This is handled by the add field functionality
+       alert('Use el botón "Agregar Campo" para añadir nuevos campos');
+     }
+   };
 
   // If we're editing a specific field
   if (initial) {
@@ -336,16 +649,26 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           />
         )}
 
-        {form.type === 'object' && form.list_values?.object_structure && (
-          <ObjectConfiguration
-            structure={form.list_values.object_structure}
-            onChange={(structure) => setForm(prev => ({
-              ...prev,
-              list_values: { ...prev.list_values, object_structure: structure }
-            }))}
-            isEditing={true}
-          />
-        )}
+                 {form.type === 'object' && form.list_values?.object_structure && (
+           <ObjectConfiguration
+             structure={form.list_values.object_structure.map((field: any) => ({
+               ...field,
+               // Transformar list_values.enum a arrayOptions para campos de tipo array
+               arrayOptions: field.type === 'array' && field.list_values?.enum
+                 ? field.list_values.enum
+                 : field.arrayOptions || []
+             }))}
+             onChange={(structure) => {
+               // Limpiar la estructura antes de guardar
+               const cleanedStructure = cleanAndValidateStructure(structure);
+               setForm(prev => ({
+                 ...prev,
+                 list_values: { ...prev.list_values, object_structure: cleanedStructure }
+               }));
+             }}
+             isEditing={true}
+           />
+         )}
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
