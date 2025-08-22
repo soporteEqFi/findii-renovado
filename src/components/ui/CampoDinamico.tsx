@@ -30,8 +30,8 @@ const ObjectField: React.FC<{
               <label className="block text-sm font-medium text-gray-700">
                 {subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
               </label>
-              {subcampo.list_values && Array.isArray(subcampo.list_values) && subcampo.list_values.length > 0 ? (
-                // Si el subcampo tiene opciones, renderizar select
+              {(subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) ? (
+                // Si el subcampo es de tipo array con enum, renderizar select
                 <select
                   value={value[subcampo.key] ?? subcampo.default_value ?? ''}
                   onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
@@ -40,7 +40,7 @@ const ObjectField: React.FC<{
                   className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
                 >
                   <option value="">Seleccionar...</option>
-                  {(subcampo.list_values as string[]).map((option) => (
+                  {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
