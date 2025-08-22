@@ -502,56 +502,78 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     return true;
   };
 
-  const handleAddField = () => {
-    if (!newFieldForm.key || !newFieldForm.displayName) return;
+     const handleAddField = () => {
+     if (!newFieldForm.key || !newFieldForm.displayName) return;
 
-    // Validar tipos antes de crear el campo
-    if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length === 0) {
-      alert('El campo es de tipo array pero no tiene opciones configuradas.');
-      return;
-    }
+     // Validar tipos antes de crear el campo
+     if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length === 0) {
+       alert('El campo es de tipo array pero no tiene opciones configuradas.');
+       return;
+     }
 
-    if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
-      if (!validateFieldTypes(newFieldForm.objectStructure)) {
-        return;
+     if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
+       if (!validateFieldTypes(newFieldForm.objectStructure)) {
+         return;
+       }
+     }
+
+     const newField: FieldDefinition = {
+       empresa_id: 1,
+       entity: selectedGroup?.entity || 'solicitante',
+       json_column: selectedGroup?.jsonColumn || 'info_extra',
+       key: newFieldForm.key,
+       type: newFieldForm.type as any,
+       required: newFieldForm.required,
+       description: newFieldForm.displayName,
+       default_value: '',
+     };
+
+           // Add list_values for array and object types
+      if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
+        // Filtrar líneas vacías y crear list_values.enum
+        const filteredOptions = newFieldForm.arrayOptions.filter(opt => opt.trim() !== '');
+        newField.list_values = { enum: filteredOptions };
+
+        // Console.log para debuggear el campo array
+        console.log('🔍 CAMPO ARRAY - Datos enviados al backend:', {
+          campo_completo: newField,
+          tipo_campo: newField.type,
+          arrayOptions_original: newFieldForm.arrayOptions,
+          filteredOptions: filteredOptions,
+          list_values_final: newField.list_values,
+          estructura_completa: JSON.stringify(newField, null, 2)
+        });
+      } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
+        // Usar la función de limpieza y validación
+        const cleanedStructure = cleanAndValidateStructure(newFieldForm.objectStructure);
+
+        newField.list_values = {
+          array_type: 'object',
+          object_structure: cleanedStructure
+        };
+
+        // Console.log para debuggear el campo objeto
+        console.log('🔍 CAMPO OBJETO - Datos enviados al backend:', {
+          campo_completo: newField,
+          tipo_campo: newField.type,
+          objectStructure_original: newFieldForm.objectStructure,
+          cleanedStructure: cleanedStructure,
+          list_values_final: newField.list_values,
+          estructura_completa: JSON.stringify(newField, null, 2)
+        });
       }
-    }
 
-    const newField: FieldDefinition = {
-      empresa_id: 1,
-      entity: selectedGroup?.entity || 'solicitante',
-      json_column: selectedGroup?.jsonColumn || 'info_extra',
-      key: newFieldForm.key,
-      type: newFieldForm.type as any,
-      required: newFieldForm.required,
-      description: newFieldForm.displayName,
-      default_value: '',
-    };
-
-    // Add list_values for array and object types
-    if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
-      newField.list_values = { enum: newFieldForm.arrayOptions };
-    } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
-      // Usar la función de limpieza y validación
-      const cleanedStructure = cleanAndValidateStructure(newFieldForm.objectStructure);
-
-      newField.list_values = {
-        array_type: 'object',
-        object_structure: cleanedStructure
-      };
-    }
-
-    onSubmit(newField);
-    setNewFieldForm({
-      key: '',
-      displayName: '',
-      type: 'string',
-      required: false,
-      arrayOptions: [],
-      objectStructure: []
-    });
-    setShowAddField(false);
-  };
+      onSubmit(newField);
+     setNewFieldForm({
+       key: '',
+       displayName: '',
+       type: 'string',
+       required: false,
+       arrayOptions: [],
+       objectStructure: []
+     });
+     setShowAddField(false);
+   };
 
   const handleRemoveField = (field: FieldDefinition) => {
     if (onDeleteField) {
@@ -573,13 +595,21 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
          };
        }
 
-       // Si es un campo de tipo array, asegurar que no tenga arrayOptions
-       if (cleanedForm.type === 'array' && cleanedForm.list_values?.enum) {
-         // arrayOptions ya debería estar limpio, pero por seguridad
-         delete (cleanedForm as any).arrayOptions;
-       }
+               // Si es un campo de tipo array, asegurar que no tenga arrayOptions
+        if (cleanedForm.type === 'array' && cleanedForm.list_values?.enum) {
+          // arrayOptions ya debería estar limpio, pero por seguridad
+          delete (cleanedForm as any).arrayOptions;
 
-       onSubmit(cleanedForm);
+          // Console.log para debuggear la edición de campo array
+          console.log('🔍 EDITANDO CAMPO ARRAY - Datos enviados al backend:', {
+            campo_completo: cleanedForm,
+            tipo_campo: cleanedForm.type,
+            list_values_final: cleanedForm.list_values,
+            estructura_completa: JSON.stringify(cleanedForm, null, 2)
+          });
+        }
+
+        onSubmit(cleanedForm);
      } else {
        // This is handled by the add field functionality
        alert('Use el botón "Agregar Campo" para añadir nuevos campos');
@@ -659,11 +689,10 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                  : field.arrayOptions || []
              }))}
              onChange={(structure) => {
-               // Limpiar la estructura antes de guardar
-               const cleanedStructure = cleanAndValidateStructure(structure);
+               // NO limpiar aquí, solo actualizar el estado
                setForm(prev => ({
                  ...prev,
-                 list_values: { ...prev.list_values, object_structure: cleanedStructure }
+                 list_values: { ...prev.list_values, object_structure: structure }
                }));
              }}
              isEditing={true}

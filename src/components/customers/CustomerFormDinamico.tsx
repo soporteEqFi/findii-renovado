@@ -759,15 +759,34 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             <div className="space-y-4">
               <h4 className="text-md font-medium text-gray-800">Información Adicional</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {esquemas.solicitante.esquema.campos_dinamicos.map(campo => (
-                  <CampoDinamico
-                    key={campo.key}
-                    campo={campo}
-                    value={datosFormulario[campo.key]}
-                    onChange={handleFieldChange}
-                    error={errores[campo.key]}
-                  />
-                ))}
+                {esquemas.solicitante.esquema.campos_dinamicos
+                  .filter(campo => {
+                    // Función para determinar si un campo debe mostrarse basado en condiciones
+                    if (!campo.conditional_on) return true;
+
+                    const { field: triggerField, value: expectedValue } = campo.conditional_on;
+                    const actualValue = datosFormulario[triggerField];
+
+                    console.log('🔍 DEBUG CONDICIONAL:', {
+                      campo: campo.key,
+                      conditional_on: campo.conditional_on,
+                      triggerField,
+                      expectedValue,
+                      actualValue,
+                      shouldShow: actualValue === expectedValue
+                    });
+
+                    return actualValue === expectedValue;
+                  })
+                  .map(campo => (
+                    <CampoDinamico
+                      key={campo.key}
+                      campo={campo}
+                      value={datosFormulario[campo.key]}
+                      onChange={handleFieldChange}
+                      error={errores[campo.key]}
+                    />
+                  ))}
               </div>
             </div>
           )}

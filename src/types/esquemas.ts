@@ -11,6 +11,10 @@ export interface EsquemaCampo {
   description?: string;
   default_value?: any;
   order_index?: number;
+  conditional_on?: {
+    field: string; // Nombre del campo que actúa como trigger
+    value: string; // Valor que debe tener para mostrar este campo
+  };
 }
 
 export interface EsquemaResponse {

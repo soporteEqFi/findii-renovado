@@ -23,6 +23,38 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
     onChange(key, value);
   };
 
+  // Función para determinar si un campo debe mostrarse basado en condiciones
+  const shouldShowField = (campo: any): boolean => {
+    // Debug: Mostrar TODOS los campos para ver su estructura
+    console.log('🔍 DEBUG CAMPO:', {
+      campo: campo.key,
+      conditional_on: campo.conditional_on,
+      tiene_conditional_on: !!campo.conditional_on,
+      titulo: titulo
+    });
+
+    if (!campo.conditional_on) return true;
+
+    const { field: triggerField, value: expectedValue } = campo.conditional_on;
+    const actualValue = valores[triggerField];
+
+    console.log('🔍 DEBUG CONDICIONAL FormularioCompleto:', {
+      campo: campo.key,
+      conditional_on: campo.conditional_on,
+      triggerField,
+      expectedValue,
+      actualValue,
+      shouldShow: actualValue === expectedValue,
+      titulo: titulo
+    });
+
+    return actualValue === expectedValue;
+  };
+
+  // Filtrar campos fijos y dinámicos según condiciones
+  const camposFijosVisibles = esquemaCompleto.campos_fijos.filter(shouldShowField);
+  const camposDinamicosVisibles = esquemaCompleto.campos_dinamicos.filter(shouldShowField);
+
   return (
     <div className="space-y-6">
       {titulo && (
@@ -32,11 +64,11 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       )}
 
       {/* SECCIÓN: CAMPOS FIJOS */}
-      {esquemaCompleto.campos_fijos.length > 0 && (
+      {camposFijosVisibles.length > 0 && (
         <div className="space-y-4">
           <h4 className="text-md font-medium text-gray-800">Información Básica</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {esquemaCompleto.campos_fijos.map(campo => (
+            {camposFijosVisibles.map(campo => (
               <CampoDinamico
                 key={campo.key}
                 campo={campo}
@@ -51,11 +83,11 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       )}
 
       {/* SECCIÓN: CAMPOS DINÁMICOS */}
-      {esquemaCompleto.campos_dinamicos.length > 0 && (
+      {camposDinamicosVisibles.length > 0 && (
         <div className="space-y-4">
           <h4 className="text-md font-medium text-gray-800">Información Adicional</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {esquemaCompleto.campos_dinamicos.map(campo => (
+            {camposDinamicosVisibles.map(campo => (
               <CampoDinamico
                 key={campo.key}
                 campo={campo}
