@@ -42,33 +42,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     barrio: 'Chapinero',
     estrato: 3,
 
-    // ===== ACTIVIDAD ECONÓMICA =====
-    empresa: 'TechCorp SAS',
-    cargo: 'Desarrollador Senior',
-    tipo_contrato: 'indefinido',
-    salario_base: 4500000,
-    tipo_actividad: 'empleado',
-    sector_economico: 'servicios',
-    antiguedad_meses: 48,
-    ingresos_mensuales: 4500000,
-
-    // Campos adicionales de actividad económica
-    codigo_ciuu: '6201',
-    departamento_empresa: 'Cundinamarca',
-    ciudad_empresa: 'Bogotá',
-    telefono_empresa: '6015551234',
-    correo_empresa: 'info@techcorp.com',
-    nit_empresa: '900123456-1',
-    direccion_empresa: 'Carrera 7 #32-16',
-    nombre_negocio: 'TechCorp SAS',
-    direccion_negocio: 'Carrera 7 #32-16',
-    departamento_negocio: 'Cundinamarca',
-    ciudad_negocio: 'Bogotá',
-    numero_empleados_negocio: 50,
-    antiguedad_actividad: '4 años',
-    entidad_pagadora_pension: 'Protección S.A.',
-    pago_impuestos_colombia: true,
-
     // ===== INFORMACIÓN FINANCIERA =====
     ingresos_mensuales_base: 4500000,
     gastos_mensuales: 2800000,
