@@ -46,6 +46,12 @@ const ConfiguracionAdmin: React.FC = () => {
       jsonColumn: 'detalle_financiera',
       displayName: 'Información Financiera',
       description: 'Configuración de campos personalizados para información financiera del solicitante.'
+    },
+    {
+      entity: 'solicitud',
+      jsonColumn: 'detalle_credito',
+      displayName: 'Solicitud',
+      description: 'Configuración de campos personalizados para información de la solicitud de crédito.'
     }
   ]), []);
 
@@ -53,7 +59,7 @@ const ConfiguracionAdmin: React.FC = () => {
     setLoading(true);
     try {
       const groups: EntityGroup[] = [];
-      
+
       for (const config of entityConfig) {
         try {
           const fields = await fieldConfigService.listBy(config.entity, config.jsonColumn);
@@ -73,7 +79,7 @@ const ConfiguracionAdmin: React.FC = () => {
           });
         }
       }
-      
+
       setEntityGroups(groups);
     } catch (e: any) {
       toast.error(e.message || 'Error cargando configuración');
@@ -109,17 +115,17 @@ const ConfiguracionAdmin: React.FC = () => {
     try {
       await fieldConfigService.delete(field.entity, field.json_column, field.key);
       toast.success('Campo eliminado');
-      
+
       // Update only the selected group's fields without closing modal
       if (selectedGroup) {
         const updatedFields = selectedGroup.fields.filter(f => f.key !== field.key);
         const updatedGroup = { ...selectedGroup, fields: updatedFields, fieldCount: updatedFields.length };
         setSelectedGroup(updatedGroup);
-        
+
         // Update the entityGroups state
-        setEntityGroups(prev => prev.map(group => 
-          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
-            ? updatedGroup 
+        setEntityGroups(prev => prev.map(group =>
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn
+            ? updatedGroup
             : group
         ));
       }
@@ -152,7 +158,7 @@ const ConfiguracionAdmin: React.FC = () => {
       };
       await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
       toast.success(editing ? 'Campo actualizado' : 'Campo creado');
-      
+
       // Update the selected group's fields without closing modal
       if (selectedGroup) {
         let updatedFields;
@@ -163,18 +169,18 @@ const ConfiguracionAdmin: React.FC = () => {
           // Add new field
           updatedFields = [...selectedGroup.fields, payload];
         }
-        
+
         const updatedGroup = { ...selectedGroup, fields: updatedFields, fieldCount: updatedFields.length };
         setSelectedGroup(updatedGroup);
-        
+
         // Update the entityGroups state
-        setEntityGroups(prev => prev.map(group => 
-          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
-            ? updatedGroup 
+        setEntityGroups(prev => prev.map(group =>
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn
+            ? updatedGroup
             : group
         ));
       }
-      
+
       // Only reset editing state, keep modal open
       setEditing(null);
     } catch (e: any) {
@@ -187,23 +193,23 @@ const ConfiguracionAdmin: React.FC = () => {
       // Here you would implement the group configuration save logic
       // For now, we'll just update the local state and show a success message
       if (selectedGroup) {
-        const updatedGroup = { 
-          ...selectedGroup, 
+        const updatedGroup = {
+          ...selectedGroup,
           displayName: groupData.displayName,
           description: groupData.description,
           isActive: groupData.isActive
         };
         setSelectedGroup(updatedGroup);
-        
+
         // Update the entityGroups state
-        setEntityGroups(prev => prev.map(group => 
-          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn 
-            ? updatedGroup 
+        setEntityGroups(prev => prev.map(group =>
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn
+            ? updatedGroup
             : group
         ));
-        
+
         toast.success('Configuración guardada exitosamente');
-        
+
         // Close modal after saving
         setShowForm(false);
         setEditing(null);
@@ -228,8 +234,8 @@ const ConfiguracionAdmin: React.FC = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Configuración de Campos</h1>
-        <button 
-          onClick={handleCreate} 
+        <button
+          onClick={handleCreate}
           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
         >
           <Plus size={16} />
@@ -245,7 +251,7 @@ const ConfiguracionAdmin: React.FC = () => {
                 <h2 className="text-xl font-bold">
                   {editing ? 'Editar Campo' : selectedGroup ? `Agregar Campo a ${selectedGroup.displayName}` : 'Crear Nuevo Campo'}
                 </h2>
-                <button 
+                <button
                   onClick={() => { setShowForm(false); setEditing(null); setSelectedGroup(null); }}
                   className="text-gray-400 hover:text-gray-600"
                 >
@@ -307,13 +313,13 @@ const ConfiguracionAdmin: React.FC = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button 
+                  <button
                     onClick={() => handleEdit(group)}
                     className="text-blue-600 hover:text-blue-800 mr-4 font-medium"
                   >
                     Editar
                   </button>
-                  <button 
+                  <button
                     onClick={() => handleDelete(group)}
                     className="text-red-600 hover:text-red-800 font-medium"
                   >
