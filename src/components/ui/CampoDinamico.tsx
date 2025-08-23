@@ -21,53 +21,48 @@ const ObjectField: React.FC<{
   };
 
   return (
-    <div className="space-y-3">
-      <div className="border border-gray-300 rounded-lg p-4 bg-gray-50">
-        <label className="block text-sm font-medium text-gray-900 mb-3">{name}:</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {structure.map(subcampo => (
-            <div key={subcampo.key} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                {subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
-              </label>
-              {(subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) ? (
-                // Si el subcampo es de tipo array con enum, renderizar select
-                <select
-                  value={value[subcampo.key] ?? subcampo.default_value ?? ''}
-                  onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
-                  required={subcampo.required}
-                  disabled={disabled}
-                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                >
-                  <option value="">Seleccionar...</option>
-                  {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              ) : (
-                // Input normal
-                <input
-                  type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
-                  placeholder={subcampo.description || subcampo.key}
-                  value={value[subcampo.key] ?? subcampo.default_value ?? ''}
-                  onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
-                  required={subcampo.required}
-                  disabled={disabled}
-                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                  step={subcampo.type === 'integer' ? '1' : '0.01'}
-                />
-              )}
-            </div>
-          ))}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {structure.map(subcampo => (
+        <div key={subcampo.key} className="space-y-2">
+          <label className="block text-sm font-medium text-gray-700">
+            {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
+          </label>
+          {(subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) ? (
+            // Si el subcampo es de tipo array con enum, renderizar select
+            <select
+              value={value[subcampo.key] ?? subcampo.default_value ?? ''}
+              onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
+              required={subcampo.required}
+              disabled={disabled}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+            >
+              <option value="">Seleccionar...</option>
+              {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          ) : (
+            // Input normal
+            <input
+              type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
+              placeholder={subcampo.description || subcampo.key}
+              value={value[subcampo.key] ?? subcampo.default_value ?? ''}
+              onChange={(e) => actualizarCampo(subcampo.key, e.target.value)}
+              required={subcampo.required}
+              disabled={disabled}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              step={subcampo.type === 'integer' ? '1' : '0.01'}
+            />
+          )}
         </div>
+      ))}
 
-        {/* Información de debug para el objeto */}
-        {process.env.NODE_ENV === 'development' && Object.keys(value || {}).length > 0 && (
-          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-            <strong>Debug - Valor actual:</strong> {JSON.stringify(value, null, 2)}
-          </div>
-        )}
-      </div>
+      {/* Información de debug para el objeto */}
+      {process.env.NODE_ENV === 'development' && Object.keys(value || {}).length > 0 && (
+        <div className="col-span-full mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+          <strong>Debug - Valor actual:</strong> {JSON.stringify(value, null, 2)}
+        </div>
+      )}
     </div>
   );
 };
@@ -93,6 +88,68 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   const handleChange = (newValue: any) => {
     onChange(campo.key, newValue);
   };
+
+  // Si es un campo objeto, renderizar los subcampos directamente sin contenedor
+  if (campo.type === 'object' && campo.list_values && typeof campo.list_values === 'object' && 'object_structure' in campo.list_values) {
+    const structure = (campo.list_values as { object_structure: EsquemaCampo[] }).object_structure;
+
+    return (
+      <>
+        {structure.map((subcampo: EsquemaCampo) => (
+          <div key={subcampo.key} className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
+            </label>
+            {(subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) ? (
+              // Si el subcampo es de tipo array con enum, renderizar select
+              <select
+                value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                onChange={(e) => {
+                  const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                  // Limpiar campos vacíos
+                  Object.keys(nuevoObjeto).forEach(k => {
+                    if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
+                      delete nuevoObjeto[k];
+                    }
+                  });
+                  handleChange(nuevoObjeto);
+                }}
+                required={subcampo.required}
+                disabled={disabled}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              >
+                <option value="">Seleccionar...</option>
+                {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            ) : (
+              // Input normal
+              <input
+                type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
+                placeholder={subcampo.description || subcampo.key}
+                value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                onChange={(e) => {
+                  const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                  // Limpiar campos vacíos
+                  Object.keys(nuevoObjeto).forEach(k => {
+                    if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
+                      delete nuevoObjeto[k];
+                    }
+                  });
+                  handleChange(nuevoObjeto);
+                }}
+                required={subcampo.required}
+                disabled={disabled}
+                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                step={subcampo.type === 'integer' ? '1' : '0.01'}
+              />
+            )}
+          </div>
+        ))}
+      </>
+    );
+  }
 
   const renderCampo = () => {
     const baseClasses = `border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${

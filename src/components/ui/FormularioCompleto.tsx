@@ -25,6 +25,10 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // Función para determinar si un campo debe mostrarse basado en condiciones
   const shouldShowField = (campo: any): boolean => {
+    // Ocultar el campo de estado en el formulario de solicitud
+    if (campo.key === 'estado') {
+      return false;
+    }
 
     if (!campo.conditional_on) return true;
 
@@ -46,41 +50,32 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
         </h3>
       )}
 
-      {/* SECCIÓN: CAMPOS FIJOS */}
-      {camposFijosVisibles.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-md font-medium text-gray-800">Información Básica</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {camposFijosVisibles.map(campo => (
-              <CampoDinamico
-                key={campo.key}
-                campo={campo}
-                value={valores[campo.key]}
-                onChange={handleFieldChange}
-                error={errores[campo.key]}
-                disabled={disabled}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {/* TODOS LOS CAMPOS JUNTOS (FIJOS Y DINÁMICOS) */}
+      {(camposFijosVisibles.length > 0 || camposDinamicosVisibles.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Campos fijos */}
+          {camposFijosVisibles.map(campo => (
+            <CampoDinamico
+              key={campo.key}
+              campo={campo}
+              value={valores[campo.key]}
+              onChange={handleFieldChange}
+              error={errores[campo.key]}
+              disabled={disabled}
+            />
+          ))}
 
-      {/* SECCIÓN: CAMPOS DINÁMICOS */}
-      {camposDinamicosVisibles.length > 0 && (
-        <div className="space-y-4">
-          <h4 className="text-md font-medium text-gray-800">Información Adicional</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {camposDinamicosVisibles.map(campo => (
-              <CampoDinamico
-                key={campo.key}
-                campo={campo}
-                value={valores[campo.key]}
-                onChange={handleFieldChange}
-                error={errores[campo.key]}
-                disabled={disabled}
-              />
-            ))}
-          </div>
+          {/* Campos dinámicos */}
+          {camposDinamicosVisibles.map(campo => (
+            <CampoDinamico
+              key={campo.key}
+              campo={campo}
+              value={valores[campo.key]}
+              onChange={handleFieldChange}
+              error={errores[campo.key]}
+              disabled={disabled}
+            />
+          ))}
         </div>
       )}
     </div>
