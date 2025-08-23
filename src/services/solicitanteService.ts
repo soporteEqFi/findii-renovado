@@ -84,10 +84,8 @@ export const solicitanteService = {
   // Traer todos los registros de un solicitante específico
   async traerTodosLosRegistros(solicitanteId: number, empresaId: number = 1): Promise<TodosLosRegistrosResponse> {
     try {
-      console.log(`🔍 Traer todos los registros para solicitante ID: ${solicitanteId}`);
 
       const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.TRAER_TODOS_REGISTROS}/${solicitanteId}/traer-todos-registros?empresa_id=${empresaId}`);
-      console.log('🌐 Llamando endpoint:', url);
 
       const response = await fetch(url, {
         method: 'GET',
@@ -97,7 +95,6 @@ export const solicitanteService = {
         }
       });
 
-      console.log(`📡 Respuesta del servidor: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -106,7 +103,6 @@ export const solicitanteService = {
       }
 
       const result = await response.json();
-      console.log('✅ Datos completos recibidos:', result);
 
       if (!result.ok) {
         throw new Error(result.error || 'Error en la respuesta del servidor');

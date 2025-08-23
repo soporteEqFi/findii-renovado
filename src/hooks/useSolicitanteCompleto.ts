@@ -31,18 +31,12 @@ export const useSolicitanteCompleto = (
     setError(null);
 
     try {
-      console.log(`🔄 Cargando datos completos para solicitante ID: ${solicitanteId}`);
 
       const response = await solicitanteService.traerTodosLosRegistros(solicitanteId, empresaId);
-
       setDatos(response);
-
       // Mapear datos para UI
       const mapeados = solicitanteService.mapearDatosParaUI(response);
       setDatosMapeados(mapeados);
-
-      console.log('✅ Datos cargados exitosamente:', response);
-      console.log('📊 Datos mapeados para UI:', mapeados);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';

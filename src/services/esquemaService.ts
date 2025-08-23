@@ -347,9 +347,6 @@ export const esquemaService = {
 
       // Crear registro base
       const url = buildApiUrl(`/${esquemaCompleto.tabla}/?empresa_id=${empresaId}`);
-      console.log(`🌐 CREANDO REGISTRO EN: ${url}`);
-      console.log(`📋 Tabla objetivo: ${esquemaCompleto.tabla}`);
-      console.log(`📤 Datos fijos a enviar:`, datosFijos);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -358,9 +355,6 @@ export const esquemaService = {
         },
         body: JSON.stringify(datosFijos)
       });
-
-      console.log(`📡 Respuesta del servidor: ${response.status} ${response.statusText}`);
-      console.log('📋 Headers de respuesta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         console.error(`❌ Error HTTP ${response.status} para ${url}`);
@@ -382,10 +376,8 @@ export const esquemaService = {
       let result;
       try {
         const responseText = await response.text();
-        console.log('📋 Respuesta cruda del servidor:', responseText.substring(0, 200) + '...');
 
         result = JSON.parse(responseText);
-        console.log('✅ JSON parseado correctamente:', result);
       } catch (parseError) {
         console.error('❌ Error parseando JSON:', parseError);
         console.error('🔍 La respuesta no es JSON válido');
@@ -433,10 +425,6 @@ export const esquemaService = {
     empresaId: number = 1
   ): Promise<any> {
     try {
-      console.log('🚀 === CREANDO REGISTRO COMPLETO UNIFICADO ===');
-      console.log('📦 Datos del formulario:', formData);
-      console.log('📋 Esquemas disponibles:', esquemasCompletos);
-
       // Estructurar datos según el formato esperado por el backend
       const datosCompletos = {
         solicitante: this.extraerDatosEntidad(formData, esquemasCompletos.solicitante?.esquema, 'solicitante'),
@@ -454,12 +442,7 @@ export const esquemaService = {
         datosCompletos.solicitudes[0].estado = 'Pendiente';
       }
 
-      console.log('📤 Datos estructurados para enviar:', datosCompletos);
-      console.log('📋 Estructura JSON generada:');
-      console.log(JSON.stringify(datosCompletos, null, 2));
-
       const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.CREAR_REGISTRO_COMPLETO}?empresa_id=${empresaId}`);
-      console.log('🌐 Llamando endpoint unificado:', url);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -470,8 +453,6 @@ export const esquemaService = {
         body: JSON.stringify(datosCompletos)
       });
 
-      console.log(`📡 Respuesta del servidor: ${response.status} ${response.statusText}`);
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Error del servidor:', errorText);
@@ -479,8 +460,6 @@ export const esquemaService = {
       }
 
       const result = await response.json();
-      console.log('✅ Registro completo creado exitosamente:', result);
-
       return result;
 
     } catch (error) {
@@ -590,7 +569,6 @@ export const esquemaService = {
       }
     }
 
-    console.log(`📊 Datos extraídos para ${entidad}:`, datos);
     return datos;
   },
 

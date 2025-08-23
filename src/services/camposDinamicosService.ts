@@ -101,14 +101,12 @@ class CamposDinamicosService {
     try {
       // ✅ RUTA SEGÚN GUÍA: /schema/{entidad}?empresa_id={id}
       const url = this.buildUrl(`/schema/${entidad}`);
-      console.log(`🔍 Obteniendo esquema COMPLETO con GET: ${url}`);
 
       const response = await fetch(url, {
         method: 'GET', // ✅ CORRECTO: GET para obtener esquema completo
         headers: this.getHeaders()
       });
 
-      console.log(`📡 Respuesta esquema completo: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         throw new Error(`Error al cargar esquema completo: ${response.status} ${response.statusText}`);
@@ -120,7 +118,6 @@ class CamposDinamicosService {
         throw new Error(result.error || 'Error en la respuesta del servidor');
       }
 
-      console.log(`✅ Esquema completo cargado para ${entidad}:`, result.data);
 
       // Guardar en cache
       this.setCache(cacheKey, result.data);
@@ -149,14 +146,12 @@ class CamposDinamicosService {
     try {
       // ✅ RUTA SEGÚN GUÍA: /json/schema/{entidad}/{json_field}?empresa_id={id}
       const url = this.buildUrl(`/json/schema/${entidad}/${campoJson}`);
-      console.log(`🔍 Obteniendo esquema JSON con GET: ${url}`);
 
       const response = await fetch(url, {
         method: 'GET', // ✅ CORRECTO: GET para obtener esquema
         headers: this.getHeaders()
       });
 
-      console.log(`📡 Respuesta esquema JSON: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         throw new Error(`Error al cargar esquema JSON: ${response.status} ${response.statusText}`);
@@ -169,7 +164,6 @@ class CamposDinamicosService {
       }
 
       const esquema = result.data || [];
-      console.log(`✅ Esquema JSON cargado: ${esquema.length} campos para ${entidad}/${campoJson}`);
 
       // Guardar en cache
       this.setCache(cacheKey, esquema);
@@ -193,14 +187,12 @@ class CamposDinamicosService {
     try {
       // ✅ RUTA SEGÚN GUÍA: /json/{entidad}/{record_id}/{json_field}?empresa_id={id}
       const url = this.buildUrl(`/json/${entidad}/${recordId}/${campoJson}`);
-      console.log(`📖 Leyendo datos JSON con GET: ${url}`);
 
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders()
       });
 
-      console.log(`📡 Respuesta lectura: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         throw new Error(`Error al leer campo JSON: ${response.status} ${response.statusText}`);
@@ -212,7 +204,6 @@ class CamposDinamicosService {
         throw new Error(result.error || 'Error en la respuesta del servidor');
       }
 
-      console.log(`✅ Datos JSON leídos para ${entidad}/${recordId}/${campoJson}:`, result.data);
       return result.data || {};
     } catch (error) {
       console.error(`❌ Error leyendo campo JSON ${entidad}/${recordId}/${campoJson}:`, error);
@@ -274,9 +265,6 @@ class CamposDinamicosService {
       const urlWithValidate = new URL(url);
       urlWithValidate.searchParams.set('validate', validar.toString());
 
-      console.log(`💾 Actualizando clave específica con PATCH: ${urlWithValidate.toString()}`);
-      console.log(`🔑 Clave: ${clave}, Valor:`, valor);
-
       const response = await fetch(urlWithValidate.toString(), {
         method: 'PATCH',
         headers: this.getHeaders(),
@@ -287,8 +275,6 @@ class CamposDinamicosService {
         })
       });
 
-      console.log(`📡 Respuesta actualización clave: ${response.status} ${response.statusText}`);
-
       if (!response.ok) {
         throw new Error(`Error al actualizar clave JSON: ${response.status} ${response.statusText}`);
       }
@@ -298,8 +284,6 @@ class CamposDinamicosService {
       if (!result.ok) {
         throw new Error(result.error || 'Error en la respuesta del servidor');
       }
-
-      console.log(`✅ Clave actualizada exitosamente: ${clave}`, result.data);
       return result.data;
     } catch (error) {
       console.error(`❌ Error actualizando clave JSON ${entidad}/${recordId}/${campoJson}/${clave}:`, error);
@@ -330,11 +314,6 @@ class CamposDinamicosService {
         const urlWithValidate = new URL(url);
         urlWithValidate.searchParams.set('validate', validar.toString());
 
-        console.log(`🌐 URL para actualización: ${urlWithValidate.toString()}`);
-        console.log(`📋 Datos a enviar:`, datos);
-        console.log(`🔧 Método HTTP: ${metodo} (para actualizar datos JSON)`);
-        console.log(`✅ Validación activa: ${validar}`);
-
         const response = await fetch(urlWithValidate.toString(), {
           method: metodo,
           headers: this.getHeaders(),
@@ -343,14 +322,6 @@ class CamposDinamicosService {
             value: datos
           })
         });
-
-        console.log(`Respuesta con ${metodo}: ${response.status} ${response.statusText}`);
-
-        // Si obtenemos un 405, intentar el siguiente método
-        if (response.status === 405) {
-          console.log(`Método ${metodo} no permitido, probando el siguiente...`);
-          continue;
-        }
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -364,7 +335,6 @@ class CamposDinamicosService {
           throw new Error(result.error || 'Error en la respuesta del servidor');
         }
 
-        console.log(`Éxito con método ${metodo}:`, result.data);
         return result.data;
       } catch (error) {
         console.error(`Error con método ${metodo}:`, error);
@@ -400,15 +370,10 @@ class CamposDinamicosService {
       const urlWithPath = new URL(url);
       urlWithPath.searchParams.set('path', clave);
 
-      console.log(`🗑️ Eliminando clave JSON con DELETE: ${urlWithPath.toString()}`);
-      console.log(`🔑 Eliminando clave: ${clave}`);
-
       const response = await fetch(urlWithPath.toString(), {
         method: 'DELETE',
         headers: this.getHeaders()
       });
-
-      console.log(`📡 Respuesta eliminación: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         throw new Error(`Error al eliminar clave JSON: ${response.status} ${response.statusText}`);
@@ -420,7 +385,6 @@ class CamposDinamicosService {
         throw new Error(result.error || 'Error en la respuesta del servidor');
       }
 
-      console.log(`✅ Clave eliminada exitosamente: ${clave}`, result.data);
       return result.data;
     } catch (error) {
       console.error(`❌ Error eliminando clave JSON ${entidad}/${recordId}/${campoJson}/${clave}:`, error);
@@ -542,8 +506,6 @@ class CamposDinamicosService {
           empresaId: parseInt(empresaId)
         };
 
-        console.log('Intentando fallback con:', fallbackData);
-
         const response = await fetch(url, {
           method: 'POST',
           headers: {
@@ -559,7 +521,6 @@ class CamposDinamicosService {
         }
 
         const result = await response.json();
-        console.log('Fallback exitoso:', result);
         return result;
       } catch (fallbackError) {
         console.error('Fallback también falló:', fallbackError);

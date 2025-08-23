@@ -25,15 +25,6 @@ export class DiagnosticoCamposDinamicos {
    * Probar todos los endpoints disponibles para campos dinámicos
    */
   async probarEndpoints(entidad: string = 'solicitante', recordId: number = 1, campoJson: string = 'info_extra'): Promise<void> {
-    console.group('🔍 DIAGNÓSTICO CAMPOS DINÁMICOS');
-    console.log('Configuración inicial:');
-    console.log('- Base URL:', this.baseUrl);
-    console.log('- Empresa ID:', this.empresaId);
-    console.log('- Headers:', this.getHeaders());
-    console.log('- Entidad:', entidad);
-    console.log('- Record ID:', recordId);
-    console.log('- Campo JSON:', campoJson);
-    console.log('');
 
     // 1. Probar endpoint de esquema completo
     await this.probarEsquemaCompleto(entidad);
@@ -47,27 +38,20 @@ export class DiagnosticoCamposDinamicos {
     // 4. Probar endpoints alternativos
     await this.probarEndpointsAlternativos(entidad, recordId, campoJson);
 
-    console.groupEnd();
   }
 
   private async probarEsquemaCompleto(entidad: string): Promise<void> {
-    console.group('📋 Probando esquema completo');
 
     try {
       const url = `${this.baseUrl}/schema/${entidad}?empresa_id=${this.empresaId}`;
-      console.log('URL:', url);
 
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders()
       });
 
-      console.log('Status:', response.status, response.statusText);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Esquema completo exitoso');
-        console.log('Datos recibidos:', data);
       } else {
         console.log('❌ Error en esquema completo');
         const text = await response.text();
@@ -77,27 +61,20 @@ export class DiagnosticoCamposDinamicos {
       console.log('❌ Error de red en esquema completo:', error);
     }
 
-    console.groupEnd();
   }
 
   private async probarEsquemaJSON(entidad: string, campoJson: string): Promise<void> {
-    console.group('📄 Probando esquema JSON');
 
     try {
       const url = `${this.baseUrl}/json/schema/${entidad}/${campoJson}?empresa_id=${this.empresaId}`;
-      console.log('URL:', url);
 
       const response = await fetch(url, {
         method: 'GET',
         headers: this.getHeaders()
       });
 
-      console.log('Status:', response.status, response.statusText);
-
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Esquema JSON exitoso');
-        console.log('Datos recibidos:', data);
       } else {
         console.log('❌ Error en esquema JSON');
         const text = await response.text();
@@ -107,11 +84,9 @@ export class DiagnosticoCamposDinamicos {
       console.log('❌ Error de red en esquema JSON:', error);
     }
 
-    console.groupEnd();
   }
 
   private async probarActualizacion(entidad: string, recordId: number, campoJson: string): Promise<void> {
-    console.group('💾 Probando actualización de datos');
 
     const datosTest = { test_field: 'test_value', timestamp: new Date().toISOString() };
     const metodosHTTP = ['PATCH', 'PUT', 'POST'];

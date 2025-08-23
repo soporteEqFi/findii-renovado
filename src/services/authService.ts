@@ -62,10 +62,6 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
 
   const data = await response.json();
 
-  // Log para debugging
-  console.log('Respuesta del backend:', data);
-  console.log('Campos disponibles:', Object.keys(data));
-
   // Verificar si la respuesta tiene la estructura esperada
   if (!data) {
     throw new Error('No se recibieron datos del servidor');

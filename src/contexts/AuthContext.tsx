@@ -80,13 +80,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error('No se encontraron datos de usuario en la respuesta');
       }
-
-      // Log para debugging
-      console.log('Datos completos del backend:', data);
-      console.log('Datos del usuario extraídos:', userData);
-      console.log('Rol encontrado en data.rol:', data.rol);
-      console.log('Rol encontrado en userData.rol:', userData.rol);
-
       // Map API response to our User type
       const userObj: User = {
         id: Number(userData.id || userData.id_usuario || 1),
@@ -101,10 +94,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         usuario: userData.usuario || '',
         info_extra: data.info_extra || userData.info_extra || null
       };
-
-      // Log del objeto final
-      console.log('Objeto de usuario final:', userObj);
-
       // Save token and user data
       setToken(data.access_token || '');
       setUser(userObj);
