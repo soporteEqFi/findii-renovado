@@ -534,15 +534,6 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         const filteredOptions = newFieldForm.arrayOptions.filter(opt => opt.trim() !== '');
         newField.list_values = { enum: filteredOptions };
 
-        // Console.log para debuggear el campo array
-        console.log('🔍 CAMPO ARRAY - Datos enviados al backend:', {
-          campo_completo: newField,
-          tipo_campo: newField.type,
-          arrayOptions_original: newFieldForm.arrayOptions,
-          filteredOptions: filteredOptions,
-          list_values_final: newField.list_values,
-          estructura_completa: JSON.stringify(newField, null, 2)
-        });
       } else if (newFieldForm.type === 'object' && newFieldForm.objectStructure.length > 0) {
         // Usar la función de limpieza y validación
         const cleanedStructure = cleanAndValidateStructure(newFieldForm.objectStructure);
@@ -551,16 +542,6 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           array_type: 'object',
           object_structure: cleanedStructure
         };
-
-        // Console.log para debuggear el campo objeto
-        console.log('🔍 CAMPO OBJETO - Datos enviados al backend:', {
-          campo_completo: newField,
-          tipo_campo: newField.type,
-          objectStructure_original: newFieldForm.objectStructure,
-          cleanedStructure: cleanedStructure,
-          list_values_final: newField.list_values,
-          estructura_completa: JSON.stringify(newField, null, 2)
-        });
       }
 
       onSubmit(newField);
@@ -599,14 +580,6 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         if (cleanedForm.type === 'array' && cleanedForm.list_values?.enum) {
           // arrayOptions ya debería estar limpio, pero por seguridad
           delete (cleanedForm as any).arrayOptions;
-
-          // Console.log para debuggear la edición de campo array
-          console.log('🔍 EDITANDO CAMPO ARRAY - Datos enviados al backend:', {
-            campo_completo: cleanedForm,
-            tipo_campo: cleanedForm.type,
-            list_values_final: cleanedForm.list_values,
-            estructura_completa: JSON.stringify(cleanedForm, null, 2)
-          });
         }
 
         onSubmit(cleanedForm);

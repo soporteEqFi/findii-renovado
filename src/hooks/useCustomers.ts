@@ -34,14 +34,7 @@ export const useCustomers = () => {
         }
       }
 
-      console.log('🔍 Debug user_id:', { userId, exists: !!userId });
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}${userId ? `&user_id=${userId}` : ''}`;
-      console.log('🌐 URL final:', url);
-
-      const token = localStorage.getItem('access_token');
-      console.log('🔐 Token disponible:', { token: token ? 'SÍ' : 'NO', length: token?.length });
-
-
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`

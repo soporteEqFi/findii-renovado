@@ -48,10 +48,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   onStatusChange,
   totalRecords
 }) => {
-  // console.log('CustomerTable received customers:', customers);
-  // console.log('CustomerTable totalRecords:', totalRecords);
-  // console.log('Customers array length:', customers?.length);
-
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
   const [dateRange, setDateRange] = useState({

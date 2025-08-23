@@ -9,9 +9,6 @@ interface CreditTypeFormProps {
 
 export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditType, onSave }) => {
 
-  // console.log('=== INICIO CreditTypeForm ===');
-  // console.log('initialCreditType recibido:', initialCreditType);
-
   const [creditType, setCreditType] = useState<CreditType>(
     initialCreditType || {
       id: '',
@@ -22,9 +19,6 @@ export const CreditTypeForm: React.FC<CreditTypeFormProps> = ({ initialCreditTyp
       isActive: true,
     }
   );
-
-  // console.log('Estado inicial del creditType:', creditType);
-  // console.log('Campos iniciales:', creditType.fields);
 
   // Verificar cada campo individualmente
   creditType.fields.forEach((field, index) => {

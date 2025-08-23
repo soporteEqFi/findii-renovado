@@ -43,8 +43,8 @@ const Profile = () => {
       <div className="py-8">
         <div className="bg-white rounded-lg shadow-md p-8">
           <div className="flex flex-col items-center">
-            <img 
-              src={userInfo.imagen_aliado || '/default-avatar.png'} 
+            <img
+              src={userInfo.imagen_aliado || '/default-avatar.png'}
               alt={userInfo.nombre}
               className="w-32 h-32 rounded-full mb-5 object-cover"
             />
@@ -68,7 +68,7 @@ const Profile = () => {
                 <p className="">{userInfo.rol}</p>
               </div>
             </div>
-            <button 
+            <button
               className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               onClick={() => setIsModalOpen(true)}
             >
@@ -77,7 +77,7 @@ const Profile = () => {
           </div>
         </div>
 
-        <ProfileDetails 
+        <ProfileDetails
           userInfo={userInfo}
           open={isModalOpen}
           onClose={() => setIsModalOpen(false)}

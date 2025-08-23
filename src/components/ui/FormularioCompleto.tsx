@@ -25,28 +25,11 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // Función para determinar si un campo debe mostrarse basado en condiciones
   const shouldShowField = (campo: any): boolean => {
-    // Debug: Mostrar TODOS los campos para ver su estructura
-    console.log('🔍 DEBUG CAMPO:', {
-      campo: campo.key,
-      conditional_on: campo.conditional_on,
-      tiene_conditional_on: !!campo.conditional_on,
-      titulo: titulo
-    });
 
     if (!campo.conditional_on) return true;
 
     const { field: triggerField, value: expectedValue } = campo.conditional_on;
     const actualValue = valores[triggerField];
-
-    console.log('🔍 DEBUG CONDICIONAL FormularioCompleto:', {
-      campo: campo.key,
-      conditional_on: campo.conditional_on,
-      triggerField,
-      expectedValue,
-      actualValue,
-      shouldShow: actualValue === expectedValue,
-      titulo: titulo
-    });
 
     return actualValue === expectedValue;
   };
@@ -98,15 +81,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
               />
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Información de debug */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs">
-          <p><strong>Debug:</strong> {esquemaCompleto.total_campos} campos totales</p>
-          <p>Fijos: {esquemaCompleto.campos_fijos.length} | Dinámicos: {esquemaCompleto.campos_dinamicos.length}</p>
-          <p>Tabla: {esquemaCompleto.tabla} | JSON Column: {esquemaCompleto.json_column}</p>
         </div>
       )}
     </div>

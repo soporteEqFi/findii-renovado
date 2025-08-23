@@ -39,12 +39,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const solicitanteId = customer.id_solicitante || customer.solicitante_id || customer.id;
   const solicitanteIdNumber = typeof solicitanteId === 'number' ? solicitanteId : parseInt(solicitanteId as string, 10);
 
-  console.log('🔍 === EXTRACCIÓN DE SOLICITANTE_ID PARA DOCUMENTOS ===');
-  console.log('📊 Customer completo:', customer);
-  console.log('🆔 ID extraído (raw):', solicitanteId);
-  console.log('🔢 ID convertido a número:', solicitanteIdNumber);
-  console.log('✅ ID válido para documentos:', !isNaN(solicitanteIdNumber) && solicitanteIdNumber > 0);
-
   const { datos: datosCompletos, datosMapeados, loading: loadingCompletos, error: errorCompletos } = useSolicitanteCompleto(
     isNaN(solicitanteIdNumber) || solicitanteIdNumber <= 0 ? null : solicitanteIdNumber
   );
@@ -68,10 +62,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           console.log('📥 === CARGANDO DOCUMENTOS DEL CLIENTE SELECCIONADO ===');
           console.log('🆔 Solicitante ID del cliente seleccionado para editar:', solicitanteIdNumber);
           console.log('🌐 URL que se llamará: GET /documentos/?solicitante_id=' + solicitanteIdNumber);
-          
+
           const documents = await documentService.getDocuments(solicitanteIdNumber);
           setCustomerDocuments(documents);
-          
+
           console.log('✅ Documentos cargados para el cliente:', documents);
           console.log('📊 Total documentos encontrados:', documents.length);
         } catch (error) {
@@ -259,7 +253,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Gestionar archivos: eliminar y subir nuevos
       if (filesToDelete.length > 0 || selectedFiles.length > 0) {
         console.log('🔄 === GESTIONANDO ARCHIVOS ===');
-        
+
         // Eliminar archivos marcados para eliminación
         if (filesToDelete.length > 0) {
           console.log('🗑️ Eliminando archivos:', filesToDelete);
@@ -392,7 +386,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       return (
         <div key={key} className="col-span-full">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Archivos</h3>
-          
+
           {loadingDocuments && (
             <div className="flex items-center mb-4">
               <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -405,7 +399,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               No hay documentos disponibles para este cliente.
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mostrar documentos existentes desde el API */}
             {filteredDocuments.map((document, index) => {
@@ -501,7 +495,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 <Upload className="w-4 h-4 mr-2" />
                 Agregar Archivos
               </button>
-              
+
               {(customerDocuments.length > 0 || selectedFiles.length > 0) && (
                 <div className="ml-4 text-sm text-gray-600">
                   Total: {customerDocuments.length} documento(s) + {selectedFiles.length} nuevo(s)
@@ -663,7 +657,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
        {/* Archivos */}
       <div className="md:col-span-2">
         <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos</h3>
-        
+
         {loadingDocuments && (
           <div className="flex items-center mb-4">
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
@@ -702,7 +696,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
                 const fileUrl = doc.documento_url || doc.url || doc.file_path;
                 const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-                
+
                 return (
                   <div key={doc.id || index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                     <div className="flex items-start space-x-3">
@@ -760,7 +754,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               <Upload className="w-4 h-4 mr-2" />
               Agregar Archivos
             </button>
-            
+
             {selectedFiles.length > 0 && (
               <div className="mt-4">
                 <h5 className="text-sm font-medium text-gray-700 mb-2">Archivos seleccionados:</h5>

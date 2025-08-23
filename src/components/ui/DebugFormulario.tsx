@@ -76,40 +76,34 @@ export const DebugFormulario: React.FC<DebugFormularioProps> = ({
   );
 };
 
-// Función de diagnóstico para usar en consola
-export const diagnosticarEsquema = async (entidad: string, campoJson: string, empresaId: number = 1) => {
-  try {
-    const response = await fetch(`http://localhost:5000/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`);
-    const result = await response.json();
+// // Función de diagnóstico para usar en consola
+// export const diagnosticarEsquema = async (entidad: string, campoJson: string, empresaId: number = 1) => {
+//   try {
+//     const response = await fetch(`http://localhost:5000/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`);
+//     const result = await response.json();
 
-    console.log('=== DIAGNÓSTICO ===');
-    console.log('Entidad:', entidad);
-    console.log('Campo JSON:', campoJson);
-    console.log('Empresa ID:', empresaId);
-    console.log('Respuesta completa:', result);
+//     if (result.data) {
+//       result.data.forEach((campo: EsquemaCampo) => {
+//         console.log(`\n${campo.key} (${campo.type}):`);
+//         console.log('  list_values:', campo.list_values);
+//         console.log('  tipo de list_values:', typeof campo.list_values);
 
-    if (result.data) {
-      result.data.forEach((campo: EsquemaCampo) => {
-        console.log(`\n${campo.key} (${campo.type}):`);
-        console.log('  list_values:', campo.list_values);
-        console.log('  tipo de list_values:', typeof campo.list_values);
+//         if (campo.type === 'object' && campo.list_values) {
+//           console.log('  ✓ Es array?', Array.isArray(campo.list_values));
+//           if (Array.isArray(campo.list_values)) {
+//             console.log('  ✓ Primer item:', campo.list_values[0]);
+//           }
+//         }
 
-        if (campo.type === 'object' && campo.list_values) {
-          console.log('  ✓ Es array?', Array.isArray(campo.list_values));
-          if (Array.isArray(campo.list_values)) {
-            console.log('  ✓ Primer item:', campo.list_values[0]);
-          }
-        }
-
-        if (campo.type === 'array' && campo.list_values) {
-          console.log('  ✓ Tiene item_structure?', !!(campo.list_values as any).item_structure);
-          if ((campo.list_values as any).item_structure) {
-            console.log('  ✓ Item structure:', (campo.list_values as any).item_structure);
-          }
-        }
-      });
-    }
-  } catch (error) {
-    console.error('Error en diagnóstico:', error);
-  }
-};
+//         if (campo.type === 'array' && campo.list_values) {
+//           console.log('  ✓ Tiene item_structure?', !!(campo.list_values as any).item_structure);
+//           if ((campo.list_values as any).item_structure) {
+//             console.log('  ✓ Item structure:', (campo.list_values as any).item_structure);
+//           }
+//         }
+//       });
+//     }
+//   } catch (error) {
+//     console.error('Error en diagnóstico:', error);
+//   }
+// };

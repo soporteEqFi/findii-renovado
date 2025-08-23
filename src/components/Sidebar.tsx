@@ -34,9 +34,6 @@ const Sidebar = () => {
       const userData = JSON.parse(user_document || '{}');
       const user_document_obj = userData.cedula;
 
-      console.log("Objeto de usuario es:")
-      console.log(userData)
-      console.log("Claves del objeto userData:", Object.keys(userData))
       localStorage.setItem('cedula', user_document_obj)
       const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.USER_INFO}/${user_document_obj}`), {
         headers: {
@@ -50,8 +47,6 @@ const Sidebar = () => {
       }
 
       const data = await response.json();
-      console.log("La data que llega es:")
-      console.log(data);
        // Asignamos la imagen del aliado
       setImage(data["imagen_aliado"]);
       // Asignamos el nombre de la empresa
