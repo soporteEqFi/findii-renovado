@@ -592,62 +592,133 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         </div>
       )}
 
-             {/* TODOS LOS CAMPOS DISPONIBLES */}
-       {/* Información Básica del Solicitante */}
-       <Section title="Información Básica del Solicitante" keys={[
-         'nombre_completo', 'tipo_documento', 'numero_documento',
-         'fecha_nacimiento', 'genero', 'correo_electronico'
-       ]} customer={editedCustomer} renderField={renderField} />
+             {/* CAMPOS DINÁMICOS - Usar datos completos cuando estén disponibles */}
+       {datosCompletos ? (
+         <>
+                       {/* Información Básica del Solicitante */}
+            <DynamicSection
+              title="Información Básica del Solicitante"
+              data={datosCompletos.solicitante}
+              excludeKeys={['info_extra']}
+            />
 
-       {/* Información Adicional del Solicitante */}
-       <Section title="Información Adicional del Solicitante" keys={[
-         'personas_a_cargo', 'telefono', 'nacionalidad', 'estado_civil'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información Adicional del Solicitante */}
+            {datosCompletos.solicitante.info_extra && (
+              <DynamicSection
+                title="Información Adicional del Solicitante"
+                data={datosCompletos.solicitante.info_extra}
+              />
+            )}
 
-       {/* Información de Ubicación */}
-       <Section title="Información de Ubicación" keys={[
-         'direccion', 'ciudad', 'departamento'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información de Ubicación */}
+            {datosCompletos.ubicaciones.length > 0 && (
+              <DynamicSection
+                title="Información de Ubicación"
+                data={datosCompletos.ubicaciones[0]}
+              />
+            )}
 
-       {/* Información de Actividad Económica */}
-       <Section title="Actividad Económica" keys={[
-         'tipo_actividad', 'sector_economico', 'empresa', 'tipo_contrato'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Detalles de Dirección */}
+            {datosCompletos.ubicaciones[0]?.detalle_direccion && (
+              <DynamicSection
+                title="Detalles de Dirección"
+                data={datosCompletos.ubicaciones[0].detalle_direccion}
+              />
+            )}
 
-       {/* Detalles de Actividad Económica */}
-       <Section title="Detalles de Actividad Económica" keys={[
-         'codigo_ciiu', 'departamento_empresa', 'ciudad_empresa', 'telefono_empresa', 'correo_oficina', 'nit'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información de Actividad Económica */}
+            {datosCompletos.actividad_economica && (
+              <DynamicSection
+                title="Actividad Económica"
+                data={datosCompletos.actividad_economica}
+              />
+            )}
 
-       {/* Información del Negocio */}
-       <Section title="Información del Negocio" keys={[
-         'direccion_empresa', 'tiene_negocio_propio', 'nombre_negocio', 'direccion_negocio', 'departamento_negocio', 'ciudad_negocio', 'numero_empleados'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Detalles de Actividad Económica */}
+            {datosCompletos.actividad_economica?.detalle_actividad && (
+              <DynamicSection
+                title="Detalles de Actividad Económica"
+                data={datosCompletos.actividad_economica.detalle_actividad}
+              />
+            )}
 
-       {/* Información Financiera */}
-       <Section title="Información Financiera" keys={[
-         'ingresos_mensuales', 'gastos_mensuales', 'total_activos', 'total_pasivos'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información Financiera */}
+            {datosCompletos.informacion_financiera && (
+              <DynamicSection
+                title="Información Financiera"
+                data={datosCompletos.informacion_financiera}
+              />
+            )}
 
-       {/* Detalles Financieros */}
-       <Section title="Detalles Financieros" keys={[
-         'ingreso_basico_mensual', 'ingreso_variable_mensual', 'otros_ingresos_mensuales', 'gastos_financieros_mensuales', 'gastos_personales_mensuales'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Detalles Financieros */}
+            {datosCompletos.informacion_financiera?.detalle_financiera && (
+              <DynamicSection
+                title="Detalles Financieros"
+                data={datosCompletos.informacion_financiera.detalle_financiera}
+              />
+            )}
 
-       {/* Otros Ingresos */}
-       <Section title="Otros Ingresos" keys={[
-         'ingresos_fijos_pension', 'ingresos_por_ventas', 'ingresos_varios', 'honorarios', 'arriendos', 'ingresos_actividad_independiente', 'declara_renta'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información de Referencias */}
+            {datosCompletos.referencias.length > 0 && (
+              <DynamicSection
+                title="Información de Referencias"
+                data={datosCompletos.referencias[0]}
+              />
+            )}
 
-       {/* Información de Referencias */}
-       <Section title="Información de Referencias" keys={[
-         'tipo_referencia', 'nombre_referencia', 'relacion_referencia', 'direccion_referencia', 'ciudad_referencia'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Detalles de Referencias */}
+            {datosCompletos.referencias[0]?.detalle_referencia && (
+              <DynamicSection
+                title="Detalles de Referencias"
+                data={datosCompletos.referencias[0].detalle_referencia}
+              />
+            )}
 
-       {/* Información de Crédito */}
-       <Section title="Información de Crédito" keys={[
-         'estado_credito'
-       ]} customer={editedCustomer} renderField={renderField} />
+            {/* Información de Solicitudes */}
+            {datosCompletos.solicitudes.length > 0 && (
+              <DynamicSection
+                title="Información de Solicitudes"
+                data={datosCompletos.solicitudes[0]}
+              />
+            )}
+
+            {/* Detalles de Crédito */}
+            {datosCompletos.solicitudes[0]?.detalle_credito && (
+              <DynamicSection
+                title="Detalles de Crédito"
+                data={datosCompletos.solicitudes[0].detalle_credito}
+              />
+            )}
+         </>
+       ) : (
+         <>
+           {/* Fallback a campos hardcodeados si no hay datos completos */}
+           <Section title="Información Básica del Solicitante" keys={[
+             'nombre_completo', 'tipo_documento', 'numero_documento',
+             'fecha_nacimiento', 'genero', 'correo_electronico'
+           ]} customer={editedCustomer} renderField={renderField} />
+
+           <Section title="Información Adicional del Solicitante" keys={[
+             'personas_a_cargo', 'telefono', 'nacionalidad', 'estado_civil'
+           ]} customer={editedCustomer} renderField={renderField} />
+
+           <Section title="Información de Ubicación" keys={[
+             'direccion', 'ciudad', 'departamento'
+           ]} customer={editedCustomer} renderField={renderField} />
+
+           <Section title="Actividad Económica" keys={[
+             'tipo_actividad', 'sector_economico', 'empresa', 'tipo_contrato'
+           ]} customer={editedCustomer} renderField={renderField} />
+
+           <Section title="Información Financiera" keys={[
+             'ingresos_mensuales', 'gastos_mensuales', 'total_activos', 'total_pasivos'
+           ]} customer={editedCustomer} renderField={renderField} />
+
+           <Section title="Información de Crédito" keys={[
+             'estado_credito'
+           ]} customer={editedCustomer} renderField={renderField} />
+         </>
+       )}
 
        {/* Archivos */}
       <div className="md:col-span-2">
@@ -854,3 +925,154 @@ const Section: React.FC<{
     </div>
   </div>
 );
+
+// Componente para secciones dinámicas que renderiza todos los campos de un objeto
+const DynamicSection: React.FC<{
+  title: string;
+  data: Record<string, any>;
+  excludeKeys?: string[];
+}> = ({ title, data, excludeKeys = [] }) => {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+      const filteredKeys = Object.keys(data).filter(key => {
+    const value = data[key];
+
+    // Excluir claves específicas
+    if (excludeKeys.includes(key)) {
+      return false;
+    }
+
+    // Excluir campos de timestamps y IDs automáticamente
+    if (key === 'created_at' || key === 'updated_at' || key === 'id' ||
+        key.endsWith('_id') || key.includes('_id_') ||
+        key === 'created_by_user_id' || key === 'assigned_to_user_id') {
+      return false;
+    }
+
+    // Excluir valores null, undefined o vacíos
+    if (value === null || value === undefined || value === '') {
+      return false;
+    }
+
+    // Excluir objetos complejos (más de 5 propiedades)
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      const keys = Object.keys(value);
+      if (keys.length > 5) {
+        return false;
+      }
+    }
+
+    // Excluir arrays muy largos
+    if (Array.isArray(value) && value.length > 10) {
+      return false;
+    }
+
+    return true;
+  });
+
+  if (filteredKeys.length === 0) {
+    return null;
+  }
+
+  const formatFieldName = (key: string) => {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const formatValue = (value: any) => {
+    // Si es null o undefined, mostrar '-'
+    if (value === null || value === undefined) {
+      return '-';
+    }
+
+    // Si es un objeto, convertirlo a string JSON o mostrar '[Objeto]'
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      try {
+        // Si el objeto tiene propiedades, mostrar las claves principales
+        const keys = Object.keys(value);
+        if (keys.length === 0) {
+          return '[Objeto vacío]';
+        }
+        if (keys.length <= 3) {
+          return keys.join(', ');
+        }
+        return `[${keys.length} propiedades]`;
+      } catch {
+        return '[Objeto]';
+      }
+    }
+
+    // Si es un array, mostrar el número de elementos
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return '[Array vacío]';
+      }
+      return `[${value.length} elementos]`;
+    }
+
+    // Si es boolean
+    if (typeof value === 'boolean') {
+      return value ? 'Sí' : 'No';
+    }
+
+    // Si es número
+    if (typeof value === 'number') {
+      return value.toLocaleString();
+    }
+
+    // Si es string
+    if (typeof value === 'string') {
+      // Si está vacío, mostrar '-'
+      if (value.trim() === '') {
+        return '-';
+      }
+
+      // Si es email
+      if (value.includes('@')) {
+        return (
+          <div className="flex items-center">
+            <Mail className="w-4 h-4 mr-2 text-gray-500" />
+            {value}
+          </div>
+        );
+      }
+
+      // Si es teléfono (10+ dígitos)
+      if (/^\d{10,}$/.test(value)) {
+        return (
+          <div className="flex items-center">
+            <Phone className="w-4 h-4 mr-2 text-gray-500" />
+            {value}
+          </div>
+        );
+      }
+
+      return value;
+    }
+
+    // Para cualquier otro tipo, convertir a string
+    return String(value);
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+        {filteredKeys.map((key) => (
+          <div key={key} className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              {formatFieldName(key)}
+            </label>
+            <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+              {formatValue(data[key])}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

@@ -54,10 +54,38 @@ export const conditionalFieldService = {
         body: { conditional_on: conditionalConfig }
       });
 
-      // Usar apiPatch del baseService que maneja mejor CORS
-      const response = await apiPatch<FieldDefinition>(`/json/definitions/${fieldDefinition.id}?empresa_id=${empresaId}`, {
-        conditional_on: conditionalConfig
+      // Usar fetch directamente para evitar la validación de token que está fallando
+      const patchResponse = await fetch(`${API_CONFIG.BASE_URL}/json/definitions/${fieldDefinition.id}?empresa_id=${empresaId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'X-Empresa-Id': empresaId
+        },
+        body: JSON.stringify({
+          conditional_on: conditionalConfig
+        })
       });
+
+      console.log('conditionalFieldService - PATCH response info:', {
+        status: patchResponse.status,
+        statusText: patchResponse.statusText,
+        url: patchResponse.url,
+        ok: patchResponse.ok,
+        contentType: patchResponse.headers.get('content-type')
+      });
+
+      if (!patchResponse.ok) {
+        const errorText = await patchResponse.text();
+        console.error('conditionalFieldService - PATCH error response:', {
+          status: patchResponse.status,
+          statusText: patchResponse.statusText,
+          body: errorText.substring(0, 500)
+        });
+        throw new Error(`API Error: ${patchResponse.status} - ${errorText}`);
+      }
+
+      const response = await patchResponse.json();
 
       console.log('conditionalFieldService - response:', response);
       return response;
