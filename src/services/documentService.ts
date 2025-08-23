@@ -3,12 +3,12 @@ import { API_CONFIG } from '../config/constants';
 // Función para obtener headers con autenticación (sin Content-Type para FormData)
 const getFormDataHeaders = (): HeadersInit => {
   const headers: HeadersInit = {};
-  
+
   const token = localStorage.getItem('access_token');
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   // No incluir Content-Type para FormData - el navegador lo establece automáticamente
   return headers;
 };
@@ -16,7 +16,7 @@ const getFormDataHeaders = (): HeadersInit => {
 // Función para subir documentos
 export const uploadDocument = async (file: File, solicitanteId: number): Promise<any> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/`;
-  
+
   console.log('🌐 === INICIANDO SUBIDA DE DOCUMENTO INDIVIDUAL ===');
   console.log('📍 URL de destino:', url);
   console.log('📄 Archivo a subir:', {
@@ -25,90 +25,124 @@ export const uploadDocument = async (file: File, solicitanteId: number): Promise
     tipo: file.type
   });
   console.log('🆔 Solicitante ID:', solicitanteId);
-  
+  console.log('🔗 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
+  console.log('🔗 API_CONFIG.ENDPOINTS.DOCUMENTOS:', API_CONFIG.ENDPOINTS.DOCUMENTOS);
+
   // Crear FormData
   const formData = new FormData();
   formData.append('file', file);
   formData.append('solicitante_id', solicitanteId.toString());
-  
+
   console.log('📦 FormData creado con:');
   console.log('  - file:', file.name);
   console.log('  - solicitante_id:', solicitanteId.toString());
-  
+
   // Log de headers
   const headers = getFormDataHeaders();
   console.log('📋 Headers de la petición:', headers);
-  
+
   console.log('🚀 Enviando petición POST...');
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: headers,
-    body: formData,
-  });
 
-  console.log('📡 Respuesta recibida:', {
-    status: response.status,
-    statusText: response.statusText,
-    ok: response.ok,
-    headers: Object.fromEntries(response.headers.entries())
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: headers,
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Error en la respuesta del servidor:', errorText);
-    throw new Error(`Error al subir documento: ${response.status} - ${errorText}`);
+    console.log('📡 Respuesta recibida:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Error en la respuesta del servidor:', errorText);
+      console.error('❌ URL que falló:', url);
+      console.error('❌ Status:', response.status);
+      throw new Error(`Error al subir documento: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Documento subido exitosamente:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ Error en fetch:', error);
+    console.error('❌ URL que causó el error:', url);
+    throw error;
   }
-
-  const result = await response.json();
-  console.log('✅ Documento subido exitosamente:', result);
-  return result;
 };
 
 // Función para obtener documentos de un solicitante
 export const getDocuments = async (solicitanteId: number): Promise<any[]> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`;
-  
+
   console.log('📥 === OBTENIENDO DOCUMENTOS DEL SOLICITANTE ===');
   console.log('📍 URL de consulta:', url);
   console.log('🆔 Solicitante ID:', solicitanteId);
   console.log('🔗 Endpoint completo construido:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`);
-  
+  console.log('🔗 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
+  console.log('🔗 API_CONFIG.ENDPOINTS.DOCUMENTOS:', API_CONFIG.ENDPOINTS.DOCUMENTOS);
+
   const headers = getFormDataHeaders();
   console.log('📋 Headers de la petición:', headers);
-  
-  const response = await fetch(url, {
-    method: 'GET',
-    headers: headers,
-  });
 
-  console.log('📡 Respuesta recibida:', {
-    status: response.status,
-    statusText: response.statusText,
-    ok: response.ok
-  });
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: headers,
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Error al obtener documentos:', errorText);
-    throw new Error(`Error al obtener documentos: ${response.status} - ${errorText}`);
+    console.log('📡 Respuesta recibida:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      headers: Object.fromEntries(response.headers.entries())
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Error al obtener documentos:', errorText);
+      console.error('❌ URL que falló:', url);
+      console.error('❌ Status:', response.status);
+      throw new Error(`Error al obtener documentos: ${response.status} - ${errorText}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Documentos obtenidos exitosamente:', result);
+    console.log('✅ Tipo de resultado:', typeof result);
+    console.log('✅ Es array:', Array.isArray(result));
+
+    // Asegurar que devolvemos un array
+    if (Array.isArray(result)) {
+      return result;
+    } else if (result && Array.isArray(result.data)) {
+      return result.data;
+    } else if (result && Array.isArray(result.documents)) {
+      return result.documents;
+    } else {
+      console.warn('⚠️ Resultado no es un array, devolviendo array vacío:', result);
+      return [];
+    }
+  } catch (error) {
+    console.error('❌ Error en fetch getDocuments:', error);
+    console.error('❌ URL que causó el error:', url);
+    throw error;
   }
-
-  const result = await response.json();
-  console.log('✅ Documentos obtenidos exitosamente:', result);
-  return result;
 };
 
 // Función para eliminar un documento
 export const deleteDocument = async (documentId: number): Promise<any> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/${documentId}`;
-  
+
   console.log('🗑️ === ELIMINANDO DOCUMENTO ===');
   console.log('📍 URL de eliminación:', url);
   console.log('🆔 Document ID:', documentId);
-  
+
   const headers = getFormDataHeaders();
-  
+
   const response = await fetch(url, {
     method: 'DELETE',
     headers: headers,

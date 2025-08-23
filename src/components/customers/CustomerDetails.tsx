@@ -56,6 +56,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   // Cargar documentos del cliente cuando se obtiene el solicitante_id
   useEffect(() => {
     const loadCustomerDocuments = async () => {
+      console.log('🔄 === INICIANDO CARGA DE DOCUMENTOS ===');
+      console.log('🆔 solicitanteIdNumber:', solicitanteIdNumber);
+      console.log('🆔 customer.id_solicitante:', customer.id_solicitante);
+      console.log('🆔 customer.solicitante_id:', customer.solicitante_id);
+      console.log('🆔 customer.id:', customer.id);
+
       if (solicitanteIdNumber && !isNaN(solicitanteIdNumber) && solicitanteIdNumber > 0) {
         setLoadingDocuments(true);
         try {
@@ -64,10 +70,14 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           console.log('🌐 URL que se llamará: GET /documentos/?solicitante_id=' + solicitanteIdNumber);
 
           const documents = await documentService.getDocuments(solicitanteIdNumber);
-          setCustomerDocuments(documents);
+          console.log('📄 Respuesta del servicio getDocuments:', documents);
 
-          console.log('✅ Documentos cargados para el cliente:', documents);
-          console.log('📊 Total documentos encontrados:', documents.length);
+          // Asegurar que documents sea un array
+          const documentsArray = Array.isArray(documents) ? documents : [];
+          setCustomerDocuments(documentsArray);
+
+          console.log('✅ Documentos cargados para el cliente:', documentsArray);
+          console.log('📊 Total documentos encontrados:', documentsArray.length);
         } catch (error) {
           console.error('❌ Error al cargar documentos del cliente:', error);
           setCustomerDocuments([]);
@@ -76,11 +86,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         }
       } else {
         console.warn('⚠️ No se puede cargar documentos - solicitante_id inválido:', solicitanteIdNumber);
+        setCustomerDocuments([]);
       }
     };
 
     loadCustomerDocuments();
-  }, [solicitanteIdNumber]);
+  }, [solicitanteIdNumber, customer.id_solicitante, customer.solicitante_id, customer.id]);
 
   // Mostrar loading si se están cargando los datos completos
   // MOVER ESTO DESPUÉS DE TODOS LOS HOOKS
@@ -166,6 +177,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleDelete = async () => {
+    // Confirmar antes de eliminar
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que deseas eliminar el registro de "${customer.nombre_completo || customer.nombre || 'este cliente'}"?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmDelete) {
+      console.log('Eliminación cancelada por el usuario');
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
     console.log('Eliminando cliente con ID de solicitud:', customer.id_solicitud);
@@ -195,6 +216,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('Error al eliminar el registro');
       }
 
+      // Mostrar mensaje de éxito
+      alert('Registro eliminado exitosamente');
+
       onCustomerDelete(solicitudId.toString());
     } catch (error: any) {
       setApiError(error.message);
@@ -215,12 +239,104 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleDeleteExistingFile = (documentId: number) => {
-    setFilesToDelete(prev => [...prev, documentId]);
+    console.log('🗑️ Marcando documento para eliminación:', documentId);
+    setFilesToDelete(prev => {
+      const newList = [...prev, documentId];
+      console.log('🗑️ Lista actualizada de documentos a eliminar:', newList);
+      return newList;
+    });
   };
 
   const triggerFileInput = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
+    }
+  };
+
+    // Función específica para gestionar documentos
+  const handleManageDocuments = async () => {
+    console.log('🚀 === INICIANDO handleManageDocuments ===');
+    console.log('🆔 editedCustomer.id_solicitante:', editedCustomer.id_solicitante);
+    console.log('📁 selectedFiles:', selectedFiles);
+    console.log('🗑️ filesToDelete:', filesToDelete);
+
+    if (!editedCustomer.id_solicitante) {
+      setApiError('ID del solicitante no encontrado');
+      return;
+    }
+
+    setLoading(true);
+    setApiError(null);
+
+    try {
+      console.log('🔄 === GESTIONANDO DOCUMENTOS ===');
+
+      // Eliminar archivos marcados para eliminación
+      if (filesToDelete.length > 0) {
+        console.log('🗑️ Eliminando archivos:', filesToDelete);
+        console.log('🗑️ Total archivos a eliminar:', filesToDelete.length);
+
+        for (const documentId of filesToDelete) {
+          try {
+            console.log('🗑️ Intentando eliminar documento ID:', documentId);
+            console.log('🗑️ URL de eliminación:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/${documentId}`);
+
+            await documentService.deleteDocument(documentId);
+            console.log('✅ Documento eliminado exitosamente:', documentId);
+          } catch (error: any) {
+            console.error('❌ Error al eliminar documento:', documentId, error);
+            console.error('❌ Error details:', error);
+            throw new Error(`Error al eliminar documento ${documentId}: ${error.message}`);
+          }
+        }
+
+        console.log('✅ Todos los documentos marcados fueron eliminados exitosamente');
+      }
+
+      // Subir nuevos archivos
+      if (selectedFiles.length > 0) {
+        console.log('📤 Subiendo nuevos archivos:', selectedFiles.map(f => f.name));
+        console.log('📤 Total archivos a subir:', selectedFiles.length);
+        console.log('🆔 Solicitante ID para subida:', Number(editedCustomer.id_solicitante));
+
+        try {
+          console.log('📤 Llamando a uploadMultipleDocuments...');
+          const uploadResults = await documentService.uploadMultipleDocuments(
+            selectedFiles,
+            Number(editedCustomer.id_solicitante)
+          );
+          console.log('✅ Archivos subidos exitosamente:', uploadResults);
+        } catch (error: any) {
+          console.error('❌ Error al subir archivos:', error);
+          console.error('❌ Error details:', error);
+          throw new Error(`Error al subir los nuevos archivos: ${error.message}`);
+        }
+      }
+
+      // Recargar documentos después de los cambios
+      try {
+        console.log('🔄 Recargando documentos...');
+        const updatedDocuments = await documentService.getDocuments(Number(editedCustomer.id_solicitante));
+        setCustomerDocuments(updatedDocuments);
+        console.log('✅ Documentos recargados:', updatedDocuments);
+      } catch (error) {
+        console.error('❌ Error al recargar documentos:', error);
+      }
+
+      // Limpiar estados
+      setSelectedFiles([]);
+      setFilesToDelete([]);
+
+      // Mostrar mensaje de éxito
+      alert('Documentos gestionados exitosamente');
+
+    } catch (error: any) {
+      console.error('❌ Error en la gestión de documentos:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ Error stack:', error.stack);
+      setApiError(error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -244,49 +360,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       if (!cedula) {
         throw new Error('No se encontró la información del asesor');
       }
-
-      // Gestionar archivos: eliminar y subir nuevos
-      if (filesToDelete.length > 0 || selectedFiles.length > 0) {
-        console.log('🔄 === GESTIONANDO ARCHIVOS ===');
-
-        // Eliminar archivos marcados para eliminación
-        if (filesToDelete.length > 0) {
-          console.log('🗑️ Eliminando archivos:', filesToDelete);
-          for (const documentId of filesToDelete) {
-            try {
-              await documentService.deleteDocument(documentId);
-              console.log('✅ Documento eliminado:', documentId);
-            } catch (error) {
-              console.error('❌ Error al eliminar documento:', documentId, error);
-            }
-          }
-        }
-
-        // Subir nuevos archivos
-        if (selectedFiles.length > 0) {
-          console.log('📤 Subiendo nuevos archivos:', selectedFiles.map(f => f.name));
-          try {
-            const uploadResults = await documentService.uploadMultipleDocuments(
-              selectedFiles,
-              Number(editedCustomer.id_solicitante)
-            );
-            console.log('✅ Archivos subidos exitosamente:', uploadResults);
-          } catch (error) {
-            console.error('❌ Error al subir archivos:', error);
-            throw new Error('Error al subir los nuevos archivos');
-          }
-        }
-
-        // Recargar documentos después de los cambios
-        try {
-          const updatedDocuments = await documentService.getDocuments(Number(editedCustomer.id_solicitante));
-          setCustomerDocuments(updatedDocuments);
-        } catch (error) {
-          console.error('❌ Error al recargar documentos:', error);
-        }
-      }
-
-      // Los campos JSON ya no son necesarios para la versión simplificada
 
       // Estructurar los datos simplificados
       const mappedCustomer = {
@@ -337,8 +410,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       onSave();
 
       setIsEditing(false);
-      setSelectedFiles([]);
-      setFilesToDelete([]);
     } catch (error: any) {
       console.error('Error en la actualización:', error);
       setApiError(error.message);
@@ -433,14 +504,15 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                           <Download className="w-4 h-4" />
                         </a>
                       )}
-                      {isEditing && canEditCustomer() && (
-                        <button
-                          onClick={() => handleDeleteExistingFile(document.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <XIcon className="w-4 h-4" />
-                        </button>
-                      )}
+                                             {isEditing && canEditCustomer() && (
+                         <button
+                           onClick={() => handleDeleteExistingFile(document.id)}
+                           className="text-red-500 hover:text-red-700"
+                           title="Marcar para eliminar"
+                         >
+                           <XIcon className="w-4 h-4" />
+                         </button>
+                       )}
                     </div>
                   </div>
                 </div>
@@ -720,51 +792,75 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
          </>
        )}
 
-       {/* Archivos */}
-      <div className="md:col-span-2">
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos</h3>
+               {/* Archivos */}
+       <div className="md:col-span-2">
+         <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos</h3>
 
-        {loadingDocuments && (
-          <div className="flex items-center mb-4">
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            <span className="text-sm text-gray-600">Cargando documentos...</span>
-          </div>
-        )}
+         {/* Debug info para documentos */}
+         {process.env.NODE_ENV === 'development' && (
+           <div className="bg-yellow-50 p-2 text-xs text-yellow-700 border rounded mb-4">
+             🔍 Debug documentos: loadingDocuments={loadingDocuments.toString()},
+             customerDocuments.length={customerDocuments.length},
+             solicitanteIdNumber={solicitanteIdNumber}
+           </div>
+         )}
 
-        {(() => {
-          // Parsear customerDocuments si es string
-          let documentsArray = [];
-          try {
-            if (typeof customerDocuments === 'string') {
-              const parsed = JSON.parse(customerDocuments);
-              documentsArray = parsed.data || [];
-            } else if (Array.isArray(customerDocuments)) {
-              documentsArray = customerDocuments;
-            }
-          } catch (error) {
-            console.error('Error parsing customerDocuments:', error);
-            documentsArray = [];
-          }
+         {loadingDocuments && (
+           <div className="flex items-center mb-4">
+             <Loader2 className="w-4 h-4 animate-spin mr-2" />
+             <span className="text-sm text-gray-600">Cargando documentos...</span>
+           </div>
+         )}
 
-          console.log('📋 Documentos procesados:', documentsArray);
+         {(() => {
+           // Parsear customerDocuments si es string
+           let documentsArray = [];
+           try {
+             if (typeof customerDocuments === 'string') {
+               const parsed = JSON.parse(customerDocuments);
+               documentsArray = parsed.data || [];
+             } else if (Array.isArray(customerDocuments)) {
+               documentsArray = customerDocuments;
+             }
+           } catch (error) {
+             console.error('Error parsing customerDocuments:', error);
+             documentsArray = [];
+           }
 
-          if (!loadingDocuments && documentsArray.length === 0) {
-            return (
-              <div className="text-gray-500 text-sm mb-4">
-                No hay documentos disponibles para este cliente.
-              </div>
-            );
-          }
+           console.log('📋 Documentos procesados:', documentsArray);
+           console.log('📋 Tipo de customerDocuments:', typeof customerDocuments);
+           console.log('📋 customerDocuments raw:', customerDocuments);
 
-          return (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documentsArray.map((doc: any, index: number) => {
-                const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
-                const fileUrl = doc.documento_url || doc.url || doc.file_path;
-                const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+           if (!loadingDocuments && documentsArray.length === 0) {
+             return (
+               <div className="text-gray-500 text-sm mb-4">
+                 No hay documentos disponibles para este cliente.
+                 {process.env.NODE_ENV === 'development' && (
+                   <div className="mt-2 text-xs text-gray-400">
+                     (Debug: solicitanteIdNumber={solicitanteIdNumber})
+                   </div>
+                 )}
+               </div>
+             );
+           }
 
-                return (
-                  <div key={doc.id || index} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+           return (
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+               {documentsArray.map((doc: any, index: number) => {
+                 const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
+                 const fileUrl = doc.documento_url || doc.url || doc.file_path;
+                 const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+                 const isMarkedForDeletion = filesToDelete.includes(doc.id);
+
+                 return (
+                   <div
+                     key={doc.id || index}
+                     className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow ${
+                       isMarkedForDeletion
+                         ? 'border-red-300 bg-red-50'
+                         : 'border-gray-200'
+                     }`}
+                   >
                     <div className="flex items-start space-x-3">
                       <div className="flex-shrink-0">
                         {isImage ? (
@@ -773,80 +869,139 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                           <File className="w-8 h-8 text-gray-500" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-gray-900 truncate">
-                          {fileName}
-                        </h4>
+                                             <div className="flex-1 min-w-0">
+                         <div className="flex items-center space-x-2">
+                           <h4 className="text-sm font-medium text-gray-900 truncate">
+                             {fileName}
+                           </h4>
+                           {isMarkedForDeletion && (
+                             <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                               Eliminar
+                             </span>
+                           )}
+                         </div>
                         {doc.file_size && (
                           <p className="text-xs text-gray-500 mt-1">
                             {(doc.file_size / 1024).toFixed(1)} KB
                           </p>
                         )}
-                        {fileUrl && (
-                          <a
-                            href={fileUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            Abrir archivo
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                                                 {fileUrl && (
+                           <a
+                             href={fileUrl}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="inline-flex items-center mt-2 text-sm text-blue-600 hover:text-blue-800"
+                           >
+                             <ExternalLink className="w-4 h-4 mr-1" />
+                             Abrir archivo
+                           </a>
+                         )}
+
+                         {/* Botón de eliminar para documentos existentes */}
+                         {isEditing && canEditCustomer() && (
+                           <button
+                             onClick={() => handleDeleteExistingFile(doc.id)}
+                             className="inline-flex items-center mt-2 text-sm text-red-600 hover:text-red-800"
+                             title="Marcar para eliminar"
+                           >
+                             <XIcon className="w-4 h-4 mr-1" />
+                             Eliminar
+                           </button>
+                         )}
+                       </div>
+                     </div>
+                   </div>
+                 );
+               })}
             </div>
           );
         })()}
 
-        {isEditing && canEditCustomer() && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              className="hidden"
-              multiple
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-            <button
-              type="button"
-              onClick={triggerFileInput}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              Agregar Archivos
-            </button>
+                 {isEditing && canEditCustomer() && (
+           <div className="mt-6 pt-4 border-t border-gray-200">
+             <div className="flex items-center justify-between mb-4">
+               <h4 className="text-lg font-medium text-gray-900">Gestión de Documentos</h4>
+               <div className="flex space-x-2">
+                 <input
+                   type="file"
+                   ref={fileInputRef}
+                   onChange={handleFileSelect}
+                   className="hidden"
+                   multiple
+                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                 />
+                 <button
+                   type="button"
+                   onClick={triggerFileInput}
+                   className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                 >
+                   <Upload className="w-4 h-4 mr-2" />
+                   Seleccionar Archivos
+                 </button>
 
-            {selectedFiles.length > 0 && (
-              <div className="mt-4">
-                <h5 className="text-sm font-medium text-gray-700 mb-2">Archivos seleccionados:</h5>
-                <div className="space-y-2">
-                  {selectedFiles.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
-                      <div className="flex items-center">
-                        <File className="w-4 h-4 mr-2 text-gray-500" />
-                        <span className="text-sm text-gray-700">{file.name}</span>
-                        <span className="ml-2 text-xs text-gray-500">
-                          ({(file.size / 1024).toFixed(1)} KB)
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFile(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <XIcon className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+                 {(selectedFiles.length > 0 || filesToDelete.length > 0) && (
+                   <button
+                     type="button"
+                     onClick={handleManageDocuments}
+                     disabled={loading}
+                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                   >
+                     {loading ? (
+                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                     ) : (
+                       <Save className="w-4 h-4 mr-2" />
+                     )}
+                     {loading ? 'Procesando...' : 'Aplicar Cambios'}
+                   </button>
+                 )}
+               </div>
+             </div>
+
+             {/* Resumen de cambios */}
+             {(selectedFiles.length > 0 || filesToDelete.length > 0) && (
+               <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
+                 <h5 className="text-sm font-medium text-blue-900 mb-2">Cambios pendientes:</h5>
+                 <div className="space-y-1">
+                   {selectedFiles.length > 0 && (
+                     <div className="text-sm text-blue-700">
+                       📤 Archivos a subir: {selectedFiles.length}
+                     </div>
+                   )}
+                   {filesToDelete.length > 0 && (
+                     <div className="text-sm text-blue-700">
+                       🗑️ Archivos a eliminar: {filesToDelete.length}
+                     </div>
+                   )}
+                 </div>
+               </div>
+             )}
+
+             {selectedFiles.length > 0 && (
+               <div className="mt-4">
+                 <h5 className="text-sm font-medium text-gray-700 mb-2">Archivos seleccionados para subir:</h5>
+                 <div className="space-y-2">
+                   {selectedFiles.map((file, index) => (
+                     <div key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                       <div className="flex items-center">
+                         <File className="w-4 h-4 mr-2 text-gray-500" />
+                         <span className="text-sm text-gray-700">{file.name}</span>
+                         <span className="ml-2 text-xs text-gray-500">
+                           ({(file.size / 1024).toFixed(1)} KB)
+                         </span>
+                       </div>
+                       <button
+                         onClick={() => handleRemoveFile(index)}
+                         className="text-red-500 hover:text-red-700"
+                       >
+                         <XIcon className="w-4 h-4" />
+                       </button>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+             )}
+           </div>
+         )}
       </div>
 
        {/* Datos Completos (Solo en desarrollo) */}

@@ -18,57 +18,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   onCancel,
   isLoading
 }) => {
-  // Estados para todos los campos (base + dinámicos) con valores por defecto
-  const [datosFormulario, setDatosFormulario] = useState<Record<string, any>>({
-    // ===== SOLICITANTE =====
-    nombres: 'Juan Carlos',
-    primer_apellido: 'Rodríguez',
-    segundo_apellido: 'García',
-    tipo_identificacion: 'CC',
-    numero_documento: '12345678',
-    genero: 'M',
-    correo: 'juan.rodriguez@email.com',
-    telefono: '3001234567',
-    estado_civil: 'Soltero',
-    personas_a_cargo: 2,
-    fecha_nacimiento: '1990-01-01',
-
-    // ===== UBICACIÓN =====
-    direccion: 'Calle 123 #45-67',
-    ciudad_residencia: 'Bogotá',
-    departamento_residencia: 'Cundinamarca',
-    direccion_residencia: 'Cra 50 # 12-34',
-    tipo_direccion: 'residencia',
-    barrio: 'Chapinero',
-    estrato: 3,
-
-    // ===== INFORMACIÓN FINANCIERA =====
-    ingresos_mensuales_base: 4500000,
-    gastos_mensuales: 2800000,
-    otros_ingresos: 500000,
-    total_ingresos_mensuales: 5000000,
-    total_egresos_mensuales: 2800000,
-    total_activos: 45000000,
-    total_pasivos: 2500000,
-    gastos_vivienda: 1200000,
-    gastos_alimentacion: 600000,
-    gastos_transporte: 400000,
-
-    // ===== REFERENCIAS =====
-    nombre_completo: 'Carlos Martínez',
-    telefono_referencia: '3009876543',
-    tipo_referencia: 'personal',
-    parentesco: 'Amigo',
-    nombre_referencia: 'Carlos Martínez',
-
-    // ===== SOLICITUD =====
-    monto_solicitado: 15000000,
-    plazo_meses: 36,
-    tipo_credito_id: 2,
-    destino_credito: 'Vehiculo',
-    cuota_inicial: 3000000,
-    valor_inmueble: 0
-  });
+  // Estados para todos los campos (base + dinámicos) - INICIALMENTE VACÍO
+  const [datosFormulario, setDatosFormulario] = useState<Record<string, any>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
 
   // Estados para archivos y checkboxes
@@ -104,23 +55,23 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
 
-    // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DEFAULT_VALUE
+    // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DEFAULT_VALUE (solo campos que realmente necesiten valores por defecto)
   const autoLlenarTodosLosCampos = () => {
     const nuevosValores: Record<string, any> = { ...datosFormulario };
 
-    // Recorrer cada esquema y auto-llenar campos dinámicos
+    // Recorrer cada esquema y auto-llenar solo campos que realmente necesiten valores por defecto
     Object.entries(esquemas).forEach(([entidad, esquemaData]) => {
       if (esquemaData?.esquema) {
-        // Campos fijos
+        // Campos fijos - solo llenar si no están definidos (no sobrescribir vacíos intencionales)
         esquemaData.esquema.campos_fijos?.forEach(campo => {
-          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '' || nuevosValores[campo.key] === null)) {
+          if (campo.default_value !== undefined && nuevosValores[campo.key] === undefined) {
             nuevosValores[campo.key] = campo.default_value;
           }
         });
 
-        // Campos dinámicos
+        // Campos dinámicos - solo llenar si no están definidos (no sobrescribir vacíos intencionales)
         esquemaData.esquema.campos_dinamicos?.forEach(campo => {
-          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '' || nuevosValores[campo.key] === null)) {
+          if (campo.default_value !== undefined && nuevosValores[campo.key] === undefined) {
             nuevosValores[campo.key] = campo.default_value;
           }
 
@@ -133,7 +84,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                 objetoDefault[subcampo.key] = subcampo.default_value;
               }
             });
-            if (Object.keys(objetoDefault).length > 0 && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === null || Object.keys(nuevosValores[campo.key] || {}).length === 0)) {
+            if (Object.keys(objetoDefault).length > 0 && nuevosValores[campo.key] === undefined) {
               nuevosValores[campo.key] = objetoDefault;
             }
           }
@@ -141,47 +92,16 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       }
     });
 
-    // 🚀 FUERZA BRUTA: Auto-llenar campos comunes que pueden faltar
+    // Solo agregar campos que realmente faltan (no sobrescribir campos vacíos intencionales)
     const camposFaltantes = {
-      // Actividad económica adicionales - nombres exactos como aparecen en el formulario
-      'codigo_ciuu': nuevosValores.codigo_ciuu || '6201',
-      'departamento_empresa': nuevosValores.departamento_empresa || 'Cundinamarca',
-      'ciudad_empresa': nuevosValores.ciudad_empresa || 'Bogotá',
-      'telefono_empresa': nuevosValores.telefono_empresa || '6015551234',
-      'correo_empresa': nuevosValores.correo_empresa || 'info@techcorp.com',
-      'correo_electronico_empresa': nuevosValores.correo_electronico_empresa || 'info@techcorp.com',
-      'nit_empresa': nuevosValores.nit_empresa || '900123456-1',
-      'direccion_empresa': nuevosValores.direccion_empresa || 'Carrera 7 #32-16',
-      'nombre_negocio': nuevosValores.nombre_negocio || 'TechCorp SAS',
-      'direccion_negocio': nuevosValores.direccion_negocio || 'Carrera 7 #32-16',
-      'departamento_negocio': nuevosValores.departamento_negocio || 'Cundinamarca',
-      'ciudad_negocio': nuevosValores.ciudad_negocio || 'Bogotá',
-      'numero_empleados_negocio': nuevosValores.numero_empleados_negocio || 50,
-      'antiguedad_actividad': nuevosValores.antiguedad_actividad || '4 años',
-      'antiguedad_actividad_texto': nuevosValores.antiguedad_actividad_texto || '4 años',
-      'entidad_pagadora_pension': nuevosValores.entidad_pagadora_pension || 'Protección S.A.',
+      // Solo campos que realmente necesiten valores por defecto para funcionar
       'pago_impuestos_colombia': nuevosValores.pago_impuestos_colombia ?? true,
-
-      // Variaciones de nombres de campos
-      'codigo_ciiu': nuevosValores.codigo_ciiu || '6201',
-      'departamento_de_la_empresa': nuevosValores.departamento_de_la_empresa || 'Cundinamarca',
-      'ciudad_de_la_empresa': nuevosValores.ciudad_de_la_empresa || 'Bogotá',
-      'telefono_de_la_empresa': nuevosValores.telefono_de_la_empresa || '6015551234',
-      'correo_electronico_de_la_empresa': nuevosValores.correo_electronico_de_la_empresa || 'info@techcorp.com',
-      'nit_de_la_empresa': nuevosValores.nit_de_la_empresa || '900123456-1',
-      'direccion_de_la_empresa': nuevosValores.direccion_de_la_empresa || 'Carrera 7 #32-16',
-      'nombre_del_negocio': nuevosValores.nombre_del_negocio || 'TechCorp SAS',
-      'direccion_del_negocio': nuevosValores.direccion_del_negocio || 'Carrera 7 #32-16',
-      'departamento_del_negocio': nuevosValores.departamento_del_negocio || 'Cundinamarca',
-      'ciudad_del_negocio': nuevosValores.ciudad_del_negocio || 'Bogotá',
-      'numero_de_empleados_del_negocio': nuevosValores.numero_de_empleados_del_negocio || 50,
-      'antiguedad_en_la_actividad': nuevosValores.antiguedad_en_la_actividad || '4 años',
       'pago_de_impuestos_fuera_de_colombia': nuevosValores.pago_de_impuestos_fuera_de_colombia ?? false,
     };
 
-    // Aplicar solo campos que están vacíos
+    // Aplicar solo campos que no están definidos (undefined)
     Object.entries(camposFaltantes).forEach(([key, value]) => {
-      if (!nuevosValores[key] || nuevosValores[key] === '' || nuevosValores[key] === null) {
+      if (nuevosValores[key] === undefined) {
         nuevosValores[key] = value;
       }
     });
@@ -195,7 +115,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       console.log('🚀 Auto-llenado completado:', nuevosValores);
       console.log(`📊 Campos agregados: ${camposNuevos - camposOriginales} (total: ${camposNuevos})`);
     } else {
-      console.log('✅ Todos los campos ya están llenos');
+      console.log('✅ Todos los campos ya están llenos o el formulario está limpio');
     }
   };
 
@@ -208,6 +128,88 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Auto-llenar cuando los esquemas se cargan (SOLO UNA VEZ)
   const [yaAutoLlenado, setYaAutoLlenado] = React.useState(false);
+
+  // Función para limpiar el formulario
+  const limpiarFormulario = () => {
+    console.log('🧹 Limpiando formulario...');
+
+    // Crear un objeto completamente vacío
+    const formularioLimpio: Record<string, any> = {};
+
+    // Limpiar todos los campos conocidos
+    const camposConocidos = [
+      // ===== SOLICITANTE =====
+      'nombres', 'primer_apellido', 'segundo_apellido', 'tipo_identificacion',
+      'numero_documento', 'genero', 'correo', 'telefono', 'estado_civil',
+      'personas_a_cargo', 'fecha_nacimiento',
+
+      // ===== UBICACIÓN =====
+      'direccion', 'ciudad_residencia', 'departamento_residencia',
+      'direccion_residencia', 'tipo_direccion', 'barrio', 'estrato',
+
+      // ===== INFORMACIÓN FINANCIERA =====
+      'ingresos_mensuales_base', 'gastos_mensuales', 'otros_ingresos',
+      'total_ingresos_mensuales', 'total_egresos_mensuales', 'total_activos',
+      'total_pasivos', 'gastos_vivienda', 'gastos_alimentacion', 'gastos_transporte',
+
+      // ===== REFERENCIAS =====
+      'nombre_completo', 'telefono_referencia', 'tipo_referencia',
+      'parentesco', 'nombre_referencia',
+
+      // ===== SOLICITUD =====
+      'monto_solicitado', 'plazo_meses', 'tipo_credito_id',
+      'destino_credito', 'cuota_inicial', 'valor_inmueble',
+
+      // ===== CAMPOS ADICIONALES QUE PODRÍAN ACTIVAR CONDICIONES =====
+      'tipo_actividad_economica', 'tipo_credito', 'estado', 'banco',
+      'empresa', 'cargo', 'tipo_contrato', 'salario_base', 'tipo_actividad',
+      'sector_economico', 'codigo_ciuu', 'departamento_empresa', 'ciudad_empresa',
+      'telefono_empresa', 'correo_empresa', 'nit_empresa', 'direccion_empresa',
+      'nombre_negocio', 'direccion_negocio', 'departamento_negocio', 'ciudad_negocio',
+      'numero_empleados_negocio', 'antiguedad_actividad', 'antiguedad_actividad_texto',
+      'entidad_pagadora_pension', 'pago_impuestos_colombia', 'codigo_ciiu',
+      'departamento_de_la_empresa', 'ciudad_de_la_empresa', 'telefono_de_la_empresa',
+      'correo_electronico_de_la_empresa', 'nit_de_la_empresa', 'direccion_de_la_empresa',
+      'nombre_del_negocio', 'direccion_del_negocio', 'departamento_del_negocio',
+      'ciudad_del_negocio', 'numero_de_empleados_del_negocio', 'antiguedad_en_la_actividad',
+      'pago_de_impuestos_fuera_de_colombia'
+    ];
+
+    // Inicializar todos los campos como vacíos
+    camposConocidos.forEach(campo => {
+      formularioLimpio[campo] = '';
+    });
+
+    // Campos numéricos específicos
+    const camposNumericos = ['personas_a_cargo', 'estrato', 'ingresos_mensuales_base',
+      'gastos_mensuales', 'otros_ingresos', 'total_ingresos_mensuales',
+      'total_egresos_mensuales', 'total_activos', 'total_pasivos',
+      'gastos_vivienda', 'gastos_alimentacion', 'gastos_transporte',
+      'monto_solicitado', 'plazo_meses', 'tipo_credito_id', 'cuota_inicial',
+      'valor_inmueble', 'numero_empleados_negocio', 'numero_de_empleados_del_negocio'];
+
+    camposNumericos.forEach(campo => {
+      formularioLimpio[campo] = 0;
+    });
+
+    // Campos booleanos específicos
+    formularioLimpio.pago_impuestos_colombia = false;
+    formularioLimpio.pago_de_impuestos_fuera_de_colombia = false;
+
+    console.log('🧹 Formulario limpio creado:', formularioLimpio);
+
+    setDatosFormulario(formularioLimpio);
+    setErrores({});
+    setSelectedFiles([]);
+    setAceptaTerminos(false);
+    setAceptaAcuerdoFirma(false);
+    setYaAutoLlenado(false);
+  };
+
+  // Limpiar formulario cuando se monta el componente
+  React.useEffect(() => {
+    limpiarFormulario();
+  }, []);
 
   React.useEffect(() => {
     if (!esquemasLoading && esquemasCompletos && !yaAutoLlenado) {
@@ -730,26 +732,53 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           {/* ✅ CAMPOS DINÁMICOS - Solo info_extra JSON */}
           {esquemas.solicitante?.esquema?.campos_dinamicos && esquemas.solicitante.esquema.campos_dinamicos.length > 0 && (
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
-              {esquemas.solicitante.esquema.campos_dinamicos
-                .filter(campo => {
-                  // Función para determinar si un campo debe mostrarse basado en condiciones
-                  if (!campo.conditional_on) return true;
+              {(() => {
+                console.log('🔍 === DEBUG CAMPOS CONDICIONALES ===');
+                console.log('📊 datosFormulario actual:', datosFormulario);
+                console.log('📋 Campos dinámicos totales:', esquemas.solicitante.esquema.campos_dinamicos.length);
+                console.log('📋 Estructura completa de campos dinámicos:', esquemas.solicitante.esquema.campos_dinamicos);
 
-                  const { field: triggerField, value: expectedValue } = campo.conditional_on;
-                  const actualValue = datosFormulario[triggerField];
+                const camposFiltrados = esquemas.solicitante.esquema.campos_dinamicos
+                  .filter(campo => {
+                    // Función para determinar si un campo debe mostrarse basado en condiciones
+                    if (!campo.conditional_on) {
+                      console.log('✅ Campo sin condición:', campo.key);
+                      return true;
+                    }
 
-                  console.log('🔍 DEBUG CONDICIONAL:', {
-                    campo: campo.key,
-                    conditional_on: campo.conditional_on,
-                    triggerField,
-                    expectedValue,
-                    actualValue,
-                    shouldShow: actualValue === expectedValue
+                    const { field: triggerField, value: expectedValue } = campo.conditional_on;
+                    const actualValue = datosFormulario[triggerField];
+
+                    console.log('🔍 DEBUG CONDICIONAL:', {
+                      campo: campo.key,
+                      conditional_on: campo.conditional_on,
+                      triggerField,
+                      expectedValue,
+                      actualValue,
+                      shouldShow: actualValue === expectedValue,
+                      tipoActualValue: typeof actualValue,
+                      tipoExpectedValue: typeof expectedValue
+                    });
+
+                                        const shouldShow = actualValue === expectedValue;
+
+                    if (shouldShow) {
+                      console.log('⚠️ CAMPO CONDICIONAL APARECIENDO:', campo.key, 'porque', triggerField, '=', actualValue);
+                    } else {
+                      console.log('❌ Campo condicional NO aparecerá:', campo.key, 'porque', triggerField, '(', actualValue, ') !==', expectedValue);
+                    }
+
+                    // Verificación adicional: solo mostrar si el valor no está vacío
+                    if (shouldShow && (actualValue === '' || actualValue === null || actualValue === undefined)) {
+                      console.log('🚫 Campo condicional bloqueado porque el valor está vacío:', campo.key);
+                      return false;
+                    }
+
+                    return shouldShow;
                   });
 
-                  return actualValue === expectedValue;
-                })
-                .map(campo => (
+                console.log('📊 Campos filtrados que se mostrarán:', camposFiltrados.length);
+                return camposFiltrados.map(campo => (
                   <CampoDinamico
                     key={campo.key}
                     campo={campo}
@@ -757,7 +786,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                     onChange={handleFieldChange}
                     error={errores[campo.key]}
                   />
-                ))}
+                ));
+              })()}
             </div>
           )}
         </div>
@@ -956,26 +986,36 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
        )} */}
 
       {/* Form Actions */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
+      <div className="flex justify-between items-center pt-4 border-t">
         <button
           type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          onClick={limpiarFormulario}
+          className="px-4 py-2 border border-orange-300 rounded-md shadow-sm text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
         >
-          Cancelar
+          Limpiar Formulario
         </button>
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4 mr-2" />
-          )}
-          Guardar
-        </button>
+
+        <div className="flex space-x-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4 mr-2" />
+            )}
+            Guardar
+          </button>
+        </div>
       </div>
     </form>
   );
