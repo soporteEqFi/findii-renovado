@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Customer } from '../../types/customer';
-import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon } from 'lucide-react';
+import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon, ExternalLink } from 'lucide-react';
 import { usePermissions } from '../../utils/permissions';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
@@ -166,32 +166,27 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleDelete = async () => {
-    if (!canDeleteCustomer()) return;
-
     setLoading(true);
     setApiError(null);
-    // http://127.0.0.A:5000
-    // https://aapi-findii.onrender.com/
-    console.log('Eliminando cliente:', customer.id_solicitante);
+    console.log('Eliminando cliente con ID de solicitud:', customer.id_solicitud);
     console.log('Customer:', customer);
 
     try {
-      // Obtener la cédula del asesor
-      const cedula = localStorage.getItem('cedula') || '';
+      // Obtener empresa_id del localStorage
+      const empresaId = localStorage.getItem('empresa_id') || '1';
 
-      if (!cedula) {
-        throw new Error('No se encontró la información del asesor');
+      // Usar el ID de la solicitud para el endpoint de eliminación
+      const solicitudId = customer.id_solicitud;
+
+      if (!solicitudId) {
+        throw new Error('ID de la solicitud no encontrado');
       }
 
-      const response = await fetch(buildApiUrl('/delete-record'), {
+      const response = await fetch(buildApiUrl(`/solicitudes/${solicitudId}?empresa_id=${empresaId}`), {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          solicitante_id: customer.id_solicitante,
-          cedula: cedula
-        }),
       });
 
       console.log('Respuesta de eliminación:', response);
@@ -200,7 +195,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         throw new Error('Error al eliminar el registro');
       }
 
-      onCustomerDelete(customer.id_solicitante?.toString() || '');
+      onCustomerDelete(solicitudId.toString());
     } catch (error: any) {
       setApiError(error.message);
     } finally {
@@ -273,7 +268,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           try {
             const uploadResults = await documentService.uploadMultipleDocuments(
               selectedFiles,
-              editedCustomer.id_solicitante
+              Number(editedCustomer.id_solicitante)
             );
             console.log('✅ Archivos subidos exitosamente:', uploadResults);
           } catch (error) {
@@ -284,7 +279,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
         // Recargar documentos después de los cambios
         try {
-          const updatedDocuments = await documentService.getDocuments(editedCustomer.id_solicitante);
+          const updatedDocuments = await documentService.getDocuments(Number(editedCustomer.id_solicitante));
           setCustomerDocuments(updatedDocuments);
         } catch (error) {
           console.error('❌ Error al recargar documentos:', error);
@@ -692,7 +687,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
           return (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {documentsArray.map((doc, index) => {
+              {documentsArray.map((doc: any, index: number) => {
                 const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
                 const fileUrl = doc.documento_url || doc.url || doc.file_path;
                 const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
