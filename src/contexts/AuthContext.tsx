@@ -98,7 +98,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         password: undefined,
         imagen_aliado: userData.imagen_aliado || null,
         apellido: userData.apellido || '',
-        usuario: userData.usuario || ''
+        usuario: userData.usuario || '',
+        info_extra: data.info_extra || userData.info_extra || null
       };
 
       // Log del objeto final

@@ -183,15 +183,25 @@ const Customers = () => {
                 Gestionar Usuarios
               </Link>
             )} */}
-
-            {user && (
-              <span className="text-sm text-gray-600">
-                Logged in as: <span className="font-medium">{user.nombre}</span>
-                {user.rol && (
-                  <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
+            { user && user.rol && (
+                  <span className="text-sm text-gray-600">
+                  Rol: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
                     {user.rol}
                   </span>
+                  </span>
                 )}
+
+            {user && user.info_extra && (
+              <span className="text-sm text-gray-600">
+                Banco: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
+                  {user.info_extra.banco_nombre}
+                </span>
+                Ciudad: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
+                  {user.info_extra.ciudad}
+                </span>
+                Linea de Credito: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
+                  {user.info_extra.linea_credito}
+                </span>
               </span>
             )}
           </div>

@@ -9,4 +9,9 @@ export interface User {
   imagen_aliado?: string | null;
   apellido?: string;
   usuario?: string;
-} 
+  info_extra?: {
+    banco_nombre: string;
+    ciudad: string;
+    linea_credito: string;
+  };
+}
