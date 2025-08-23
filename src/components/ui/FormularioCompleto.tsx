@@ -42,6 +42,29 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   const camposFijosVisibles = esquemaCompleto.campos_fijos.filter(shouldShowField);
   const camposDinamicosVisibles = esquemaCompleto.campos_dinamicos.filter(shouldShowField);
 
+  // Crear un array ordenado insertando los campos dinámicos después de sus campos activadores
+  const todosLosCampos: any[] = [];
+
+  // Primero agregar todos los campos fijos
+  camposFijosVisibles.forEach(campoFijo => {
+    todosLosCampos.push(campoFijo);
+
+    // Buscar campos dinámicos que se activen con este campo fijo
+    const camposDinamicosRelacionados = camposDinamicosVisibles.filter(campoDinamico =>
+      campoDinamico.conditional_on?.field === campoFijo.key
+    );
+
+    // Insertar los campos dinámicos relacionados justo después del campo fijo
+    todosLosCampos.push(...camposDinamicosRelacionados);
+  });
+
+  // Agregar campos dinámicos que no tienen campo activador específico al final
+  const camposDinamicosSinActivador = camposDinamicosVisibles.filter(campoDinamico =>
+    !camposFijosVisibles.some(campoFijo => campoFijo.key === campoDinamico.conditional_on?.field)
+  );
+
+  todosLosCampos.push(...camposDinamicosSinActivador);
+
   return (
     <div className="space-y-6">
       {titulo && (
@@ -51,22 +74,9 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       )}
 
       {/* TODOS LOS CAMPOS JUNTOS (FIJOS Y DINÁMICOS) */}
-      {(camposFijosVisibles.length > 0 || camposDinamicosVisibles.length > 0) && (
+      {todosLosCampos.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Campos fijos */}
-          {camposFijosVisibles.map(campo => (
-            <CampoDinamico
-              key={campo.key}
-              campo={campo}
-              value={valores[campo.key]}
-              onChange={handleFieldChange}
-              error={errores[campo.key]}
-              disabled={disabled}
-            />
-          ))}
-
-          {/* Campos dinámicos */}
-          {camposDinamicosVisibles.map(campo => (
+          {todosLosCampos.map(campo => (
             <CampoDinamico
               key={campo.key}
               campo={campo}
