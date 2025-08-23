@@ -125,8 +125,15 @@ export const useCustomers = () => {
 
       });
 
-      setCustomers(mappedCustomers);
-      setTotalRecords(mappedCustomers.length);
+      // Ordenar por fecha de creación descendente (más reciente primero)
+      const sortedCustomers = mappedCustomers.sort((a, b) => {
+        const dateA = new Date(a.created_at || 0);
+        const dateB = new Date(b.created_at || 0);
+        return dateB.getTime() - dateA.getTime();
+      });
+
+      setCustomers(sortedCustomers);
+      setTotalRecords(sortedCustomers.length);
       setError(null);
     } catch (error) {
       console.error('Error loading customers:', error);
