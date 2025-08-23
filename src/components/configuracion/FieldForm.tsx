@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FieldDefinition } from '../../types/fieldDefinition';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Settings } from 'lucide-react';
+import { ConditionalFieldConfig } from './ConditionalFieldConfig';
 
 // Componente reutilizable para configuración de Array
 const ArrayConfiguration: React.FC<{
@@ -340,6 +341,7 @@ interface Props {
   onCancel: () => void;
   onEditField?: (field: FieldDefinition) => void;
   onDeleteField?: (field: FieldDefinition) => void;
+  onConfigureCondition?: (field: FieldDefinition) => void;
   onSaveGroupConfiguration?: (groupData: { displayName: string; description: string; isActive: boolean }) => void;
 }
 
@@ -354,7 +356,7 @@ const defaultItem: FieldDefinition = {
   default_value: '',
 };
 
-const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel, onEditField, onDeleteField, onSaveGroupConfiguration }) => {
+const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel, onEditField, onDeleteField, onConfigureCondition, onSaveGroupConfiguration }) => {
   const [form, setForm] = useState<FieldDefinition>(initial || defaultItem);
   const [groupForm, setGroupForm] = useState({
     displayName: selectedGroup?.displayName || '',
@@ -377,6 +379,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     }[]
   });
   const [showAddField, setShowAddField] = useState(false);
+  const [showConditionalModal, setShowConditionalModal] = useState(false);
+  const [fieldToConfigure, setFieldToConfigure] = useState<FieldDefinition | null>(null);
 
   useEffect(() => {
     if (initial) {
@@ -766,6 +770,17 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                     >
                       ✏️
                     </button>
+                                         <button
+                       type="button"
+                       className="text-green-600 hover:text-green-800 text-sm"
+                       onClick={() => {
+                         setFieldToConfigure(field);
+                         setShowConditionalModal(true);
+                       }}
+                       title="Configurar condición"
+                     >
+                       <Settings size={16} />
+                     </button>
                     <button
                       type="button"
                       className="text-red-600 hover:text-red-800 text-sm"
@@ -900,6 +915,34 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           Guardar Configuración
         </button>
       </div>
+
+      {/* Modal de Configuración de Condiciones */}
+      {showConditionalModal && fieldToConfigure && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <ConditionalFieldConfig
+              campo={fieldToConfigure}
+              camposDisponibles={selectedGroup?.fields || []}
+              onSave={(campoKey, conditionalConfig) => {
+                if (onConfigureCondition) {
+                  // Crear un campo actualizado con la condición
+                  const updatedField = {
+                    ...fieldToConfigure,
+                    conditional_on: conditionalConfig.field ? conditionalConfig : undefined
+                  };
+                  onConfigureCondition(updatedField);
+                }
+                setShowConditionalModal(false);
+                setFieldToConfigure(null);
+              }}
+              onCancel={() => {
+                setShowConditionalModal(false);
+                setFieldToConfigure(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

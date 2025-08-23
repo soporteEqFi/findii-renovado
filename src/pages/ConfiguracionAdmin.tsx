@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { FieldDefinition } from '../types/fieldDefinition';
 import { fieldConfigService } from '../services/fieldConfigService';
+import { conditionalFieldService } from '../services/conditionalFieldService';
 import { toast } from 'react-hot-toast';
 import FieldForm from '../components/configuracion/FieldForm';
+import { ConditionalFieldConfig } from '../components/configuracion/ConditionalFieldConfig';
 
 interface EntityGroup {
   entity: string;
@@ -21,6 +23,8 @@ const ConfiguracionAdmin: React.FC = () => {
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editing, setEditing] = useState<FieldDefinition | null>(null);
   const [selectedGroup, setSelectedGroup] = useState<EntityGroup | null>(null);
+  const [showConditionalConfig, setShowConditionalConfig] = useState<boolean>(false);
+  const [configuringField, setConfiguringField] = useState<FieldDefinition | null>(null);
 
   const entityConfig = useMemo(() => ([
     {
@@ -132,6 +136,83 @@ const ConfiguracionAdmin: React.FC = () => {
     } catch (e: any) {
       toast.error(e.message || 'Error eliminando campo');
     }
+  };
+
+  const handleConfigureCondition = (field: FieldDefinition) => {
+    setConfiguringField(field);
+    setShowConditionalConfig(true);
+  };
+
+  const handleSaveCondition = async (campoKey: string, conditionalConfig: any) => {
+    console.log('ConfiguracionAdmin - handleSaveCondition iniciado:', { campoKey, conditionalConfig, configuringField });
+
+    if (!configuringField) {
+      console.log('ConfiguracionAdmin - No hay configuringField');
+      return;
+    }
+
+    try {
+      // Validar que el campo tenga ID
+      if (!configuringField.id) {
+        toast.error('Error: El campo no tiene ID válido');
+        return;
+      }
+
+      // Validar la condición antes de guardar
+      // Si no hay campo activador seleccionado, significa que se quiere remover la condición
+      if (conditionalConfig.field) {
+        const validation = conditionalFieldService.validateCondition(conditionalConfig);
+        if (!validation.isValid) {
+          toast.error(`Errores de validación: ${validation.errors.join(', ')}`);
+          return;
+        }
+      }
+
+      console.log('Enviando actualización:', {
+        fieldKey: configuringField.key,
+        entity: configuringField.entity,
+        jsonColumn: configuringField.json_column,
+        conditionalConfig: conditionalConfig.field ? conditionalConfig : null
+      });
+
+      // Actualizar la condición en el backend
+      const updatedField = await conditionalFieldService.updateFieldCondition(
+        configuringField.key,
+        configuringField.entity,
+        configuringField.json_column,
+        conditionalConfig.field ? conditionalConfig : null
+      );
+
+      console.log('Respuesta del backend:', updatedField);
+
+      // Actualizar el estado local
+      if (selectedGroup) {
+        const updatedFields = selectedGroup.fields.map(f =>
+          f.key === configuringField.key ? { ...f, conditional_on: conditionalConfig.field ? conditionalConfig : undefined } : f
+        );
+        const updatedGroup = { ...selectedGroup, fields: updatedFields };
+        setSelectedGroup(updatedGroup);
+
+        // Update the entityGroups state
+        setEntityGroups(prev => prev.map(group =>
+          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn
+            ? updatedGroup
+            : group
+        ));
+      }
+
+      toast.success('Condición guardada exitosamente');
+      setShowConditionalConfig(false);
+      setConfiguringField(null);
+    } catch (e: any) {
+      console.error('Error guardando condición:', e);
+      toast.error(e.message || 'Error guardando condición');
+    }
+  };
+
+  const handleCancelCondition = () => {
+    setShowConditionalConfig(false);
+    setConfiguringField(null);
   };
 
   const handleDelete = async (group: EntityGroup) => {
@@ -266,9 +347,24 @@ const ConfiguracionAdmin: React.FC = () => {
                 onSubmit={handleSubmit}
                 onEditField={handleEditField}
                 onDeleteField={handleDeleteField}
+                onConfigureCondition={handleConfigureCondition}
                 onSaveGroupConfiguration={handleSaveGroupConfiguration}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Configuración de Condiciones */}
+      {showConditionalConfig && configuringField && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <ConditionalFieldConfig
+              campo={configuringField}
+              camposDisponibles={selectedGroup?.fields || []}
+              onSave={handleSaveCondition}
+              onCancel={handleCancelCondition}
+            />
           </div>
         </div>
       )}

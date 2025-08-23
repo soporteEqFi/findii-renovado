@@ -75,7 +75,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
       {/* TODOS LOS CAMPOS JUNTOS (FIJOS Y DINÁMICOS) */}
       {todosLosCampos.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
           {todosLosCampos.map(campo => (
             <CampoDinamico
               key={campo.key}

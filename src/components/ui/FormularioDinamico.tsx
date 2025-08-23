@@ -50,7 +50,7 @@ export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
         </h3>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
         {camposVisibles.map((campo) => (
           <CampoDinamico
             key={campo.key}

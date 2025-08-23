@@ -6,6 +6,11 @@ export interface FieldObjectStructureItem {
   required?: boolean;
 }
 
+export interface ConditionalConfig {
+  field: string;
+  value: any;
+}
+
 export interface FieldDefinition {
   id?: string;
   empresa_id: number | string;
@@ -18,6 +23,7 @@ export interface FieldDefinition {
   default_value?: any;
   // list_values holds enum for arrays or object structure for objects
   list_values?: any;
+  conditional_on?: ConditionalConfig;
   created_at?: string;
 }
 

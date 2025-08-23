@@ -729,7 +729,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
           {/* ✅ CAMPOS DINÁMICOS - Solo info_extra JSON */}
           {esquemas.solicitante?.esquema?.campos_dinamicos && esquemas.solicitante.esquema.campos_dinamicos.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
               {esquemas.solicitante.esquema.campos_dinamicos
                 .filter(campo => {
                   // Función para determinar si un campo debe mostrarse basado en condiciones

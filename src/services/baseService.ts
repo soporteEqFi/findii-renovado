@@ -30,7 +30,7 @@ export const apiCall = async <T>(
   options: RequestInit = {}
 ): Promise<T> => {
   const url = `${API_CONFIG.BASE_URL}${endpoint}`;
-  
+
   const config: RequestInit = {
     headers: getBaseHeaders(),
     ...options,
@@ -38,9 +38,35 @@ export const apiCall = async <T>(
 
   const response = await fetch(url, config);
 
+  console.log('API Response Info:', {
+    status: response.status,
+    statusText: response.statusText,
+    url: response.url,
+    ok: response.ok,
+    contentType: response.headers.get('content-type')
+  });
+
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('API Error Response:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.url,
+      headers: Object.fromEntries(response.headers.entries()),
+      body: errorText.substring(0, 500) // Primeros 500 caracteres
+    });
     throw new Error(`API Error: ${response.status} - ${errorText}`);
+  }
+
+  // Verificar si la respuesta es JSON antes de parsear
+  const contentType = response.headers.get('content-type');
+  if (contentType && !contentType.includes('application/json')) {
+    const responseText = await response.text();
+    console.error('Non-JSON Response:', {
+      contentType,
+      body: responseText.substring(0, 500)
+    });
+    throw new Error(`Expected JSON but got ${contentType}: ${responseText.substring(0, 100)}`);
   }
 
   return response.json();
@@ -65,6 +91,13 @@ export const apiPut = <T>(endpoint: string, data: any): Promise<T> => {
   });
 };
 
+export const apiPatch = <T>(endpoint: string, data: any): Promise<T> => {
+  return apiCall<T>(endpoint, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+};
+
 export const apiDelete = <T>(endpoint: string): Promise<T> => {
   return apiCall<T>(endpoint, { method: 'DELETE' });
-}; 
+};
