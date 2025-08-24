@@ -52,6 +52,12 @@ const ConfiguracionAdmin: React.FC = () => {
       description: 'Configuración de campos personalizados para información financiera del solicitante.'
     },
     {
+      entity: 'referencia',
+      jsonColumn: 'detalle_referencia',
+      displayName: 'Referencias',
+      description: 'Configuración de campos personalizados para información de referencias personales.'
+    },
+    {
       entity: 'solicitud',
       jsonColumn: 'detalle_credito',
       displayName: 'Solicitud',
@@ -237,8 +243,26 @@ const ConfiguracionAdmin: React.FC = () => {
         entity: targetGroup.entity,
         json_column: targetGroup.jsonColumn,
       };
-      await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
-      toast.success(editing ? 'Campo actualizado' : 'Campo creado');
+
+      if (editing && editing.id) {
+        // Si estamos editando un campo existente, usar updateField para actualizar solo ese campo
+        const updates: Partial<FieldDefinition> = {
+          key: data.key,
+          type: data.type,
+          required: data.required,
+          description: data.description,
+          default_value: data.default_value,
+          order_index: data.order_index,
+          list_values: data.list_values
+        };
+
+        await fieldConfigService.updateField(editing.id, updates);
+        toast.success('Campo actualizado');
+      } else {
+        // Si es un campo nuevo, usar upsert
+        await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
+        toast.success('Campo creado');
+      }
 
       // Update the selected group's fields without closing modal
       if (selectedGroup) {

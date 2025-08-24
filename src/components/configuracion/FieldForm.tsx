@@ -28,22 +28,26 @@ const ArrayConfiguration: React.FC<{
   return (
     <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
       <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
-      <div>
-        <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
-        <textarea
-          value={localValue}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
-          rows={6}
-          placeholder="Opción 1
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+          <textarea
+            value={localValue}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            rows={6}
+            placeholder="Opción 1
 Opción 2
 Opción 3
 Opción 4
 Opción 5
 Opción 6"
-        />
-        <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+          />
+          <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+        </div>
+
+
       </div>
     </div>
   );
@@ -72,20 +76,26 @@ const NestedArrayConfiguration: React.FC<{
 
   return (
     <div className="mt-3 p-3 bg-gray-50 rounded border">
-      <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
-      <textarea
-        value={localValue}
-        onChange={handleChange}
-        onBlur={handleBlur}
-        className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-        rows={5}
-        placeholder="Opción 1
+      <div className="space-y-3">
+        <div>
+          <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+          <textarea
+            value={localValue}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+            rows={5}
+            placeholder="Opción 1
 Opción 2
 Opción 3
 Opción 4
 Opción 5"
-      />
-      <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+          />
+          <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+        </div>
+
+
+      </div>
     </div>
   );
 };
@@ -97,16 +107,18 @@ const ObjectConfiguration: React.FC<{
     type: string;
     required: boolean;
     description: string;
+    order_index?: number;
     arrayOptions?: string[];
-    objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+    objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
   }[];
   onChange: (structure: {
     key: string;
     type: string;
     required: boolean;
     description: string;
+    order_index?: number;
     arrayOptions?: string[];
-    objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+    objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
   }[]) => void;
   isEditing?: boolean;
 }> = ({ structure, onChange, isEditing = false }) => (
@@ -208,7 +220,7 @@ const ObjectConfiguration: React.FC<{
               <div className="space-y-2">
                 {(field.objectStructure || []).map((subField, subIndex) => (
                   <div key={subIndex} className="p-2 bg-white rounded border space-y-1">
-                    <div className="grid grid-cols-2 gap-1">
+                    <div className="grid grid-cols-3 gap-1">
                       <input
                         type="text"
                         value={subField.key}
@@ -234,6 +246,20 @@ const ObjectConfiguration: React.FC<{
                         }}
                         placeholder="Descripción"
                         className="border border-gray-300 rounded px-2 py-1 text-xs"
+                      />
+                      <input
+                        type="number"
+                        value={subField.order_index || ''}
+                        onChange={(e) => {
+                          const newStructure = [...structure];
+                          const newSubStructure = [...(newStructure[index].objectStructure || [])];
+                          newSubStructure[subIndex].order_index = e.target.value ? parseInt(e.target.value) : undefined;
+                          newStructure[index].objectStructure = newSubStructure;
+                          onChange(newStructure);
+                        }}
+                        placeholder="Orden"
+                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        min="1"
                       />
                     </div>
                     <div className="flex items-center gap-1">
@@ -294,7 +320,7 @@ const ObjectConfiguration: React.FC<{
                   type="button"
                   onClick={() => {
                     const newStructure = [...structure];
-                    const newSubStructure = [...(newStructure[index].objectStructure || []), { key: '', type: 'string', required: false, description: '' }];
+                    const newSubStructure = [...(newStructure[index].objectStructure || []), { key: '', type: 'string', required: false, description: '', order_index: undefined }];
                     newStructure[index].objectStructure = newSubStructure;
                     onChange(newStructure);
                   }}
@@ -311,7 +337,7 @@ const ObjectConfiguration: React.FC<{
       <button
         type="button"
         onClick={() => {
-          const newStructure = [...structure, { key: '', type: 'string', required: false, description: '' }];
+          const newStructure = [...structure, { key: '', type: 'string', required: false, description: '', order_index: undefined }];
           onChange(newStructure);
         }}
         className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
@@ -368,14 +394,16 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     displayName: '',
     type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object',
     required: false,
+    order_index: undefined as number | undefined,
     arrayOptions: [] as string[],
     objectStructure: [] as {
       key: string;
       type: string;
       required: boolean;
       description: string;
+      order_index?: number;
       arrayOptions?: string[];
-      objectStructure?: { key: string; type: string; required: boolean; description: string }[];
+      objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
     }[]
   });
   const [showAddField, setShowAddField] = useState(false);
@@ -427,10 +455,11 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         key: field.key,
         type: field.type,
         required: field.required,
-        description: field.description
+        description: field.description,
+        order_index: field.order_index
       };
 
-             // Validar y limpiar configuración de array
+                   // Validar y limpiar configuración de array
        if (field.type === 'array' && field.arrayOptions && field.arrayOptions.length > 0) {
          // Filtrar líneas vacías solo al guardar
          const filteredOptions = field.arrayOptions.filter((opt: string) => opt.trim() !== '');
@@ -446,10 +475,11 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             key: subField.key,
             type: subField.type,
             required: subField.required,
-            description: subField.description
+            description: subField.description,
+            order_index: subField.order_index
           };
 
-                     // Para sub-campos de tipo array, agregar list_values.enum y eliminar arrayOptions
+                                          // Para sub-campos de tipo array, agregar list_values.enum y eliminar arrayOptions
            if (subField.type === 'array' && subField.arrayOptions && subField.arrayOptions.length > 0) {
              // Filtrar líneas vacías solo al guardar
              const filteredOptions = subField.arrayOptions.filter((opt: string) => opt.trim() !== '');
@@ -530,9 +560,10 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        required: newFieldForm.required,
        description: newFieldForm.displayName,
        default_value: '',
+       order_index: newFieldForm.order_index,
      };
 
-           // Add list_values for array and object types
+                      // Add list_values for array and object types
       if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
         // Filtrar líneas vacías y crear list_values.enum
         const filteredOptions = newFieldForm.arrayOptions.filter(opt => opt.trim() !== '');
@@ -554,6 +585,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        displayName: '',
        type: 'string',
        required: false,
+       order_index: undefined,
        arrayOptions: [],
        objectStructure: []
      });
@@ -617,6 +649,32 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
               className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Crédito de vivienda"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Orden de Aparición</label>
+            <input
+              type="number"
+              name="order_index"
+              value={form.order_index || ''}
+              onChange={(e) => setForm(prev => ({ ...prev, order_index: e.target.value ? parseInt(e.target.value) : undefined }))}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="1, 2, 3..."
+              min="1"
+            />
+            <p className="text-xs text-gray-500 mt-1">Número que define el orden de aparición (1 = primero, 2 = segundo, etc.)</p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Valor por Defecto</label>
+            <input
+              name="default_value"
+              value={form.default_value || ''}
+              onChange={(e) => setForm(prev => ({ ...prev, default_value: e.target.value }))}
+              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Valor predeterminado"
             />
           </div>
         </div>
@@ -750,12 +808,30 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
           {selectedGroup && selectedGroup.fields.length > 0 ? (
             <div className="space-y-2">
-              {selectedGroup.fields.map((field) => (
+              {selectedGroup.fields
+                .sort((a, b) => {
+                  // Ordenar por order_index, si no tiene order_index va al final
+                  const orderA = a.order_index || 999;
+                  const orderB = b.order_index || 999;
+                  return orderA - orderB;
+                })
+                .map((field) => (
                 <div key={field.key} className="flex items-center justify-between bg-white p-3 rounded border">
-                  <div className="flex-1">
-                    <div className="text-sm font-medium text-gray-900">{field.description || field.key}</div>
-                    <div className="text-xs text-gray-500">
-                      {field.key} - Tipo: {field.type} {field.required ? '(Obligatorio)' : ''}
+                  <div className="flex items-center gap-3">
+                    {field.order_index ? (
+                      <div className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
+                        {field.order_index}
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-400 text-xs font-medium rounded-full">
+                        ?
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">{field.description || field.key}</div>
+                      <div className="text-xs text-gray-500">
+                        {field.key} - Tipo: {field.type} {field.required ? '(Obligatorio)' : ''}
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -822,14 +898,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                 />
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-4">
+            <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Tipo de Campo</label>
                 <select
                   name="type"
                   value={newFieldForm.type}
                   onChange={handleNewFieldChange}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
                 >
                   <option value="string">Texto</option>
                   <option value="number">Número</option>
@@ -839,6 +915,18 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   <option value="array">Lista/Array</option>
                   <option value="object">Objeto</option>
                 </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-600 mb-1">Orden de Aparición</label>
+                <input
+                  type="number"
+                  name="order_index"
+                  value={newFieldForm.order_index || ''}
+                  onChange={(e) => setNewFieldForm(prev => ({ ...prev, order_index: e.target.value ? parseInt(e.target.value) : undefined }))}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
+                  placeholder="1, 2, 3..."
+                  min="1"
+                />
               </div>
               <div className="flex items-center mt-6">
                 <input

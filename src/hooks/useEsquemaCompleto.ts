@@ -37,9 +37,8 @@ const validarEsquema = (esquema: EsquemaCampo[]): EsquemaCampo[] => {
           campo.list_values = JSON.parse(campo.list_values);
         }
 
-        // Validar estructura según tipo (solo dos formatos permitidos)
+        // Validar estructura según tipo
         if (campo.type === 'array') {
-          // Para arrays, solo formato con enum
           if (typeof campo.list_values === 'object' && campo.list_values !== null) {
             if (!('enum' in campo.list_values)) {
               console.warn(`Campo ${campo.key}: array debe tener list_values con enum`, campo.list_values);
@@ -47,18 +46,9 @@ const validarEsquema = (esquema: EsquemaCampo[]): EsquemaCampo[] => {
             }
           }
         } else if (campo.type === 'object') {
-          // Para objetos, solo formato con object_structure
           if (typeof campo.list_values === 'object' && campo.list_values !== null) {
             if (!('object_structure' in campo.list_values)) {
               console.warn(`Campo ${campo.key}: object debe tener list_values con object_structure`, campo.list_values);
-              campo.list_values = null;
-            }
-          }
-        } else if (campo.type === 'string') {
-          // Para strings, mantener compatibilidad con formatos anteriores
-          if (typeof campo.list_values === 'object' && campo.list_values !== null) {
-            if (!('enum' in campo.list_values) && !Array.isArray(campo.list_values)) {
-              console.warn(`Campo ${campo.key}: string sin opciones válidas`, campo.list_values);
               campo.list_values = null;
             }
           }
@@ -73,10 +63,6 @@ const validarEsquema = (esquema: EsquemaCampo[]): EsquemaCampo[] => {
   });
 };
 
-// Cache para esquemas completos con TTL
-const esquemaCompletoCache = new Map<string, { data: EsquemaCompleto; timestamp: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
-
 export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseEsquemaCompletoReturn => {
   const [esquema, setEsquema] = useState<EsquemaCompleto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,303 +73,100 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
       setLoading(true);
       setError(null);
 
-      const cacheKey = `${entidad}_completo_${empresaId}`;
-      const cached = esquemaCompletoCache.get(cacheKey);
+      console.log(`🔧 Intentando cargar esquema desde backend para ${entidad}`);
 
-      // Verificar cache
-      if (cached && (Date.now() - cached.timestamp) < CACHE_TTL) {
-        setEsquema(cached.data);
-        setLoading(false);
-        return;
+      // Intentar cargar desde el backend usando el endpoint correcto
+      // Según la documentación: GET /json/schema/{entidad}/{json_field}
+      let jsonColumn = 'info_extra';
+      if (entidad === 'solicitud') {
+        jsonColumn = 'detalle_credito';
+      } else if (entidad === 'ubicacion') {
+        jsonColumn = 'detalle_direccion';
+      } else if (entidad === 'actividad_economica') {
+        jsonColumn = 'detalle_actividad';
+      } else if (entidad === 'informacion_financiera') {
+        jsonColumn = 'detalle_financiera';
+      } else if (entidad === 'referencia') {
+        jsonColumn = 'detalle_referencia';
       }
 
-      // Consultar endpoint de esquema completo
       const response = await fetch(
-        buildApiUrl(`/schema/${entidad}?empresa_id=${empresaId}`)
+        buildApiUrl(`/json/schema/${entidad}/${jsonColumn}?empresa_id=${empresaId}`)
       );
 
-      if (!response.ok) {
-        throw new Error(`Error al cargar esquema completo: ${response.statusText}`);
+      console.log(`📡 Respuesta del backend: ${response.status} ${response.statusText}`);
+
+      if (response.ok) {
+        const result = await response.json();
+
+        if (result.ok) {
+          // El endpoint /json/schema/{entidad}/{json_field} devuelve solo campos dinámicos
+          const camposDinamicos = result.data || [];
+
+          // Validar y limpiar campos dinámicos
+          const camposDinamicosLimpios = validarEsquema(camposDinamicos);
+
+          // Ordenar campos por order_index si existe
+          const ordenarCampos = (campos: EsquemaCampo[]) => {
+            return campos.sort((a: EsquemaCampo, b: EsquemaCampo) => {
+              const orderA = a.order_index || 999;
+              const orderB = b.order_index || 999;
+              return orderA - orderB;
+            });
+          };
+
+          const esquemaCompleto: EsquemaCompleto = {
+            entidad: entidad,
+            tabla: entidad,
+            json_column: jsonColumn,
+            total_campos: camposDinamicosLimpios.length,
+            campos_fijos: [], // Los campos fijos se manejan por separado
+            campos_dinamicos: ordenarCampos(camposDinamicosLimpios)
+          };
+
+          setEsquema(esquemaCompleto);
+          console.log(`✅ Esquema cargado exitosamente para ${entidad}:`, camposDinamicosLimpios);
+        } else {
+          throw new Error(result.error || 'Error en la respuesta del servidor');
+        }
+      } else {
+        throw new Error(`Error al cargar esquema: ${response.status} ${response.statusText}`);
       }
 
-      const result: EsquemaCompletoResponse = await response.json();
+    } catch (error) {
+      console.error(`❌ Error cargando esquema para ${entidad}:`, error);
+      setError(error instanceof Error ? error.message : 'Error desconocido');
 
-      if (!result.ok) {
-        throw new Error(result.error || 'Error en la respuesta del servidor');
+      // ✅ FALLBACK MÍNIMO: Solo campos básicos sin duplicaciones
+      console.log(`🔧 Usando fallback mínimo para ${entidad}`);
+
+      const camposFijos: EsquemaCampo[] = [];
+      const camposDinamicos: EsquemaCampo[] = [];
+
+      // Determinar el nombre de la columna JSON según la entidad
+      let jsonColumn = 'info_extra';
+      if (entidad === 'solicitud') {
+        jsonColumn = 'detalle_credito';
+      } else if (entidad === 'ubicacion') {
+        jsonColumn = 'detalle_direccion';
+      } else if (entidad === 'actividad_economica') {
+        jsonColumn = 'detalle_actividad';
+      } else if (entidad === 'informacion_financiera') {
+        jsonColumn = 'detalle_financiera';
+      } else if (entidad === 'referencia') {
+        jsonColumn = 'detalle_referencia';
       }
-
-      const schema = result.data;
-
-      // Validar y limpiar campos dinámicos
-      const camposDinamicosLimpios = validarEsquema(schema.campos_dinamicos || []);
-
-      // Ordenar campos por order_index si existe
-      const ordenarCampos = (campos: EsquemaCampo[]) => {
-        return campos.sort((a: EsquemaCampo, b: EsquemaCampo) => {
-          const orderA = a.order_index || 999;
-          const orderB = b.order_index || 999;
-          return orderA - orderB;
-        });
-      };
 
       const esquemaCompleto: EsquemaCompleto = {
-        entidad: schema.entidad,
-        tabla: schema.tabla,
-        json_column: schema.json_column,
-        total_campos: schema.total_campos,
-        campos_fijos: ordenarCampos(schema.campos_fijos || []),
-        campos_dinamicos: ordenarCampos(camposDinamicosLimpios)
+        entidad: entidad,
+        tabla: entidad,
+        json_column: jsonColumn,
+        total_campos: camposFijos.length + camposDinamicos.length,
+        campos_fijos: camposFijos,
+        campos_dinamicos: camposDinamicos
       };
 
       setEsquema(esquemaCompleto);
-
-      // Guardar en cache
-      esquemaCompletoCache.set(cacheKey, {
-        data: esquemaCompleto,
-        timestamp: Date.now()
-      });
-
-    } catch (err) {
-      console.error('Error cargando esquema completo:', err);
-      console.warn(`No se pudo cargar esquema desde backend para ${entidad}, usando esquema temporal`);
-
-            // ✅ FALLBACK: Usar esquemas temporales si el backend falla
-      try {
-        const { esquemasTemporales } = await import('../config/esquemasTemporales');
-        const esquemaTemporal = esquemasTemporales[`${entidad}_info_extra`] || [];
-
-        // ✅ Definir campos fijos según la entidad
-        let camposFijos: EsquemaCampo[] = [];
-
-        if (entidad === 'solicitante') {
-          camposFijos = [
-            {
-              key: 'nombres',
-              type: 'string',
-              required: true,
-              description: 'Nombres',
-              order_index: 1
-            },
-            {
-              key: 'primer_apellido',
-              type: 'string',
-              required: true,
-              description: 'Primer apellido',
-              order_index: 2
-            },
-            {
-              key: 'segundo_apellido',
-              type: 'string',
-              required: false,
-              description: 'Segundo apellido',
-              order_index: 3
-            },
-            {
-              key: 'tipo_identificacion',
-              type: 'array',
-              required: true,
-              list_values: {
-                enum: ['CC', 'TE', 'TI']
-              },
-              description: 'Tipo de identificación',
-              order_index: 4
-            },
-            {
-              key: 'numero_documento',
-              type: 'string',
-              required: true,
-              description: 'Número de documento',
-              order_index: 5
-            },
-            {
-              key: 'fecha_nacimiento',
-              type: 'date',
-              required: true,
-              description: 'Fecha de nacimiento',
-              order_index: 6
-            },
-            {
-              key: 'genero',
-              type: 'array',
-              required: true,
-              list_values: {
-                enum: ['M', 'F']
-              },
-              description: 'Género',
-              order_index: 7
-            },
-            {
-              key: 'correo',
-              type: 'string',
-              required: true,
-              description: 'Correo electrónico',
-              order_index: 8
-            }
-          ];
-        } else if (entidad === 'solicitud') {
-          camposFijos = [
-            {
-              key: 'estado',
-              type: 'string',
-              required: true,
-              description: 'Estado de la solicitud',
-              order_index: 1
-            },
-            {
-              key: 'banco_nombre',
-              type: 'string',
-              required: false,
-              description: 'Nombre del banco',
-              order_index: 2
-            }
-          ];
-        } else if (entidad === 'actividad_economica') {
-          camposFijos = [
-            {
-              key: 'tipo_actividad',
-              type: 'string',
-              required: true,
-              description: 'Tipo de actividad económica',
-              order_index: 1
-            },
-            {
-              key: 'sector_economico',
-              type: 'string',
-              required: true,
-              description: 'Sector económico',
-              order_index: 2
-            },
-            {
-              key: 'codigo_ciiu',
-              type: 'string',
-              required: false,
-              description: 'Código CIUU',
-              order_index: 3
-            },
-            {
-              key: 'departamento_empresa',
-              type: 'string',
-              required: false,
-              description: 'Departamento de la empresa',
-              order_index: 4
-            },
-            {
-              key: 'ciudad_empresa',
-              type: 'string',
-              required: false,
-              description: 'Ciudad de la empresa',
-              order_index: 5
-            },
-            {
-              key: 'telefono_empresa',
-              type: 'string',
-              required: false,
-              description: 'Teléfono de la empresa',
-              order_index: 6
-            },
-            {
-              key: 'correo_oficina',
-              type: 'string',
-              required: false,
-              description: 'Correo electrónico de la empresa',
-              order_index: 7
-            },
-            {
-              key: 'nit',
-              type: 'string',
-              required: false,
-              description: 'NIT de la empresa',
-              order_index: 8
-            }
-          ];
-        } else if (entidad === 'ubicacion') {
-          camposFijos = [
-            {
-              key: 'ciudad_residencia',
-              type: 'string',
-              required: true,
-              description: 'Ciudad de residencia',
-              order_index: 1
-            },
-            {
-              key: 'departamento_residencia',
-              type: 'string',
-              required: true,
-              description: 'Departamento de residencia',
-              order_index: 2
-            }
-          ];
-        } else if (entidad === 'informacion_financiera') {
-          camposFijos = [
-            {
-              key: 'total_ingresos_mensuales',
-              type: 'number',
-              required: true,
-              description: 'Total de ingresos mensuales',
-              order_index: 1
-            },
-            {
-              key: 'total_egresos_mensuales',
-              type: 'number',
-              required: true,
-              description: 'Total de egresos mensuales',
-              order_index: 2
-            },
-            {
-              key: 'total_activos',
-              type: 'number',
-              required: false,
-              description: 'Total de activos',
-              order_index: 3
-            },
-            {
-              key: 'total_pasivos',
-              type: 'number',
-              required: false,
-              description: 'Total de pasivos',
-              order_index: 4
-            }
-          ];
-        } else if (entidad === 'referencia') {
-          camposFijos = [
-            {
-              key: 'tipo_referencia',
-              type: 'string',
-              required: true,
-              description: 'Tipo de referencia',
-              order_index: 1
-            }
-          ];
-        }
-
-        // Determinar el nombre de la columna JSON según la entidad
-        let jsonColumn = 'info_extra';
-        if (entidad === 'solicitud') {
-          jsonColumn = 'detalle_credito';
-        } else if (entidad === 'ubicacion') {
-          jsonColumn = 'detalle_direccion';
-        } else if (entidad === 'actividad_economica') {
-          jsonColumn = 'detalle_actividad';
-        } else if (entidad === 'informacion_financiera') {
-          jsonColumn = 'detalle_financiera';
-        } else if (entidad === 'referencia') {
-          jsonColumn = 'detalle_referencia';
-        }
-
-        const esquemaCompleto: EsquemaCompleto = {
-          entidad: entidad,
-          tabla: entidad,  // Mantener nombres originales como en la BD
-          json_column: jsonColumn,
-          total_campos: camposFijos.length + esquemaTemporal.length,
-          campos_fijos: camposFijos,
-          campos_dinamicos: esquemaTemporal // Campos adicionales del JSON
-        };
-
-        setEsquema(esquemaCompleto);
-      } catch (fallbackError) {
-        console.error('Error cargando esquema temporal:', fallbackError);
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      }
     } finally {
       setLoading(false);
     }

@@ -10,7 +10,7 @@ export interface EsquemaCampo {
     | null;
   description?: string;
   default_value?: any;
-  order_index?: number;
+  order_index?: number; // Orden de aparición del campo (1, 2, 3, etc.)
   conditional_on?: {
     field: string; // Nombre del campo que actúa como trigger
     value: string; // Valor que debe tener para mostrar este campo

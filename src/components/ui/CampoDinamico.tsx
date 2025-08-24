@@ -27,10 +27,17 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   if (campo.type === 'object' && campo.list_values && typeof campo.list_values === 'object' && 'object_structure' in campo.list_values) {
     const structure = (campo.list_values as { object_structure: EsquemaCampo[] }).object_structure;
 
+    // Ordenar los subcampos por order_index si existe
+    const structureOrdenada = [...structure].sort((a, b) => {
+      const orderA = a.order_index || 999;
+      const orderB = b.order_index || 999;
+      return orderA - orderB;
+    });
+
     return (
       <div className="col-span-full">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {structure.map((subcampo: EsquemaCampo) => (
+          {structureOrdenada.map((subcampo: EsquemaCampo) => (
             <div key={subcampo.key} className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
                 {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}

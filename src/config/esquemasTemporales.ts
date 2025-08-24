@@ -131,45 +131,6 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       default_value: 'Calle 123 #45-67',
       order_index: 3
     },
-    {
-      key: 'barrio',
-      type: 'string',
-      required: false,
-      description: 'Barrio',
-      default_value: 'Chapinero',
-      order_index: 4
-    },
-    {
-      key: 'estrato',
-      type: 'integer',
-      required: false,
-      description: 'Estrato socioeconómico',
-      default_value: 3,
-      order_index: 5
-    },
-    {
-      key: 'arrendador',
-      type: 'object',
-      required: false,
-      description: 'Información del arrendador',
-      list_values: {
-        object_structure: [
-          { key: 'nombre', type: 'string', required: true, description: 'Nombre del arrendador', default_value: 'María López' },
-          { key: 'telefono', type: 'string', required: true, description: 'Teléfono de contacto', default_value: '3009876543' },
-          { key: 'ciudad', type: 'string', required: false, description: 'Ciudad', default_value: 'Bogotá' },
-          { key: 'departamento', type: 'string', required: false, description: 'Departamento', default_value: 'Cundinamarca' },
-          { key: 'valor_mensual_arriendo', type: 'number', required: false, description: 'Valor mensual del arriendo', default_value: 1200000 }
-        ]
-      },
-      default_value: {
-        nombre: 'María López',
-        telefono: '3009876543',
-        ciudad: 'Bogotá',
-        departamento: 'Cundinamarca',
-        valor_mensual_arriendo: 1200000
-      },
-      order_index: 6
-    }
   ],
 
   // Esquema para detalles de actividad económica

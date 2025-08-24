@@ -42,11 +42,21 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   const camposFijosVisibles = esquemaCompleto.campos_fijos.filter(shouldShowField);
   const camposDinamicosVisibles = esquemaCompleto.campos_dinamicos.filter(shouldShowField);
 
+  // Ordenar campos por order_index si existe
+  const ordenarCampos = (campos: any[]) => {
+    return campos.sort((a, b) => {
+      const orderA = a.order_index || 999;
+      const orderB = b.order_index || 999;
+      return orderA - orderB;
+    });
+  };
+
   // Crear un array ordenado insertando los campos dinámicos después de sus campos activadores
   const todosLosCampos: any[] = [];
 
-  // Primero agregar todos los campos fijos
-  camposFijosVisibles.forEach(campoFijo => {
+  // Primero agregar todos los campos fijos (ordenados)
+  const camposFijosOrdenados = ordenarCampos(camposFijosVisibles);
+  camposFijosOrdenados.forEach(campoFijo => {
     todosLosCampos.push(campoFijo);
 
     // Buscar campos dinámicos que se activen con este campo fijo
@@ -54,16 +64,16 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       campoDinamico.conditional_on?.field === campoFijo.key
     );
 
-    // Insertar los campos dinámicos relacionados justo después del campo fijo
-    todosLosCampos.push(...camposDinamicosRelacionados);
+    // Insertar los campos dinámicos relacionados justo después del campo fijo (ordenados)
+    todosLosCampos.push(...ordenarCampos(camposDinamicosRelacionados));
   });
 
-  // Agregar campos dinámicos que no tienen campo activador específico al final
+  // Agregar campos dinámicos que no tienen campo activador específico al final (ordenados)
   const camposDinamicosSinActivador = camposDinamicosVisibles.filter(campoDinamico =>
     !camposFijosVisibles.some(campoFijo => campoFijo.key === campoDinamico.conditional_on?.field)
   );
 
-  todosLosCampos.push(...camposDinamicosSinActivador);
+  todosLosCampos.push(...ordenarCampos(camposDinamicosSinActivador));
 
   return (
     <div className="space-y-6">

@@ -733,51 +733,26 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           {esquemas.solicitante?.esquema?.campos_dinamicos && esquemas.solicitante.esquema.campos_dinamicos.length > 0 && (
             <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
               {(() => {
-                console.log('🔍 === DEBUG CAMPOS CONDICIONALES ===');
-                console.log('📊 datosFormulario actual:', datosFormulario);
-                console.log('📋 Campos dinámicos totales:', esquemas.solicitante.esquema.campos_dinamicos.length);
-                console.log('📋 Estructura completa de campos dinámicos:', esquemas.solicitante.esquema.campos_dinamicos);
-
                 const camposFiltrados = esquemas.solicitante.esquema.campos_dinamicos
                   .filter(campo => {
                     // Función para determinar si un campo debe mostrarse basado en condiciones
                     if (!campo.conditional_on) {
-                      console.log('✅ Campo sin condición:', campo.key);
                       return true;
                     }
 
                     const { field: triggerField, value: expectedValue } = campo.conditional_on;
                     const actualValue = datosFormulario[triggerField];
 
-                    console.log('🔍 DEBUG CONDICIONAL:', {
-                      campo: campo.key,
-                      conditional_on: campo.conditional_on,
-                      triggerField,
-                      expectedValue,
-                      actualValue,
-                      shouldShow: actualValue === expectedValue,
-                      tipoActualValue: typeof actualValue,
-                      tipoExpectedValue: typeof expectedValue
-                    });
-
-                                        const shouldShow = actualValue === expectedValue;
-
-                    if (shouldShow) {
-                      console.log('⚠️ CAMPO CONDICIONAL APARECIENDO:', campo.key, 'porque', triggerField, '=', actualValue);
-                    } else {
-                      console.log('❌ Campo condicional NO aparecerá:', campo.key, 'porque', triggerField, '(', actualValue, ') !==', expectedValue);
-                    }
+                    const shouldShow = actualValue === expectedValue;
 
                     // Verificación adicional: solo mostrar si el valor no está vacío
                     if (shouldShow && (actualValue === '' || actualValue === null || actualValue === undefined)) {
-                      console.log('🚫 Campo condicional bloqueado porque el valor está vacío:', campo.key);
                       return false;
                     }
 
                     return shouldShow;
                   });
 
-                console.log('📊 Campos filtrados que se mostrarán:', camposFiltrados.length);
                 return camposFiltrados.map(campo => (
                   <CampoDinamico
                     key={campo.key}

@@ -52,8 +52,8 @@ export const fieldConfigService = {
     const fullUrl = `${url}?empresa_id=${encodeURIComponent(empresaId)}`;
 
     // ✅ FORMATO SEGÚN GUÍA: { "definitions": [...] }
-    const bodyItems = items.map(({ key, type, required, description, default_value, list_values }) => ({
-      key, type, required, description, default_value, list_values
+    const bodyItems = items.map(({ key, type, required, description, default_value, order_index, list_values }) => ({
+      key, type, required, description, default_value, order_index, list_values
     }));
 
     console.log(`💾 Creando/actualizando definiciones con POST: ${fullUrl}`);
@@ -76,9 +76,62 @@ export const fieldConfigService = {
     }
 
     console.log(`✅ Definiciones guardadas exitosamente`);
+    },
+
+
+
+  // Actualizar un campo individual (para order_index, description, etc.)
+  async updateField(
+    fieldId: string,
+    updates: Partial<FieldDefinition>
+  ): Promise<FieldDefinition> {
+    const empresaId = getEmpresaId();
+
+    // ✅ CORRECTO SEGÚN GUÍA: PATCH /json/definitions/{definition_id} para actualizar campo individual
+    const url = buildApiUrl(`/json/definitions/${fieldId}`);
+    const fullUrl = `${url}?empresa_id=${encodeURIComponent(empresaId)}`;
+
+    // Limpiar campos vacíos antes de enviar y excluir 'key' ya que está en la URL
+    const cleanedUpdates: Partial<FieldDefinition> = {};
+    Object.entries(updates).forEach(([key, value]) => {
+      // Excluir 'key' ya que está identificado por definition_id en la URL
+      if (key === 'key') {
+        return;
+      }
+
+      // Si el valor es string vacío, convertirlo a null
+      if (value === '') {
+        cleanedUpdates[key as keyof FieldDefinition] = null;
+      }
+      // Si el valor es null o undefined, no incluirlo
+      else if (value !== null && value !== undefined) {
+        cleanedUpdates[key as keyof FieldDefinition] = value;
+      }
+    });
+
+    console.log(`🔧 Actualizando campo individual con PATCH: ${fullUrl}`);
+    console.log(`📋 Actualizaciones originales:`, updates);
+    console.log(`📋 Actualizaciones limpias:`, cleanedUpdates);
+
+    const res = await fetch(fullUrl, {
+      method: 'PATCH',
+      headers: authHeaders(empresaId),
+      body: JSON.stringify(cleanedUpdates)
+    });
+
+    console.log(`📡 Respuesta actualización: ${res.status} ${res.statusText}`);
+
+    if (!res.ok) {
+      const error = await res.text().catch(() => 'Error desconocido');
+      throw new Error(`Error actualizando campo: ${res.status} - ${error}`);
+    }
+
+    const result = await res.json();
+    console.log(`✅ Campo actualizado exitosamente`);
+    return result.data || result;
   },
 
-    // Eliminar definiciones. Si se pasa key, elimina solo esa; si no, todas las de la columna
+  // Eliminar definiciones. Si se pasa key, elimina solo esa; si no, todas las de la columna
   async delete(entity: string, jsonColumn: string, key?: string): Promise<void> {
     const empresaId = getEmpresaId();
 

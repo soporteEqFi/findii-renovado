@@ -21,8 +21,12 @@ export interface FieldDefinition {
   required: boolean;
   description?: string;
   default_value?: any;
+  order_index?: number; // Orden de aparición del campo (1, 2, 3, etc.)
   // list_values holds enum for arrays or object structure for objects
-  list_values?: any;
+    list_values?:
+    | { enum: string[] }  // Para arrays
+    | { object_structure: any[] }  // Para objetos
+    | any;  // Para compatibilidad con otros tipos
   conditional_on?: ConditionalConfig;
   created_at?: string;
 }
