@@ -425,18 +425,13 @@ export const esquemaService = {
     empresaId: number = 1
   ): Promise<any> {
     try {
-      // Estructurar datos según el formato esperado por el backend
-      const datosCompletos = {
-        solicitante: this.extraerDatosEntidad(formData, esquemasCompletos.solicitante?.esquema, 'solicitante'),
-        ubicaciones: [this.extraerDatosEntidad(formData, esquemasCompletos.ubicacion?.esquema, 'ubicacion')],
-        actividad_economica: this.extraerDatosEntidad(formData, esquemasCompletos.actividad_economica?.esquema, 'actividad_economica'),
-        informacion_financiera: this.extraerDatosEntidad(formData, esquemasCompletos.informacion_financiera?.esquema, 'informacion_financiera'),
-        referencias: [this.extraerDatosEntidad(formData, esquemasCompletos.referencia?.esquema, 'referencia')],
-        solicitudes: [this.extraerDatosEntidad(formData, esquemasCompletos.solicitud?.esquema, 'solicitud')]
-      };
+      // Transformar datos del formulario plano a la estructura esperada por el backend
+      const datosCompletos = this.transformarDatosFormulario(formData);
+
+      console.log('🔧 Datos transformados para el backend:', JSON.stringify(datosCompletos, null, 2));
 
       // Agregar campos adicionales a la solicitud
-      if (datosCompletos.solicitudes[0]) {
+      if (datosCompletos.solicitudes && datosCompletos.solicitudes[0]) {
         datosCompletos.solicitudes[0].created_by_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].estado = 'Pendiente';
@@ -584,5 +579,163 @@ export const esquemaService = {
     };
 
     return jsonObjectMapping[entidad] || 'datos_adicionales';
+  },
+
+  // Transformar datos del formulario plano a la estructura esperada por el backend
+  transformarDatosFormulario(formData: Record<string, any>): any {
+    const datosTransformados = {
+      solicitante: {
+        // Campos fijos del solicitante
+        nombres: formData.nombres,
+        primer_apellido: formData.primer_apellido,
+        segundo_apellido: formData.segundo_apellido,
+        tipo_identificacion: formData.tipo_identificacion,
+        numero_documento: formData.numero_documento,
+        fecha_nacimiento: formData.fecha_nacimiento,
+        genero: formData.genero,
+        correo: formData.correo,
+        // Campos dinámicos del solicitante
+        info_extra: {
+          estado_civil: formData.estado_civil,
+          personas_a_cargo: formData.personas_a_cargo,
+          profesion: formData.profesion,
+          nivel_estudio: formData.nivel_estudio,
+          nacionalidad: formData.nacionalidad,
+          fecha_expedicion: formData.fecha_expedicion,
+          lugar_nacimiento: formData.lugar_nacimiento,
+          telefono: formData.telefono,
+          celular: formData.celular,
+          id_autenticacion: formData.id_autenticacion,
+          recibir_correspondencia: formData.recibir_correspondencia,
+          paga_impuestos_fuera: formData.paga_impuestos_fuera,
+          pais_donde_paga_impuestos: formData.pais_donde_paga_impuestos,
+          declara_renta: formData.declara_renta
+        }
+      },
+      ubicaciones: [
+        {
+          // Campos fijos de ubicación
+          ciudad_residencia: formData.ciudad_residencia,
+          departamento_residencia: formData.departamento_residencia,
+          // Campos dinámicos de ubicación
+          detalle_direccion: {
+            direccion_residencia: formData.direccion_residencia,
+            tipo_vivienda: formData.tipo_vivienda,
+            celular: formData.celular,
+            recibir_correspondencia: formData.recibir_correspondencia,
+            direccion: formData.direccion,
+            barrio: formData.barrio,
+            estrato: formData.estrato,
+            paga_arriendo: formData.paga_arriendo,
+            arrendador: formData.arrendador
+          }
+        }
+      ],
+      actividad_economica: {
+        // Campos fijos de actividad económica
+        tipo_actividad: formData.tipo_actividad_economica,
+        // Campos dinámicos de actividad económica
+        detalle_actividad: {
+          tipo_actividad_economica: formData.tipo_actividad_economica,
+          sector_economico: formData.sector_economico,
+          codigo_ciuu: formData.codigo_ciuu,
+          departamento_empresa: formData.departamento_empresa,
+          ciudad_empresa: formData.ciudad_empresa,
+          telefono_empresa: formData.telefono_empresa,
+          correo_electronico_empresa: formData.correo_electronico_empresa,
+          nit_empresa: formData.nit_empresa,
+          sector_economico_empresa: formData.sector_economico_empresa,
+          tipo_contrato: formData.tipo_contrato,
+          fecha_ingreso_empresa: formData.fecha_ingreso_empresa,
+          // Datos de empleado
+          datos_empleado: formData.datos_empleado,
+          // Datos de empresario
+          datos_empresario: formData.datos_empresario
+        }
+      },
+      informacion_financiera: {
+        // Campos fijos de información financiera
+        total_ingresos_mensuales: formData.total_ingresos_mensuales,
+        total_egresos_mensuales: formData.total_egresos_mensuales,
+        total_activos: formData.total_activos,
+        total_pasivos: formData.total_pasivos,
+        // Campos dinámicos de información financiera
+        detalle_financiera: {
+          ingreso_basico_mensual: formData.ingreso_basico_mensual,
+          ingreso_variable_mensual: formData.ingreso_variable_mensual,
+          otros_ingresos_mensuales: formData.otros_ingresos_mensuales,
+          gastos_financieros_mensuales: formData.gastos_financieros_mensuales,
+          gastos_personales_mensuales: formData.gastos_personales_mensuales,
+          ingresos_fijos_pension: formData.ingresos_fijos_pension,
+          ingresos_por_ventas: formData.ingresos_por_ventas,
+          ingresos_varios: formData.ingresos_varios,
+          honorarios: formData.honorarios,
+          arriendos: formData.arriendos,
+          ingresos_actividad_independiente: formData.ingresos_actividad_independiente,
+          detalle_otros_ingresos: formData.detalle_otros_ingresos,
+          gastos_vivienda: formData.gastos_vivienda,
+          gastos_alimentacion: formData.gastos_alimentacion,
+          gastos_transporte: formData.gastos_transporte,
+          ingresos_mensuales_base: formData.ingresos_mensuales_base,
+          gastos_mensuales: formData.gastos_mensuales,
+          otros_ingresos: formData.otros_ingresos
+        }
+      },
+      referencias: [
+        {
+          // Campos fijos de referencia
+          tipo_referencia: formData.tipo_referencia,
+          // Campos dinámicos de referencia
+          detalle_referencia: {
+            nombre_completo: formData.nombre_completo,
+            telefono: formData.telefono_referencia,
+            celular_referencia: formData.celular_referencia,
+            relacion_referencia: formData.relacion_referencia,
+            parentesco: formData.parentesco,
+            nombre_referencia: formData.nombre_referencia
+          }
+        }
+      ],
+      solicitudes: [
+        {
+          // Campos fijos de solicitud
+          estado: formData.estado || 'Pendiente',
+          // Campos dinámicos de solicitud
+          detalle_credito: {
+            monto: formData.monto_solicitado,
+            plazo_meses: formData.plazo_meses,
+            banco: formData.banco,
+            tipo_credito: formData.tipo_credito,
+            destino_credito: formData.destino_credito,
+            cuota_inicial: formData.cuota_inicial,
+            valor_inmueble: formData.valor_inmueble,
+            tipo_credito_id: formData.tipo_credito_id,
+            // Crédito hipotecario
+            credito_hipotecario: formData.credito_hipotecario
+          }
+        }
+      ]
+    };
+
+    // Limpiar campos vacíos, null o undefined
+    const limpiarObjeto = (obj: any): any => {
+      const resultado: any = {};
+      Object.keys(obj).forEach(key => {
+        const valor = obj[key];
+        if (valor !== null && valor !== undefined && valor !== '') {
+          if (typeof valor === 'object' && !Array.isArray(valor)) {
+            const objetoLimpio = limpiarObjeto(valor);
+            if (Object.keys(objetoLimpio).length > 0) {
+              resultado[key] = objetoLimpio;
+            }
+          } else {
+            resultado[key] = valor;
+          }
+        }
+      });
+      return resultado;
+    };
+
+    return limpiarObjeto(datosTransformados);
   }
 };

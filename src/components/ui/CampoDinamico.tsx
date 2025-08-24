@@ -65,6 +65,26 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
+              ) : subcampo.type === 'date' ? (
+                // Input de fecha
+                <input
+                  type="date"
+                  placeholder={subcampo.description || subcampo.key}
+                  value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                  onChange={(e) => {
+                    const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                    // Limpiar campos vacíos
+                    Object.keys(nuevoObjeto).forEach(k => {
+                      if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
+                        delete nuevoObjeto[k];
+                      }
+                    });
+                    handleChange(nuevoObjeto);
+                  }}
+                  required={subcampo.required}
+                  disabled={disabled}
+                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                />
               ) : (
                 // Input normal
                 <input
