@@ -426,7 +426,7 @@ export const esquemaService = {
   ): Promise<any> {
     try {
       // Transformar datos del formulario plano a la estructura esperada por el backend
-      const datosCompletos = this.transformarDatosFormulario(formData);
+      const datosCompletos = this.transformarDatosFormulario(formData, esquemasCompletos);
 
       console.log('🔧 Datos transformados para el backend:', JSON.stringify(datosCompletos, null, 2));
 
@@ -463,7 +463,7 @@ export const esquemaService = {
     }
   },
 
-    // Función auxiliar para extraer datos de una entidad específica
+    // Función auxiliar para extraer datos de una entidad específica (MEJORADA)
   extraerDatosEntidad(formData: Record<string, any>, esquema: any, entidad: string): Record<string, any> {
     if (!esquema) {
       console.warn(`⚠️ No hay esquema para ${entidad}`);
@@ -473,7 +473,7 @@ export const esquemaService = {
     const datos: Record<string, any> = {};
 
     // Extraer campos fijos (van directamente al objeto principal)
-    if (esquema.campos_fijos) {
+    if (esquema.campos_fijos && Array.isArray(esquema.campos_fijos)) {
       esquema.campos_fijos.forEach((campo: any) => {
         if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
           datos[campo.key] = formData[campo.key];
@@ -483,11 +483,9 @@ export const esquemaService = {
 
     // Para referencias, asegurar que tipo_referencia esté presente
     if (entidad === 'referencia') {
-      // Si tipo_referencia no está en campos fijos, agregarlo manualmente
       if (!datos.tipo_referencia && formData.tipo_referencia) {
         datos.tipo_referencia = formData.tipo_referencia;
       }
-      // Si aún no está presente, usar un valor por defecto
       if (!datos.tipo_referencia) {
         datos.tipo_referencia = 'personal';
         console.warn('⚠️ tipo_referencia no encontrado, usando valor por defecto: personal');
@@ -495,73 +493,45 @@ export const esquemaService = {
     }
 
     // Extraer campos dinámicos (van al objeto JSON correspondiente)
-    if (esquema.campos_dinamicos && esquema.campos_dinamicos.length > 0) {
-      // Determinar el nombre del objeto JSON según la entidad
+    if (esquema.campos_dinamicos && Array.isArray(esquema.campos_dinamicos) && esquema.campos_dinamicos.length > 0) {
       const jsonObjectName = this.getJsonObjectName(entidad);
 
-      // Caso especial para detalle_credito: crear objeto detalle_credito con todos los campos
-      if (jsonObjectName === 'detalle_credito') {
-        // Crear el objeto detalle_credito
-        datos[jsonObjectName] = {};
+      // Crear el objeto JSON para campos dinámicos
+      datos[jsonObjectName] = {};
 
-        // Buscar campos dinámicos en el nivel superior
-        esquema.campos_dinamicos.forEach((campo: any) => {
-          const valor = formData[campo.key];
-          if (valor !== undefined && valor !== null && valor !== '') {
-            // Si el valor es un objeto, extraer sus campos al detalle_credito
-            if (typeof valor === 'object' && !Array.isArray(valor)) {
-              Object.keys(valor).forEach(subKey => {
-                const subValor = valor[subKey];
-                if (subValor !== undefined && subValor !== null && subValor !== '') {
-                  // Mapear nombre_banco a banco
-                  const keyFinal = subKey === 'nombre_banco' ? 'banco' : subKey;
-                  datos[jsonObjectName][keyFinal] = subValor;
-                }
-              });
-            } else {
-              // Para campos simples, agregarlos directamente al detalle_credito
-              datos[jsonObjectName][campo.key] = valor;
-            }
+      // Procesar cada campo dinámico según su tipo
+      esquema.campos_dinamicos.forEach((campo: any) => {
+        const valor = formData[campo.key];
+
+        if (valor !== undefined && valor !== null && valor !== '') {
+          // Procesar según el tipo de campo
+          const valorProcesado = this.procesarValorCampo(campo, valor, formData);
+          if (valorProcesado !== undefined) {
+            datos[jsonObjectName][campo.key] = valorProcesado;
           }
-        });
-
-        // Buscar CUALQUIER objeto anidado y extraer todos sus campos al detalle_credito
-        Object.keys(formData).forEach(key => {
-          const valor = formData[key];
-          if (valor && typeof valor === 'object' && !Array.isArray(valor)) {
-            // Extraer TODOS los campos del objeto anidado y ponerlos en detalle_credito
-            Object.keys(valor).forEach(subKey => {
-              const subValor = valor[subKey];
-              if (subValor !== undefined && subValor !== null && subValor !== '') {
-                // Mapear nombre_banco a banco
-                const keyFinal = subKey === 'nombre_banco' ? 'banco' : subKey;
-                datos[jsonObjectName][keyFinal] = subValor;
-              }
-            });
-          }
-        });
-
-        // Solo incluir detalle_credito si tiene campos
-        if (Object.keys(datos[jsonObjectName]).length === 0) {
-          delete datos[jsonObjectName];
         }
-      } else {
-        // Para otros campos JSON, mantener la estructura anidada
-        if (!datos[jsonObjectName]) {
-          datos[jsonObjectName] = {};
-        }
+      });
 
-        esquema.campos_dinamicos.forEach((campo: any) => {
-          if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
-            datos[jsonObjectName][campo.key] = formData[campo.key];
-          }
-        });
-
-        // Solo incluir el objeto JSON si tiene campos
-        if (Object.keys(datos[jsonObjectName]).length === 0) {
-          delete datos[jsonObjectName];
-        }
+      // Solo incluir el objeto JSON si tiene campos
+      if (Object.keys(datos[jsonObjectName]).length === 0) {
+        delete datos[jsonObjectName];
       }
+    }
+
+    // Caso especial para arrays (como referencias múltiples)
+    if (entidad === 'referencias' && Array.isArray(esquema)) {
+      // Si el esquema es un array, procesar múltiples referencias
+      return esquema.map((esquemaRef: any) => this.extraerDatosEntidad(formData, esquemaRef, 'referencia'));
+    }
+
+    if (entidad === 'solicitudes' && Array.isArray(esquema)) {
+      // Si el esquema es un array, procesar múltiples solicitudes
+      return esquema.map((esquemaSol: any) => this.extraerDatosEntidad(formData, esquemaSol, 'solicitud'));
+    }
+
+    if (entidad === 'ubicaciones' && Array.isArray(esquema)) {
+      // Si el esquema es un array, procesar múltiples ubicaciones
+      return esquema.map((esquemaUbi: any) => this.extraerDatosEntidad(formData, esquemaUbi, 'ubicacion'));
     }
 
     return datos;
@@ -582,140 +552,14 @@ export const esquemaService = {
   },
 
   // Transformar datos del formulario plano a la estructura esperada por el backend
-  transformarDatosFormulario(formData: Record<string, any>): any {
-    const datosTransformados = {
-      solicitante: {
-        // Campos fijos del solicitante
-        nombres: formData.nombres,
-        primer_apellido: formData.primer_apellido,
-        segundo_apellido: formData.segundo_apellido,
-        tipo_identificacion: formData.tipo_identificacion,
-        numero_documento: formData.numero_documento,
-        fecha_nacimiento: formData.fecha_nacimiento,
-        genero: formData.genero,
-        correo: formData.correo,
-        // Campos dinámicos del solicitante
-        info_extra: {
-          estado_civil: formData.estado_civil,
-          personas_a_cargo: formData.personas_a_cargo,
-          profesion: formData.profesion,
-          nivel_estudio: formData.nivel_estudio,
-          nacionalidad: formData.nacionalidad,
-          fecha_expedicion: formData.fecha_expedicion,
-          lugar_nacimiento: formData.lugar_nacimiento,
-          telefono: formData.telefono,
-          celular: formData.celular,
-          id_autenticacion: formData.id_autenticacion,
-          recibir_correspondencia: formData.recibir_correspondencia,
-          paga_impuestos_fuera: formData.paga_impuestos_fuera,
-          pais_donde_paga_impuestos: formData.pais_donde_paga_impuestos,
-          declara_renta: formData.declara_renta
-        }
-      },
-      ubicaciones: [
-        {
-          // Campos fijos de ubicación
-          ciudad_residencia: formData.ciudad_residencia,
-          departamento_residencia: formData.departamento_residencia,
-          // Campos dinámicos de ubicación
-          detalle_direccion: {
-            direccion_residencia: formData.direccion_residencia,
-            tipo_vivienda: formData.tipo_vivienda,
-            celular: formData.celular,
-            recibir_correspondencia: formData.recibir_correspondencia,
-            direccion: formData.direccion,
-            barrio: formData.barrio,
-            estrato: formData.estrato,
-            paga_arriendo: formData.paga_arriendo,
-            arrendador: formData.arrendador
-          }
-        }
-      ],
-      actividad_economica: {
-        // Campos fijos de actividad económica
-        tipo_actividad: formData.tipo_actividad_economica,
-        // Campos dinámicos de actividad económica
-        detalle_actividad: {
-          tipo_actividad_economica: formData.tipo_actividad_economica,
-          sector_economico: formData.sector_economico,
-          codigo_ciuu: formData.codigo_ciuu,
-          departamento_empresa: formData.departamento_empresa,
-          ciudad_empresa: formData.ciudad_empresa,
-          telefono_empresa: formData.telefono_empresa,
-          correo_electronico_empresa: formData.correo_electronico_empresa,
-          nit_empresa: formData.nit_empresa,
-          sector_economico_empresa: formData.sector_economico_empresa,
-          tipo_contrato: formData.tipo_contrato,
-          fecha_ingreso_empresa: formData.fecha_ingreso_empresa,
-          // Datos de empleado
-          datos_empleado: formData.datos_empleado,
-          // Datos de empresario
-          datos_empresario: formData.datos_empresario
-        }
-      },
-      informacion_financiera: {
-        // Campos fijos de información financiera
-        total_ingresos_mensuales: formData.total_ingresos_mensuales,
-        total_egresos_mensuales: formData.total_egresos_mensuales,
-        total_activos: formData.total_activos,
-        total_pasivos: formData.total_pasivos,
-        // Campos dinámicos de información financiera
-        detalle_financiera: {
-          ingreso_basico_mensual: formData.ingreso_basico_mensual,
-          ingreso_variable_mensual: formData.ingreso_variable_mensual,
-          otros_ingresos_mensuales: formData.otros_ingresos_mensuales,
-          gastos_financieros_mensuales: formData.gastos_financieros_mensuales,
-          gastos_personales_mensuales: formData.gastos_personales_mensuales,
-          ingresos_fijos_pension: formData.ingresos_fijos_pension,
-          ingresos_por_ventas: formData.ingresos_por_ventas,
-          ingresos_varios: formData.ingresos_varios,
-          honorarios: formData.honorarios,
-          arriendos: formData.arriendos,
-          ingresos_actividad_independiente: formData.ingresos_actividad_independiente,
-          detalle_otros_ingresos: formData.detalle_otros_ingresos,
-          gastos_vivienda: formData.gastos_vivienda,
-          gastos_alimentacion: formData.gastos_alimentacion,
-          gastos_transporte: formData.gastos_transporte,
-          ingresos_mensuales_base: formData.ingresos_mensuales_base,
-          gastos_mensuales: formData.gastos_mensuales,
-          otros_ingresos: formData.otros_ingresos
-        }
-      },
-      referencias: [
-        {
-          // Campos fijos de referencia
-          tipo_referencia: formData.tipo_referencia,
-          // Campos dinámicos de referencia
-          detalle_referencia: {
-            nombre_completo: formData.nombre_completo,
-            telefono: formData.telefono_referencia,
-            celular_referencia: formData.celular_referencia,
-            relacion_referencia: formData.relacion_referencia,
-            parentesco: formData.parentesco,
-            nombre_referencia: formData.nombre_referencia
-          }
-        }
-      ],
-      solicitudes: [
-        {
-          // Campos fijos de solicitud
-          estado: formData.estado || 'Pendiente',
-          // Campos dinámicos de solicitud
-          detalle_credito: {
-            monto: formData.monto_solicitado,
-            plazo_meses: formData.plazo_meses,
-            banco: formData.banco,
-            tipo_credito: formData.tipo_credito,
-            destino_credito: formData.destino_credito,
-            cuota_inicial: formData.cuota_inicial,
-            valor_inmueble: formData.valor_inmueble,
-            tipo_credito_id: formData.tipo_credito_id,
-            // Crédito hipotecario
-            credito_hipotecario: formData.credito_hipotecario
-          }
-        }
-      ]
-    };
+  transformarDatosFormulario(formData: Record<string, any>, esquemasCompletos: any): any {
+    const datosTransformados: any = {};
+
+    // Usar el esquema dinámico para cada entidad
+    Object.keys(esquemasCompletos).forEach(entidad => {
+      const esquema = esquemasCompletos[entidad];
+      datosTransformados[entidad] = this.extraerDatosEntidad(formData, esquema, entidad);
+    });
 
     // Limpiar campos vacíos, null o undefined
     const limpiarObjeto = (obj: any): any => {
@@ -728,6 +572,18 @@ export const esquemaService = {
             if (Object.keys(objetoLimpio).length > 0) {
               resultado[key] = objetoLimpio;
             }
+          } else if (Array.isArray(valor)) {
+            // Para arrays, limpiar elementos vacíos
+            const arrayLimpio = valor.filter((item: any) => {
+              if (typeof item === 'object' && item !== null) {
+                const itemLimpio = limpiarObjeto(item);
+                return Object.keys(itemLimpio).length > 0;
+              }
+              return item !== null && item !== undefined && item !== '';
+            });
+            if (arrayLimpio.length > 0) {
+              resultado[key] = arrayLimpio;
+            }
           } else {
             resultado[key] = valor;
           }
@@ -737,5 +593,55 @@ export const esquemaService = {
     };
 
     return limpiarObjeto(datosTransformados);
+  },
+
+  // Nuevo método para procesar valores según el tipo de campo
+  procesarValorCampo(campo: any, valor: any, formData: Record<string, any>): any {
+    switch (campo.type) {
+      case 'object':
+        // Si el valor es un objeto, procesarlo
+        if (typeof valor === 'object' && !Array.isArray(valor)) {
+          const objetoLimpio: Record<string, any> = {};
+          Object.keys(valor).forEach(key => {
+            if (valor[key] !== undefined && valor[key] !== null && valor[key] !== '') {
+              objetoLimpio[key] = valor[key];
+            }
+          });
+          return Object.keys(objetoLimpio).length > 0 ? objetoLimpio : undefined;
+        }
+        return valor;
+
+      case 'array':
+        // Si el valor es un array, procesarlo
+        if (Array.isArray(valor)) {
+          const arrayLimpio = valor.filter((item: any) => {
+            if (typeof item === 'object' && item !== null) {
+              const itemLimpio = this.procesarValorCampo(campo, item, formData);
+              return itemLimpio !== undefined;
+            }
+            return item !== undefined && item !== null && item !== '';
+          });
+          return arrayLimpio.length > 0 ? arrayLimpio : undefined;
+        }
+        return valor;
+
+      case 'string':
+      case 'text':
+        return String(valor);
+
+      case 'number':
+      case 'integer':
+        const num = Number(valor);
+        return isNaN(num) ? undefined : num;
+
+      case 'boolean':
+        return Boolean(valor);
+
+      case 'date':
+        return valor; // Mantener formato de fecha como está
+
+      default:
+        return valor;
+    }
   }
 };
