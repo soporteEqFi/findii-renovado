@@ -24,18 +24,18 @@ export const CreditTypeAdmin: React.FC = () => {
         toast.error('No se encontró la cédula en localStorage');
         return;
       }
-      
+
       console.log('=== CARGANDO TIPOS DE CRÉDITO ===');
       console.log('Cédula:', cedula);
-      
+
       // Limpiar el caché para forzar recarga
       clearCreditTypesCache(cedula);
       console.log('Caché limpiado');
-      
+
       const data = await getCreditTypes(cedula);
       console.log('Datos obtenidos del backend:', data);
       console.log('Cantidad de tipos de crédito:', data.length);
-      
+
       // Verificar que cada tipo de crédito tenga un ID válido
       data.forEach((creditType, index) => {
         console.log(`Tipo de crédito ${index}:`, {
@@ -45,7 +45,7 @@ export const CreditTypeAdmin: React.FC = () => {
           hasValidId: creditType.id && creditType.id.length > 0
         });
       });
-      
+
       setCreditTypes(data);
       console.log('Estado actualizado con nuevos datos');
     } catch (error) {
@@ -71,26 +71,26 @@ export const CreditTypeAdmin: React.FC = () => {
     console.log('ID a eliminar:', id);
     console.log('Tipo del ID:', typeof id);
     console.log('ID es válido:', id && id.length > 0);
-    
+
     if (!id || id.length === 0) {
       toast.error('ID de tipo de crédito inválido');
       return;
     }
-    
+
     if (window.confirm('¿Está seguro de que desea eliminar este tipo de crédito? Esta acción no se puede deshacer.')) {
       try {
         console.log('Confirmación aceptada, procediendo con la eliminación...');
         await deleteCreditType(id);
-        
+
         console.log('Eliminación exitosa, limpiando caché...');
         const cedula = localStorage.getItem('cedula');
         if (cedula) {
           clearCreditTypesCache(cedula);
         }
-        
+
         console.log('Recargando lista de tipos de crédito...');
         await loadCreditTypes();
-        
+
         toast.success('Tipo de crédito eliminado con éxito');
         console.log('=== ELIMINACIÓN COMPLETADA ===');
       } catch (error) {
@@ -109,7 +109,7 @@ export const CreditTypeAdmin: React.FC = () => {
       toast.error('No se encontró la cédula en localStorage');
       return;
     }
-    
+
     try {
       if (selectedCreditType) {
         console.log('Actualizando tipo de crédito:', creditType);
@@ -120,11 +120,11 @@ export const CreditTypeAdmin: React.FC = () => {
         await createCreditType(creditType, cedula);
         toast.success('Tipo de crédito creado con éxito');
       }
-      
+
       // Limpiar el caché y recargar los datos
       clearCreditTypesCache(cedula);
       await loadCreditTypes();
-      
+
       setIsEditing(false);
       setSelectedCreditType(null);
     } catch (error) {
@@ -151,10 +151,10 @@ export const CreditTypeAdmin: React.FC = () => {
             Cancelar
           </button>
         </div>
-        
-        <CreditTypeForm 
-          initialCreditType={selectedCreditType || undefined} 
-          onSave={handleSave} 
+
+        <CreditTypeForm
+          initialCreditType={selectedCreditType || undefined}
+          onSave={handleSave}
         />
       </div>
     );
@@ -172,7 +172,7 @@ export const CreditTypeAdmin: React.FC = () => {
           Crear Nuevo
         </button>
       </div>
-      
+
       {creditTypes.length > 0 ? (
         <div className="bg-white shadow overflow-hidden rounded-lg">
           <table className="min-w-full divide-y divide-gray-200">
@@ -251,6 +251,6 @@ export const CreditTypeAdmin: React.FC = () => {
       )}
     </div>
   );
-}; 
+};
 
 export default CreditTypeAdmin;

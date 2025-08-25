@@ -30,8 +30,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Log cuando cambian los archivos seleccionados
   React.useEffect(() => {
-    console.log('📁 === ARCHIVOS SELECCIONADOS ACTUALIZADOS ===');
-    console.log('📂 Total archivos:', selectedFiles.length);
     selectedFiles.forEach((file, index) => {
       console.log(`📄 Archivo ${index + 1}:`, {
         nombre: file.name,
@@ -55,23 +53,151 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
 
-    // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DEFAULT_VALUE (solo campos que realmente necesiten valores por defecto)
+    // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DATOS DE PRUEBA COMPLETOS
   const autoLlenarTodosLosCampos = () => {
     const nuevosValores: Record<string, any> = { ...datosFormulario };
 
-    // Recorrer cada esquema y auto-llenar solo campos que realmente necesiten valores por defecto
+    // Datos de prueba completos para acelerar el desarrollo
+    const datosPrueba = {
+      // ===== SOLICITANTE =====
+      nombres: 'Juan Carlos',
+      primer_apellido: 'Pérez',
+      segundo_apellido: 'García',
+      tipo_identificacion: 'CC',
+      numero_documento: '12345678',
+      fecha_nacimiento: '1990-05-15',
+      genero: 'M',
+      correo: 'juan.perez@email.com',
+      telefono: '3001234567',
+      estado_civil: 'Soltero',
+      personas_a_cargo: 0,
+      fecha_expedicion: '2010-01-01',
+      lugar_nacimiento: 'Bogotá',
+      celular: '3001234567',
+      id_autenticacion: 'ABC123',
+      recibir_correspondencia: true,
+      paga_impuestos_fuera: false,
+      pais_donde_paga_impuestos: '',
+      declara_renta: false,
+
+      // ===== UBICACIÓN =====
+      direccion: 'Calle 123 # 45-67',
+      ciudad_residencia: 'Bogotá',
+      departamento_residencia: 'Cundinamarca',
+      direccion_residencia: 'Calle 123 # 45-67',
+      tipo_direccion: 'Casa',
+      barrio: 'Chapinero',
+      estrato: 4,
+      tipo_vivienda: 'Propia',
+      paga_arriendo: false,
+      arrendador: '',
+
+      // ===== ACTIVIDAD ECONÓMICA =====
+      tipo_actividad_economica: 'Empleado',
+      sector_economico: 'Tecnología',
+      codigo_ciuu: '6201',
+      departamento_empresa: 'Cundinamarca',
+      ciudad_empresa: 'Bogotá',
+      telefono_empresa: '6011234567',
+      correo_electronico_empresa: 'empresa@email.com',
+      nit_empresa: '900123456-7',
+      sector_economico_empresa: 'Tecnología',
+      tipo_contrato: 'Indefinido',
+      fecha_ingreso_empresa: '2020-01-15',
+      empresa: 'Tech Solutions S.A.S.',
+      cargo: 'Desarrollador Senior',
+      salario_base: 5000000,
+      tipo_actividad: 'Empleado',
+
+      // ===== INFORMACIÓN FINANCIERA =====
+      ingresos_mensuales_base: 5000000,
+      gastos_mensuales: 2000000,
+      otros_ingresos: 500000,
+      total_ingresos_mensuales: 5500000,
+      total_egresos_mensuales: 2000000,
+      total_activos: 50000000,
+      total_pasivos: 10000000,
+      gastos_vivienda: 800000,
+      gastos_alimentacion: 600000,
+      gastos_transporte: 300000,
+      ingreso_basico_mensual: 5000000,
+      ingreso_variable_mensual: 500000,
+      otros_ingresos_mensuales: 0,
+      gastos_financieros_mensuales: 200000,
+      gastos_personales_mensuales: 400000,
+      ingresos_fijos_pension: 0,
+      ingresos_por_ventas: 0,
+      ingresos_varios: 0,
+      honorarios: 0,
+      arriendos: 0,
+      ingresos_actividad_independiente: 0,
+      detalle_otros_ingresos: '',
+      ingresos_mensuales: 5500000,
+
+      // ===== REFERENCIAS =====
+      nombre_completo: 'María González',
+      telefono_referencia: '3009876543',
+      celular_referencia: '3009876543',
+      relacion_referencia: 'Familiar',
+      parentesco: 'Hermana',
+      nombre_referencia: 'María González',
+      tipo_referencia: 'personal',
+      ciudad_referencia: 'Bogotá',
+
+      // ===== SOLICITUD =====
+      monto_solicitado: 50000000,
+      plazo_meses: 60,
+      tipo_credito_id: 1,
+      destino_credito: 'Vivienda',
+      cuota_inicial: 10000000,
+      valor_inmueble: 150000000,
+      tipo_credito: 'Hipotecario',
+      banco: 'Banco de Bogotá',
+      estado: 'Pendiente',
+      ciudad_credito: 'Bogotá',
+
+      // ===== CAMPOS ADICIONALES =====
+      pago_impuestos_colombia: true,
+      pago_de_impuestos_fuera_de_colombia: false,
+      codigo_ciiu: '6201',
+      departamento_de_la_empresa: 'Cundinamarca',
+      ciudad_de_la_empresa: 'Bogotá',
+      telefono_de_la_empresa: '6011234567',
+      correo_electronico_de_la_empresa: 'empresa@email.com',
+      nit_de_la_empresa: '900123456-7',
+      direccion_de_la_empresa: 'Calle 100 # 50-30',
+      nombre_del_negocio: '',
+      direccion_del_negocio: '',
+      departamento_del_negocio: '',
+      ciudad_del_negocio: '',
+      numero_de_empleados_del_negocio: 0,
+      antiguedad_en_la_actividad: 3,
+      entidad_pagadora_pension: '',
+      antiguedad_actividad: 3,
+      antiguedad_actividad_texto: '3 años',
+      numero_empleados_negocio: 0
+    };
+
+    // Aplicar datos de prueba
+    Object.entries(datosPrueba).forEach(([key, value]) => {
+      if (nuevosValores[key] === undefined || nuevosValores[key] === '' || nuevosValores[key] === 0) {
+        nuevosValores[key] = value;
+      }
+    });
+
+    // También llenar campos del esquema que tengan default_value
     Object.entries(esquemas).forEach(([entidad, esquemaData]) => {
       if (esquemaData?.esquema) {
-        // Campos fijos - solo llenar si no están definidos (no sobrescribir vacíos intencionales)
+        // Campos fijos con default_value
         esquemaData.esquema.campos_fijos?.forEach(campo => {
-          if (campo.default_value !== undefined && nuevosValores[campo.key] === undefined) {
+          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
             nuevosValores[campo.key] = campo.default_value;
           }
         });
 
-        // Campos dinámicos - solo llenar si no están definidos (no sobrescribir vacíos intencionales)
+        // Campos dinámicos con default_value
         esquemaData.esquema.campos_dinamicos?.forEach(campo => {
-          if (campo.default_value !== undefined && nuevosValores[campo.key] === undefined) {
+          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
             nuevosValores[campo.key] = campo.default_value;
           }
 
@@ -84,25 +210,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                 objetoDefault[subcampo.key] = subcampo.default_value;
               }
             });
-            if (Object.keys(objetoDefault).length > 0 && nuevosValores[campo.key] === undefined) {
+            if (Object.keys(objetoDefault).length > 0 && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
               nuevosValores[campo.key] = objetoDefault;
             }
           }
         });
-      }
-    });
-
-    // Solo agregar campos que realmente faltan (no sobrescribir campos vacíos intencionales)
-    const camposFaltantes = {
-      // Solo campos que realmente necesiten valores por defecto para funcionar
-      'pago_impuestos_colombia': nuevosValores.pago_impuestos_colombia ?? true,
-      'pago_de_impuestos_fuera_de_colombia': nuevosValores.pago_de_impuestos_fuera_de_colombia ?? false,
-    };
-
-    // Aplicar solo campos que no están definidos (undefined)
-    Object.entries(camposFaltantes).forEach(([key, value]) => {
-      if (nuevosValores[key] === undefined) {
-        nuevosValores[key] = value;
       }
     });
 
@@ -112,7 +224,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
     if (camposNuevos > camposOriginales) {
       setDatosFormulario(nuevosValores);
-      console.log('🚀 Auto-llenado completado:', nuevosValores);
+      console.log('🚀 Auto-llenado completado con datos de prueba:', nuevosValores);
       console.log(`📊 Campos agregados: ${camposNuevos - camposOriginales} (total: ${camposNuevos})`);
     } else {
       console.log('✅ Todos los campos ya están llenos o el formulario está limpio');
@@ -126,12 +238,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     (esquemas[entidad]?.esquema?.campos_fijos || esquemas[entidad]?.esquema?.campos_dinamicos)
   );
 
-  // Auto-llenar cuando los esquemas se cargan (SOLO UNA VEZ)
-  const [yaAutoLlenado, setYaAutoLlenado] = React.useState(false);
-
   // Función para limpiar el formulario
   const limpiarFormulario = () => {
-    console.log('🧹 Limpiando formulario...');
 
     // Crear un objeto completamente vacío
     const formularioLimpio: Record<string, any> = {};
@@ -195,15 +303,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     // Campos booleanos específicos
     formularioLimpio.pago_impuestos_colombia = false;
     formularioLimpio.pago_de_impuestos_fuera_de_colombia = false;
-
-    console.log('🧹 Formulario limpio creado:', formularioLimpio);
-
     setDatosFormulario(formularioLimpio);
     setErrores({});
     setSelectedFiles([]);
     setAceptaTerminos(false);
     setAceptaAcuerdoFirma(false);
-    setYaAutoLlenado(false);
   };
 
   // Limpiar formulario cuando se monta el componente
@@ -211,13 +315,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     limpiarFormulario();
   }, []);
 
+  // Auto-llenado automático cuando los esquemas se cargan (opcional)
   React.useEffect(() => {
-    if (!esquemasLoading && esquemasCompletos && !yaAutoLlenado) {
-      console.log('🔄 Iniciando auto-llenado automático...');
-      autoLlenarTodosLosCampos();
-      setYaAutoLlenado(true);
+    if (!esquemasLoading && esquemasCompletos) {
     }
-  }, [esquemasLoading, esquemasCompletos, yaAutoLlenado]);
+  }, [esquemasLoading, esquemasCompletos]);
 
   // Manejar cambios en todos los campos
   const handleFieldChange = (key: string, value: any) => {
@@ -492,17 +594,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   // Debug: Ver qué esquemas están cargados
   React.useEffect(() => {
     if (!esquemasLoading) {
-      console.log('📊 Estado de carga de esquemas:');
       entidadesRequeridas.forEach(entidad => {
         const esquema = esquemas[entidad];
-        console.log(`  ${entidad}:`, {
-          existe: !!esquema,
-          tieneEsquema: !!esquema?.esquema,
-          camposFijos: esquema?.esquema?.campos_fijos?.length || 0,
-          camposDinamicos: esquema?.esquema?.campos_dinamicos?.length || 0
-        });
       });
-      console.log(`✅ Esquemas completos: ${esquemasCompletos}`);
     }
   }, [esquemasLoading, esquemas, esquemasCompletos]);
 
@@ -546,226 +640,47 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* ✅ BOTÓN AUTO-LLENAR */}
+      {/* ✅ BOTÓN AUTO-LLENAR MEJORADO */}
       <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Formulario de Registro</h2>
-          <p className="text-sm text-gray-600">Los campos se auto-llenan automáticamente para acelerar las pruebas</p>
+          <p className="text-sm text-gray-600">Llena automáticamente todos los campos con datos de prueba para acelerar el desarrollo</p>
         </div>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={autoLlenarTodosLosCampos}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
-            title="Llena automáticamente TODOS los campos vacíos para acelerar pruebas"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
+            title="Llena automáticamente TODOS los campos con datos de prueba realistas"
           >
-            🚀 Llenar TODOS los campos
+            🚀 Llenar con Datos de Prueba
           </button>
-          {yaAutoLlenado && (
-            <button
-              type="button"
-              onClick={() => setYaAutoLlenado(false)}
-              className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm"
-              title="Permitir auto-llenado nuevamente"
-            >
-              🔄 Reset
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={limpiarFormulario}
+            className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+            title="Limpiar todos los campos del formulario"
+          >
+            🗑️ Limpiar
+          </button>
         </div>
       </div>
 
       <div className="space-y-8">
-        {/* ✅ CAMPOS FIJOS - Información del Solicitante */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
-            Información del Solicitante
-          </h3>
-
-          <h4 className="text-md font-medium text-gray-800">Información Básica</h4>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Nombres */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Nombres <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={datosFormulario.nombres || ''}
-                onChange={(e) => handleFieldChange('nombres', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                placeholder="Nombres"
-                required
-              />
-              {errores.nombres && (
-                <p className="text-red-500 text-xs">{errores.nombres}</p>
-              )}
-            </div>
-
-            {/* Primer apellido */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Primer apellido <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={datosFormulario.primer_apellido || ''}
-                onChange={(e) => handleFieldChange('primer_apellido', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                placeholder="Primer apellido"
-                required
-              />
-              {errores.primer_apellido && (
-                <p className="text-red-500 text-xs">{errores.primer_apellido}</p>
-              )}
-            </div>
-
-            {/* Segundo apellido */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Segundo apellido
-              </label>
-              <input
-                type="text"
-                value={datosFormulario.segundo_apellido || ''}
-                onChange={(e) => handleFieldChange('segundo_apellido', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                placeholder="Segundo apellido"
-              />
-            </div>
-
-            {/* ✅ Tipo de identificación - SELECT */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Tipo de identificación <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={datosFormulario.tipo_identificacion || ''}
-                onChange={(e) => handleFieldChange('tipo_identificacion', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                required
-              >
-                <option value="">Seleccionar...</option>
-                <option value="CC">CC</option>
-                <option value="TE">TE</option>
-                <option value="TI">TI</option>
-              </select>
-              {errores.tipo_identificacion && (
-                <p className="text-red-500 text-xs">{errores.tipo_identificacion}</p>
-              )}
-            </div>
-
-            {/* Número de documento */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Número de documento <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={datosFormulario.numero_documento || ''}
-                onChange={(e) => handleFieldChange('numero_documento', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                placeholder="Número de documento"
-                required
-              />
-              {errores.numero_documento && (
-                <p className="text-red-500 text-xs">{errores.numero_documento}</p>
-              )}
-            </div>
-
-            {/* ✅ Fecha de nacimiento - DATE */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Fecha de nacimiento <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                value={datosFormulario.fecha_nacimiento || ''}
-                onChange={(e) => handleFieldChange('fecha_nacimiento', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                required
-              />
-              {errores.fecha_nacimiento && (
-                <p className="text-red-500 text-xs">{errores.fecha_nacimiento}</p>
-              )}
-            </div>
-
-            {/* ✅ Género - SELECT */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Género <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={datosFormulario.genero || ''}
-                onChange={(e) => handleFieldChange('genero', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                required
-              >
-                <option value="">Seleccionar...</option>
-                <option value="M">Masculino</option>
-                <option value="F">Femenino</option>
-              </select>
-              {errores.genero && (
-                <p className="text-red-500 text-xs">{errores.genero}</p>
-              )}
-            </div>
-
-            {/* Correo electrónico */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Correo electrónico <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={datosFormulario.correo || ''}
-                onChange={(e) => handleFieldChange('correo', e.target.value)}
-                className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                placeholder="correo@ejemplo.com"
-                required
-              />
-              {errores.correo && (
-                <p className="text-red-500 text-xs">{errores.correo}</p>
-              )}
-            </div>
+        {/* ✅ FORMULARIO COMPLETO - Información del Solicitante */}
+        {esquemas.solicitante?.esquema && esquemas.solicitante.esquema.campos_fijos && esquemas.solicitante.esquema.campos_dinamicos ? (
+          <FormularioCompleto
+            esquemaCompleto={esquemas.solicitante.esquema}
+            valores={datosFormulario}
+            onChange={handleFieldChange}
+            errores={errores}
+            titulo="Información del Solicitante"
+          />
+        ) : (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-700">⏳ Cargando campos del solicitante...</p>
           </div>
-
-          {/* ✅ CAMPOS DINÁMICOS - Solo info_extra JSON */}
-          {esquemas.solicitante?.esquema?.campos_dinamicos && esquemas.solicitante.esquema.campos_dinamicos.length > 0 && (
-            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
-              {(() => {
-                const camposFiltrados = esquemas.solicitante.esquema.campos_dinamicos
-                  .filter(campo => {
-                    // Función para determinar si un campo debe mostrarse basado en condiciones
-                    if (!campo.conditional_on) {
-                      return true;
-                    }
-
-                    const { field: triggerField, value: expectedValue } = campo.conditional_on;
-                    const actualValue = datosFormulario[triggerField];
-
-                    const shouldShow = actualValue === expectedValue;
-
-                    // Verificación adicional: solo mostrar si el valor no está vacío
-                    if (shouldShow && (actualValue === '' || actualValue === null || actualValue === undefined)) {
-                      return false;
-                    }
-
-                    return shouldShow;
-                  });
-
-                return camposFiltrados.map(campo => (
-                  <CampoDinamico
-                    key={campo.key}
-                    campo={campo}
-                    value={datosFormulario[campo.key]}
-                    onChange={handleFieldChange}
-                    error={errores[campo.key]}
-                  />
-                ));
-              })()}
-            </div>
-          )}
-        </div>
+        )}
 
         {/* Formulario Completo - Ubicación */}
         {esquemas.ubicacion?.esquema && esquemas.ubicacion.esquema.campos_fijos && esquemas.ubicacion.esquema.campos_dinamicos ? (

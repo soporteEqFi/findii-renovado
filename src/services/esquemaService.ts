@@ -19,7 +19,13 @@ export const esquemaService = {
 
       // Fallback al método anterior para compatibilidad
       const response = await fetch(
-        buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`)
+        buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`),
+        {
+          headers: {
+            'X-User-Id': localStorage.getItem('user_id') || '1',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
       );
 
       if (!response.ok) {
@@ -68,6 +74,7 @@ export const esquemaService = {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'X-User-Id': localStorage.getItem('user_id') || '1',
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
           },
           body: JSON.stringify({ value: datos })
@@ -89,7 +96,6 @@ export const esquemaService = {
         console.error(`Error actualizando JSON ${entidad}/${id}/${campoJson}:`, fallbackError);
 
         // Simular respuesta exitosa para desarrollo
-        console.log(`Simulando actualización de JSON para ${entidad}/${id}/${campoJson} con datos:`, datos);
         return {
           success: true,
           data: datos
@@ -105,17 +111,18 @@ export const esquemaService = {
     empresaId: number = 1
   ): Promise<RegistroCreado> {
     try {
-      const response = await fetch(
-        buildApiUrl(`/${entidad}/?empresa_id=${empresaId}`),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          },
-          body: JSON.stringify(datos)
-        }
-      );
+              const response = await fetch(
+          buildApiUrl(`/${entidad}/?empresa_id=${empresaId}`),
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': localStorage.getItem('user_id') || '1',
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(datos)
+          }
+        );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
@@ -133,7 +140,6 @@ export const esquemaService = {
       console.error(`Error creando registro ${entidad}:`, error);
 
       // Simular respuesta exitosa para desarrollo
-      console.log(`Simulando creación de ${entidad} con datos:`, datos);
       return {
         id: Math.floor(Math.random() * 10000) + 1,
         ...datos
@@ -428,7 +434,19 @@ export const esquemaService = {
       // Transformar datos del formulario plano a la estructura esperada por el backend
       const datosCompletos = this.transformarDatosFormulario(formData, esquemasCompletos);
 
-      console.log('🔧 Datos transformados para el backend:', JSON.stringify(datosCompletos, null, 2));
+      // Datos transformados para el backend
+      console.log('🚀 === DATOS TRANSFORMADOS PARA EL BACKEND ===');
+      console.log('📊 Estructura completa:', JSON.stringify(datosCompletos, null, 2));
+
+      // Verificar específicamente los campos del solicitante
+      if (datosCompletos.solicitante) {
+        console.log('👤 === CAMPOS DEL SOLICITANTE ===');
+        console.log('📋 Campos fijos:', Object.keys(datosCompletos.solicitante).filter(key => key !== 'info_extra'));
+        console.log('📋 Campos en info_extra:', datosCompletos.solicitante.info_extra ? Object.keys(datosCompletos.solicitante.info_extra) : 'No hay info_extra');
+        console.log('📊 Datos completos del solicitante:', datosCompletos.solicitante);
+      }
+
+
 
       // Agregar campos adicionales a la solicitud
       if (datosCompletos.solicitudes && datosCompletos.solicitudes[0]) {
@@ -443,6 +461,7 @@ export const esquemaService = {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-User-Id': localStorage.getItem('user_id') || '1',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         },
         body: JSON.stringify(datosCompletos)
@@ -466,19 +485,27 @@ export const esquemaService = {
     // Función auxiliar para extraer datos de una entidad específica (MEJORADA)
   extraerDatosEntidad(formData: Record<string, any>, esquema: any, entidad: string): Record<string, any> {
     if (!esquema) {
-      console.warn(`⚠️ No hay esquema para ${entidad}`);
+      // No hay esquema para esta entidad
       return {};
     }
+
+    // Procesando entidad
 
     const datos: Record<string, any> = {};
 
     // Extraer campos fijos (van directamente al objeto principal)
     if (esquema.campos_fijos && Array.isArray(esquema.campos_fijos)) {
+      console.log(`📋 Procesando ${esquema.campos_fijos.length} campos fijos para ${entidad}:`, esquema.campos_fijos.map((c: any) => c.key));
       esquema.campos_fijos.forEach((campo: any) => {
         if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
           datos[campo.key] = formData[campo.key];
+          console.log(`✅ Campo fijo agregado: ${campo.key} = ${formData[campo.key]}`);
+        } else {
+          console.log(`❌ Campo fijo vacío: ${campo.key} = ${formData[campo.key]}`);
         }
       });
+    } else {
+      console.log(`⚠️ No hay campos fijos definidos para ${entidad}`);
     }
 
     // Para referencias, asegurar que tipo_referencia esté presente
@@ -488,7 +515,6 @@ export const esquemaService = {
       }
       if (!datos.tipo_referencia) {
         datos.tipo_referencia = 'personal';
-        console.warn('⚠️ tipo_referencia no encontrado, usando valor por defecto: personal');
       }
     }
 
@@ -508,6 +534,7 @@ export const esquemaService = {
           const valorProcesado = this.procesarValorCampo(campo, valor, formData);
           if (valorProcesado !== undefined) {
             datos[jsonObjectName][campo.key] = valorProcesado;
+            // Campo dinámico agregado
           }
         }
       });
@@ -519,19 +546,19 @@ export const esquemaService = {
     }
 
     // Caso especial para arrays (como referencias múltiples)
-    if (entidad === 'referencias' && Array.isArray(esquema)) {
-      // Si el esquema es un array, procesar múltiples referencias
-      return esquema.map((esquemaRef: any) => this.extraerDatosEntidad(formData, esquemaRef, 'referencia'));
+    if (entidad === 'referencias') {
+      // Procesar como array de referencias
+      return [this.extraerDatosEntidad(formData, esquema, 'referencia')];
     }
 
-    if (entidad === 'solicitudes' && Array.isArray(esquema)) {
-      // Si el esquema es un array, procesar múltiples solicitudes
-      return esquema.map((esquemaSol: any) => this.extraerDatosEntidad(formData, esquemaSol, 'solicitud'));
+    if (entidad === 'solicitudes') {
+      // Procesar como array de solicitudes
+      return [this.extraerDatosEntidad(formData, esquema, 'solicitud')];
     }
 
-    if (entidad === 'ubicaciones' && Array.isArray(esquema)) {
-      // Si el esquema es un array, procesar múltiples ubicaciones
-      return esquema.map((esquemaUbi: any) => this.extraerDatosEntidad(formData, esquemaUbi, 'ubicacion'));
+    if (entidad === 'ubicaciones') {
+      // Procesar como array de ubicaciones
+      return [this.extraerDatosEntidad(formData, esquema, 'ubicacion')];
     }
 
     return datos;
@@ -557,8 +584,11 @@ export const esquemaService = {
 
     // Usar el esquema dinámico para cada entidad
     Object.keys(esquemasCompletos).forEach(entidad => {
-      const esquema = esquemasCompletos[entidad];
-      datosTransformados[entidad] = this.extraerDatosEntidad(formData, esquema, entidad);
+      const esquemaData = esquemasCompletos[entidad];
+      // La estructura es: esquemasCompletos[entidad].esquema
+      if (esquemaData && esquemaData.esquema) {
+        datosTransformados[entidad] = this.extraerDatosEntidad(formData, esquemaData.esquema, entidad);
+      }
     });
 
     // Limpiar campos vacíos, null o undefined

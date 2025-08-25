@@ -73,38 +73,29 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
       setLoading(true);
       setError(null);
 
-      console.log(`🔧 Intentando cargar esquema desde backend para ${entidad}`);
-
-      // Intentar cargar desde el backend usando el endpoint correcto
-      // Según la documentación: GET /json/schema/{entidad}/{json_field}
-      let jsonColumn = 'info_extra';
-      if (entidad === 'solicitud') {
-        jsonColumn = 'detalle_credito';
-      } else if (entidad === 'ubicacion') {
-        jsonColumn = 'detalle_direccion';
-      } else if (entidad === 'actividad_economica') {
-        jsonColumn = 'detalle_actividad';
-      } else if (entidad === 'informacion_financiera') {
-        jsonColumn = 'detalle_financiera';
-      } else if (entidad === 'referencia') {
-        jsonColumn = 'detalle_referencia';
-      }
-
+      // ✅ USAR EL ENDPOINT CORRECTO: /schema/{entidad} que devuelve campos fijos + dinámicos
       const response = await fetch(
-        buildApiUrl(`/json/schema/${entidad}/${jsonColumn}?empresa_id=${empresaId}`)
+        buildApiUrl(`/schema/${entidad}?empresa_id=${empresaId}`),
+        {
+          headers: {
+            'X-User-Id': localStorage.getItem('user_id') || '1',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
       );
-
-      console.log(`📡 Respuesta del backend: ${response.status} ${response.statusText}`);
 
       if (response.ok) {
         const result = await response.json();
 
         if (result.ok) {
-          // El endpoint /json/schema/{entidad}/{json_field} devuelve solo campos dinámicos
-          const camposDinamicos = result.data || [];
+          // El endpoint /schema/{entidad} devuelve tanto campos fijos como dinámicos
+          const esquemaCompleto = result.data;
+
+          // Validar y limpiar campos fijos
+          const camposFijosLimpios = validarEsquema(esquemaCompleto.campos_fijos || []);
 
           // Validar y limpiar campos dinámicos
-          const camposDinamicosLimpios = validarEsquema(camposDinamicos);
+          const camposDinamicosLimpios = validarEsquema(esquemaCompleto.campos_dinamicos || []);
 
           // Ordenar campos por order_index si existe
           const ordenarCampos = (campos: EsquemaCampo[]) => {
@@ -115,17 +106,22 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
             });
           };
 
-          const esquemaCompleto: EsquemaCompleto = {
-            entidad: entidad,
-            tabla: entidad,
-            json_column: jsonColumn,
-            total_campos: camposDinamicosLimpios.length,
-            campos_fijos: [], // Los campos fijos se manejan por separado
+          const esquemaFinal: EsquemaCompleto = {
+            entidad: esquemaCompleto.entidad || entidad,
+            tabla: esquemaCompleto.tabla || entidad,
+            json_column: esquemaCompleto.json_column || getJsonColumnName(entidad),
+            total_campos: camposFijosLimpios.length + camposDinamicosLimpios.length,
+            campos_fijos: ordenarCampos(camposFijosLimpios),
             campos_dinamicos: ordenarCampos(camposDinamicosLimpios)
           };
 
-          setEsquema(esquemaCompleto);
-          console.log(`✅ Esquema cargado exitosamente para ${entidad}:`, camposDinamicosLimpios);
+          console.log(`✅ Esquema completo cargado para ${entidad}:`, {
+            campos_fijos: esquemaFinal.campos_fijos.length,
+            campos_dinamicos: esquemaFinal.campos_dinamicos.length,
+            total: esquemaFinal.total_campos
+          });
+
+          setEsquema(esquemaFinal);
         } else {
           throw new Error(result.error || 'Error en la respuesta del servidor');
         }
@@ -137,38 +133,106 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
       console.error(`❌ Error cargando esquema para ${entidad}:`, error);
       setError(error instanceof Error ? error.message : 'Error desconocido');
 
-      // ✅ FALLBACK MÍNIMO: Solo campos básicos sin duplicaciones
-      console.log(`🔧 Usando fallback mínimo para ${entidad}`);
-
-      const camposFijos: EsquemaCampo[] = [];
-      const camposDinamicos: EsquemaCampo[] = [];
-
-      // Determinar el nombre de la columna JSON según la entidad
-      let jsonColumn = 'info_extra';
-      if (entidad === 'solicitud') {
-        jsonColumn = 'detalle_credito';
-      } else if (entidad === 'ubicacion') {
-        jsonColumn = 'detalle_direccion';
-      } else if (entidad === 'actividad_economica') {
-        jsonColumn = 'detalle_actividad';
-      } else if (entidad === 'informacion_financiera') {
-        jsonColumn = 'detalle_financiera';
-      } else if (entidad === 'referencia') {
-        jsonColumn = 'detalle_referencia';
-      }
-
-      const esquemaCompleto: EsquemaCompleto = {
+      // En caso de error, crear un esquema básico con campos fijos por defecto
+      const esquemaBasico: EsquemaCompleto = {
         entidad: entidad,
         tabla: entidad,
-        json_column: jsonColumn,
-        total_campos: camposFijos.length + camposDinamicos.length,
-        campos_fijos: camposFijos,
-        campos_dinamicos: camposDinamicos
+        json_column: getJsonColumnName(entidad),
+        total_campos: 0,
+        campos_fijos: getCamposFijosPorDefecto(entidad),
+        campos_dinamicos: []
       };
 
-      setEsquema(esquemaCompleto);
+      setEsquema(esquemaBasico);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Función auxiliar para obtener el nombre de la columna JSON según la entidad
+  const getJsonColumnName = (entidad: string): string => {
+    const jsonColumnMapping: Record<string, string> = {
+      'solicitante': 'info_extra',
+      'ubicacion': 'detalle_direccion',
+      'actividad_economica': 'detalle_actividad',
+      'informacion_financiera': 'detalle_financiera',
+      'referencia': 'detalle_referencia',
+      'solicitud': 'detalle_credito'
+    };
+
+    return jsonColumnMapping[entidad] || 'datos_adicionales';
+  };
+
+  // Función para obtener campos fijos por defecto en caso de error
+  const getCamposFijosPorDefecto = (entidad: string): EsquemaCampo[] => {
+    switch (entidad) {
+      case 'solicitante':
+        return [
+          { key: 'nombres', type: 'string', required: true },
+          { key: 'primer_apellido', type: 'string', required: true },
+          { key: 'segundo_apellido', type: 'string', required: false },
+          { key: 'tipo_identificacion', type: 'string', required: true },
+          { key: 'numero_documento', type: 'string', required: true },
+          { key: 'fecha_nacimiento', type: 'date', required: true },
+          { key: 'genero', type: 'string', required: true },
+          { key: 'correo', type: 'string', required: true },
+          { key: 'telefono', type: 'string', required: false },
+          { key: 'estado_civil', type: 'string', required: false },
+          { key: 'personas_a_cargo', type: 'number', required: false }
+        ];
+      case 'ubicacion':
+        return [
+          { key: 'direccion', type: 'string', required: true },
+          { key: 'ciudad', type: 'string', required: true },
+          { key: 'departamento', type: 'string', required: true },
+          { key: 'tipo_direccion', type: 'string', required: true },
+          { key: 'barrio', type: 'string', required: false },
+          { key: 'estrato', type: 'number', required: false }
+        ];
+      case 'actividad_economica':
+        return [
+          { key: 'empresa', type: 'string', required: false },
+          { key: 'cargo', type: 'string', required: false },
+          { key: 'tipo_contrato', type: 'string', required: false },
+          { key: 'salario_base', type: 'number', required: false },
+          { key: 'tipo_actividad', type: 'string', required: true },
+          { key: 'sector_economico', type: 'string', required: false },
+          { key: 'codigo_ciuu', type: 'string', required: false },
+          { key: 'departamento_empresa', type: 'string', required: false },
+          { key: 'ciudad_empresa', type: 'string', required: false },
+          { key: 'telefono_empresa', type: 'string', required: false },
+          { key: 'correo_empresa', type: 'string', required: false },
+          { key: 'nit_empresa', type: 'string', required: false }
+        ];
+      case 'informacion_financiera':
+        return [
+          { key: 'ingresos_mensuales', type: 'number', required: true },
+          { key: 'gastos_mensuales', type: 'number', required: true },
+          { key: 'otros_ingresos', type: 'number', required: false },
+          { key: 'total_ingresos_mensuales', type: 'number', required: false },
+          { key: 'total_egresos_mensuales', type: 'number', required: false },
+          { key: 'total_activos', type: 'number', required: false },
+          { key: 'total_pasivos', type: 'number', required: false }
+        ];
+      case 'referencia':
+        return [
+          { key: 'nombre_completo', type: 'string', required: true },
+          { key: 'telefono_referencia', type: 'string', required: true },
+          { key: 'tipo_referencia', type: 'string', required: true },
+          { key: 'parentesco', type: 'string', required: false },
+          { key: 'ciudad_referencia', type: 'string', required: false }
+        ];
+      case 'solicitud':
+        return [
+          { key: 'monto_solicitado', type: 'number', required: true },
+          { key: 'plazo_meses', type: 'number', required: true },
+          { key: 'tipo_credito_id', type: 'number', required: true },
+          { key: 'destino_credito', type: 'string', required: true },
+          { key: 'cuota_inicial', type: 'number', required: false },
+          { key: 'ciudad_credito', type: 'string', required: false }
+        ];
+      default:
+        return [];
     }
   };
 

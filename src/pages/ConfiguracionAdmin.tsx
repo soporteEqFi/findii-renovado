@@ -189,8 +189,6 @@ const ConfiguracionAdmin: React.FC = () => {
         conditionalConfig.field ? conditionalConfig : null
       );
 
-      console.log('Respuesta del backend:', updatedField);
-
       // Actualizar el estado local
       if (selectedGroup) {
         const updatedFields = selectedGroup.fields.map(f =>
