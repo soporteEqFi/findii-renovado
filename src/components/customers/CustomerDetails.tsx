@@ -1111,12 +1111,9 @@ const DynamicSection: React.FC<{
       return false;
     }
 
-    // Excluir objetos complejos (más de 5 propiedades)
+    // Excluir objetos JSON ya que los expandiremos en formatValue
     if (typeof value === 'object' && !Array.isArray(value)) {
-      const keys = Object.keys(value);
-      if (keys.length > 5) {
-        return false;
-      }
+      return false; // No incluir objetos JSON aquí, se expandirán en formatValue
     }
 
     // Excluir arrays muy largos
@@ -1144,29 +1141,84 @@ const DynamicSection: React.FC<{
       return '-';
     }
 
-    // Si es un objeto, convertirlo a string JSON o mostrar '[Objeto]'
+    // Si es un objeto, expandir todos sus campos individualmente
     if (typeof value === 'object' && !Array.isArray(value)) {
-      try {
-        // Si el objeto tiene propiedades, mostrar las claves principales
-        const keys = Object.keys(value);
-        if (keys.length === 0) {
-          return '[Objeto vacío]';
-        }
-        if (keys.length <= 3) {
-          return keys.join(', ');
-        }
-        return `[${keys.length} propiedades]`;
-      } catch {
-        return '[Objeto]';
+      const keys = Object.keys(value);
+      if (keys.length === 0) {
+        return '[Objeto vacío]';
       }
+
+      // Expandir cada campo del objeto
+      return keys.map(key => {
+        const fieldValue = value[key];
+        const fieldName = formatFieldName(key);
+
+        // Formatear el valor del campo
+        let formattedValue;
+        if (typeof fieldValue === 'boolean') {
+          formattedValue = fieldValue ? 'Sí' : 'No';
+        } else if (typeof fieldValue === 'number') {
+          formattedValue = fieldValue.toLocaleString();
+        } else if (typeof fieldValue === 'string') {
+          if (fieldValue.trim() === '') {
+            formattedValue = '-';
+          } else if (fieldValue.includes('@')) {
+            formattedValue = (
+              <div className="flex items-center">
+                <Mail className="w-4 h-4 mr-2 text-gray-500" />
+                {fieldValue}
+              </div>
+            );
+          } else if (/^\d{10,}$/.test(fieldValue)) {
+            formattedValue = (
+              <div className="flex items-center">
+                <Phone className="w-4 h-4 mr-2 text-gray-500" />
+                {fieldValue}
+              </div>
+            );
+          } else {
+            formattedValue = fieldValue;
+          }
+        } else if (typeof fieldValue === 'object' && fieldValue !== null) {
+          // Para objetos anidados, mostrar un resumen
+          const nestedKeys = Object.keys(fieldValue);
+          formattedValue = `[${nestedKeys.length} campos anidados]`;
+        } else {
+          formattedValue = String(fieldValue);
+        }
+
+        return (
+          <div key={key} className="mb-3 p-2 bg-gray-100 rounded">
+            <div className="text-sm font-medium text-gray-700 mb-1">{fieldName}</div>
+            <div className="text-sm text-gray-800">{formattedValue}</div>
+          </div>
+        );
+      });
     }
 
-    // Si es un array, mostrar el número de elementos
+    // Si es un array, mostrar los valores principales
     if (Array.isArray(value)) {
       if (value.length === 0) {
         return '[Array vacío]';
       }
-      return `[${value.length} elementos]`;
+
+      // Para arrays pequeños, mostrar los valores
+      if (value.length <= 3) {
+        const formattedValues = value.map(item => {
+          if (typeof item === 'object' && item !== null) {
+            // Si es un objeto, mostrar las claves principales
+            const keys = Object.keys(item);
+            if (keys.length <= 2) {
+              return keys.map(key => String(item[key])).join(', ');
+            }
+            return `${keys.length} campos`;
+          }
+          return String(item);
+        });
+        return formattedValues.join(', ');
+      }
+
+      return `${value.length} elementos`;
     }
 
     // Si es boolean
@@ -1216,18 +1268,38 @@ const DynamicSection: React.FC<{
   return (
     <div className="md:col-span-2">
       <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-        {filteredKeys.map((key) => (
-          <div key={key} className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-              {formatFieldName(key)}
-            </label>
-            <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
-              {formatValue(data[key])}
-            </div>
-          </div>
-        ))}
-      </div>
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+         {filteredKeys.map((key) => {
+           const value = data[key];
+           const formattedValue = formatValue(value);
+
+           // Si formatValue devuelve un array (objetos expandidos), renderizar de manera especial
+           if (Array.isArray(formattedValue)) {
+             return (
+               <div key={key} className="col-span-3">
+                 <label className="block text-sm font-medium text-gray-700 mb-3">
+                   {formatFieldName(key)}
+                 </label>
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                   {formattedValue}
+                 </div>
+               </div>
+             );
+           }
+
+           // Para valores normales
+           return (
+             <div key={key} className="space-y-2">
+               <label className="block text-sm font-medium text-gray-700">
+                 {formatFieldName(key)}
+               </label>
+               <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+                 {formattedValue}
+               </div>
+             </div>
+           );
+         })}
+       </div>
     </div>
   );
 };
