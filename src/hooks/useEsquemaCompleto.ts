@@ -171,13 +171,13 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
           { key: 'nombres', type: 'string', required: true },
           { key: 'primer_apellido', type: 'string', required: true },
           { key: 'segundo_apellido', type: 'string', required: false },
-          { key: 'tipo_identificacion', type: 'string', required: true },
+          { key: 'tipo_identificacion', type: 'string', required: true, description: 'Tipo de Identificación' },
           { key: 'numero_documento', type: 'string', required: true },
           { key: 'fecha_nacimiento', type: 'date', required: true },
-          { key: 'genero', type: 'string', required: true },
+          { key: 'genero', type: 'string', required: true, description: 'Género' },
           { key: 'correo', type: 'string', required: true },
           { key: 'telefono', type: 'string', required: false },
-          { key: 'estado_civil', type: 'string', required: false },
+          { key: 'estado_civil', type: 'string', required: false, description: 'Estado Civil' },
           { key: 'personas_a_cargo', type: 'number', required: false }
         ];
       case 'ubicacion':
@@ -193,10 +193,10 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
         return [
           { key: 'empresa', type: 'string', required: false },
           { key: 'cargo', type: 'string', required: false },
-          { key: 'tipo_contrato', type: 'string', required: false },
+          { key: 'tipo_contrato', type: 'string', required: false, description: 'Tipo de Contrato' },
           { key: 'salario_base', type: 'number', required: false },
-          { key: 'tipo_actividad', type: 'string', required: true },
-          { key: 'sector_economico', type: 'string', required: false },
+          { key: 'tipo_actividad', type: 'string', required: true, description: 'Tipo de Actividad' },
+          { key: 'sector_economico', type: 'string', required: false, description: 'Sector Económico' },
           { key: 'codigo_ciuu', type: 'string', required: false },
           { key: 'departamento_empresa', type: 'string', required: false },
           { key: 'ciudad_empresa', type: 'string', required: false },
@@ -218,8 +218,8 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
         return [
           { key: 'nombre_completo', type: 'string', required: true },
           { key: 'telefono_referencia', type: 'string', required: true },
-          { key: 'tipo_referencia', type: 'string', required: true },
-          { key: 'parentesco', type: 'string', required: false },
+          { key: 'tipo_referencia', type: 'string', required: true, description: 'Tipo de Referencia' },
+          { key: 'parentesco', type: 'string', required: false, description: 'Parentesco' },
           { key: 'ciudad_referencia', type: 'string', required: false }
         ];
       case 'solicitud':
@@ -227,9 +227,10 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
           { key: 'monto_solicitado', type: 'number', required: true },
           { key: 'plazo_meses', type: 'number', required: true },
           { key: 'tipo_credito_id', type: 'number', required: true },
-          { key: 'destino_credito', type: 'string', required: true },
+          { key: 'destino_credito', type: 'string', required: true, description: 'Destino del Crédito' },
           { key: 'cuota_inicial', type: 'number', required: false },
-          { key: 'ciudad_credito', type: 'string', required: false }
+          { key: 'ciudad_solicitud', type: 'string', required: false, description: 'Ciudad de Solicitud' },
+          { key: 'banco_nombre', type: 'string', required: false, description: 'Banco' }
         ];
       default:
         return [];

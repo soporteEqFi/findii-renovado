@@ -1,5 +1,6 @@
 import React from 'react';
 import { EsquemaCampo } from '../../types/esquemas';
+import { useConfiguraciones } from '../../hooks/useConfiguraciones';
 
 interface CampoDinamicoProps {
   campo: EsquemaCampo;
@@ -18,6 +19,10 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 }) => {
   // Usar default_value si value es null/undefined/empty
   const efectiveValue = value ?? campo.default_value ?? '';
+
+  // Cargar configuraciones para campos específicos
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
 
   const handleChange = (newValue: any) => {
     onChange(campo.key, newValue);
@@ -120,6 +125,235 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         ? 'border-red-500 focus:ring-red-500'
         : 'border-gray-300 focus:ring-blue-500'
     } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`;
+
+    // Campos especiales que usan configuraciones
+    if (campo.key === 'ciudad_solicitud') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled || loadingConfiguraciones}
+        >
+          <option value="">{loadingConfiguraciones ? 'Cargando ciudades...' : 'Seleccionar ciudad...'}</option>
+          {ciudades.map((ciudad) => (
+            <option key={ciudad} value={ciudad}>
+              {ciudad}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (campo.key === 'banco_nombre') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled || loadingConfiguraciones}
+        >
+          <option value="">{loadingConfiguraciones ? 'Cargando bancos...' : 'Seleccionar banco...'}</option>
+          {bancos.map((banco) => (
+            <option key={banco} value={banco}>
+              {banco}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    // Campos con opciones predefinidas
+    if (campo.key === 'tipo_identificacion') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo...</option>
+          <option value="CC">Cédula de Ciudadanía</option>
+          <option value="CE">Cédula de Extranjería</option>
+          <option value="TI">Tarjeta de Identidad</option>
+          <option value="PP">Pasaporte</option>
+          <option value="NIT">NIT</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'genero') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar género...</option>
+          <option value="M">Masculino</option>
+          <option value="F">Femenino</option>
+          <option value="O">Otro</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'estado_civil') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar estado civil...</option>
+          <option value="Soltero">Soltero</option>
+          <option value="Casado">Casado</option>
+          <option value="Unión Libre">Unión Libre</option>
+          <option value="Divorciado">Divorciado</option>
+          <option value="Viudo">Viudo</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'tipo_contrato') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo de contrato...</option>
+          <option value="Indefinido">Indefinido</option>
+          <option value="Término Fijo">Término Fijo</option>
+          <option value="Prestación de Servicios">Prestación de Servicios</option>
+          <option value="Obra o Labor">Obra o Labor</option>
+          <option value="Aprendizaje">Aprendizaje</option>
+          <option value="Independiente">Independiente</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'tipo_actividad') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo de actividad...</option>
+          <option value="Empleado">Empleado</option>
+          <option value="Independiente">Independiente</option>
+          <option value="Pensionado">Pensionado</option>
+          <option value="Estudiante">Estudiante</option>
+          <option value="Desempleado">Desempleado</option>
+          <option value="Rentista">Rentista</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'sector_economico') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar sector económico...</option>
+          <option value="Tecnología">Tecnología</option>
+          <option value="Finanzas">Finanzas</option>
+          <option value="Salud">Salud</option>
+          <option value="Educación">Educación</option>
+          <option value="Comercio">Comercio</option>
+          <option value="Manufactura">Manufactura</option>
+          <option value="Servicios">Servicios</option>
+          <option value="Construcción">Construcción</option>
+          <option value="Agricultura">Agricultura</option>
+          <option value="Minería">Minería</option>
+          <option value="Otro">Otro</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'tipo_referencia') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo de referencia...</option>
+          <option value="personal">Personal</option>
+          <option value="familiar">Familiar</option>
+          <option value="laboral">Laboral</option>
+          <option value="comercial">Comercial</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'parentesco') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar parentesco...</option>
+          <option value="Padre">Padre</option>
+          <option value="Madre">Madre</option>
+          <option value="Hermano">Hermano</option>
+          <option value="Hermana">Hermana</option>
+          <option value="Hijo">Hijo</option>
+          <option value="Hija">Hija</option>
+          <option value="Esposo">Esposo</option>
+          <option value="Esposa">Esposa</option>
+          <option value="Tío">Tío</option>
+          <option value="Tía">Tía</option>
+          <option value="Primo">Primo</option>
+          <option value="Prima">Prima</option>
+          <option value="Amigo">Amigo</option>
+          <option value="Amiga">Amiga</option>
+          <option value="Otro">Otro</option>
+        </select>
+      );
+    }
+
+    if (campo.key === 'destino_credito') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar destino del crédito...</option>
+          <option value="Vivienda">Vivienda</option>
+          <option value="Vehiculo">Vehículo</option>
+          <option value="Educacion">Educación</option>
+          <option value="Negocio">Negocio</option>
+          <option value="Consumo">Consumo</option>
+          <option value="Viajes">Viajes</option>
+          <option value="Salud">Salud</option>
+          <option value="Otro">Otro</option>
+        </select>
+      );
+    }
 
     switch (campo.type) {
       case 'string':

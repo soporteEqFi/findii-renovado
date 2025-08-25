@@ -489,7 +489,9 @@ export const esquemaService = {
       return {};
     }
 
-    // Procesando entidad
+    console.log(`🔍 === PROCESANDO ENTIDAD: ${entidad} ===`);
+    console.log('📋 Esquema recibido:', esquema);
+    console.log('📊 FormData recibido:', formData);
 
     const datos: Record<string, any> = {};
 
@@ -506,6 +508,15 @@ export const esquemaService = {
       });
     } else {
       console.log(`⚠️ No hay campos fijos definidos para ${entidad}`);
+    }
+
+    // Log específico para campos de solicitud
+    if (entidad === 'solicitud') {
+      console.log('🏦 === CAMPOS DE SOLICITUD ===');
+      console.log('🔍 Buscando ciudad_solicitud en formData:', formData.ciudad_solicitud);
+      console.log('🔍 Buscando banco_nombre en formData:', formData.banco_nombre);
+      console.log('📋 Campos fijos definidos:', esquema.campos_fijos?.map((c: any) => c.key));
+      console.log('📋 Campos dinámicos definidos:', esquema.campos_dinamicos?.map((c: any) => c.key));
     }
 
     // Para referencias, asegurar que tipo_referencia esté presente
@@ -559,6 +570,37 @@ export const esquemaService = {
     if (entidad === 'ubicaciones') {
       // Procesar como array de ubicaciones
       return [this.extraerDatosEntidad(formData, esquema, 'ubicacion')];
+    }
+
+    // Log final para ver qué datos se están enviando
+    if (entidad === 'solicitud') {
+      console.log('📤 === DATOS FINALES DE SOLICITUD ===');
+      console.log('📊 Datos a enviar:', datos);
+
+      // 🔧 CORRECCIÓN MANUAL: Asegurar que ciudad_solicitud y banco_nombre sean campos fijos
+      if (formData.ciudad_solicitud && formData.ciudad_solicitud !== '') {
+        datos.ciudad_solicitud = formData.ciudad_solicitud;
+        console.log('🔧 Campo fijo forzado: ciudad_solicitud =', formData.ciudad_solicitud);
+      }
+
+      if (formData.banco_nombre && formData.banco_nombre !== '') {
+        datos.banco_nombre = formData.banco_nombre;
+        console.log('🔧 Campo fijo forzado: banco_nombre =', formData.banco_nombre);
+      }
+
+      // Remover estos campos del detalle_credito si existen
+      if (datos.detalle_credito) {
+        if (datos.detalle_credito.ciudad_solicitud) {
+          delete datos.detalle_credito.ciudad_solicitud;
+          console.log('🗑️ Removido ciudad_solicitud de detalle_credito');
+        }
+        if (datos.detalle_credito.banco_nombre) {
+          delete datos.detalle_credito.banco_nombre;
+          console.log('🗑️ Removido banco_nombre de detalle_credito');
+        }
+      }
+
+      console.log('📊 Datos finales corregidos:', datos);
     }
 
     return datos;

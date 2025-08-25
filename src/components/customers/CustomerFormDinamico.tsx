@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
 import { FormularioCompleto } from '../ui/FormularioCompleto';
 import { esquemaService } from '../../services/esquemaService';
+import { useConfiguraciones } from '../../hooks/useConfiguraciones';
 import { CampoDinamico } from '../ui/CampoDinamico';
 import { documentService } from '../../services/documentService';
 
@@ -52,6 +53,10 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   ];
 
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
+
+  // Cargar configuraciones (ciudades y bancos)
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
 
     // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DATOS DE PRUEBA COMPLETOS
   const autoLlenarTodosLosCampos = () => {
@@ -152,9 +157,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       cuota_inicial: 10000000,
       valor_inmueble: 150000000,
       tipo_credito: 'Hipotecario',
-      banco: 'Banco de Bogotá',
+      banco_nombre: 'Banco de Bogotá',
       estado: 'Pendiente',
-      ciudad_credito: 'Bogotá',
+      ciudad_solicitud: 'Bogotá',
 
       // ===== CAMPOS ADICIONALES =====
       pago_impuestos_colombia: true,
@@ -430,7 +435,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           plazo_meses: datosFormulario.plazo_meses,
           tipo_credito_id: datosFormulario.tipo_credito_id,
           destino_credito: datosFormulario.destino_credito,
-          cuota_inicial: datosFormulario.cuota_inicial
+          cuota_inicial: datosFormulario.cuota_inicial,
+          ciudad_solicitud: datosFormulario.ciudad_solicitud,
+          banco_nombre: datosFormulario.banco_nombre
         }
       };
 
