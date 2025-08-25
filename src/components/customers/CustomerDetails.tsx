@@ -1290,10 +1290,10 @@ const DynamicSection: React.FC<{
            // Para valores normales
            return (
              <div key={key} className="space-y-2">
-               <label className="block text-sm font-medium text-gray-700">
+               <label className="block text-sm font-medium text-gray-700 mt-2">
                  {formatFieldName(key)}
                </label>
-               <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+               <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 mt-2">
                  {formattedValue}
                </div>
              </div>
