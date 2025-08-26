@@ -470,19 +470,19 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mostrar documentos existentes desde el API */}
             {filteredDocuments.map((document, index) => {
-              console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, document);
-              console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(document));
-              console.log(`📄 Documento ${index + 1}:`, {
-                id: document.id,
-                nombre: document.nombre,
-                documento_url: document.documento_url,
-                solicitante_id: document.solicitante_id,
-                // Verificar otros posibles nombres de campos
-                filename: (document as any).filename,
-                original_filename: (document as any).original_filename,
-                file_name: (document as any).file_name,
-                name: (document as any).name
-              });
+              // console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, document);
+              // console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(document));
+              // console.log(`📄 Documento ${index + 1}:`, {
+              //   id: document.id,
+              //   nombre: document.nombre,
+              //   documento_url: document.documento_url,
+              //   solicitante_id: document.solicitante_id,
+              //   // Verificar otros posibles nombres de campos
+              //   filename: (document as any).filename,
+              //   original_filename: (document as any).original_filename,
+              //   file_name: (document as any).file_name,
+              //   name: (document as any).name
+              // });
 
               // Intentar obtener el nombre del archivo de diferentes formas
               const possibleNames = [
@@ -497,12 +497,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               const isImage = fileName && fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
               const fileUrl = document.documento_url;
 
-              console.log(`📄 Procesando documento ${index + 1}:`, {
-                possibleNames,
-                fileName,
-                fileUrl,
-                isImage
-              });
+              // console.log(`📄 Procesando documento ${index + 1}:`, {
+              //   possibleNames,
+              //   fileName,
+              //   fileUrl,
+              //   isImage
+              // });
 
               return (
                 <div key={`document-${document.id}`} className="mb-4">
@@ -682,18 +682,18 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   return (
     <div className="space-y-6">
-             {/* Debug info - solo en desarrollo */}
-       {process.env.NODE_ENV === 'development' && datosCompletos && (
-         <div className="bg-blue-50 p-2 text-xs text-blue-700 border rounded">
-           ✅ Datos completos cargados del endpoint /solicitantes/{solicitanteIdNumber}/traer-todos-registros
-         </div>
-       )}
+        {/* Debug info - solo en desarrollo */}
+        {/* {process.env.NODE_ENV === 'development' && datosCompletos && (
+          <div className="bg-blue-50 p-2 text-xs text-blue-700 border rounded">
+            ✅ Datos completos cargados del endpoint /solicitantes/{solicitanteIdNumber}/traer-todos-registros
+          </div>
+        )} */}
 
-      {apiError && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-          <p className="text-red-600">{apiError}</p>
-        </div>
-      )}
+        {apiError && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+            <p className="text-red-600">{apiError}</p>
+          </div>
+        )}
 
              {/* CAMPOS DINÁMICOS - Usar datos completos cuando estén disponibles */}
        {datosCompletos ? (
@@ -828,13 +828,13 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">Archivos</h3>
 
          {/* Debug info para documentos */}
-         {process.env.NODE_ENV === 'development' && (
+         {/* {process.env.NODE_ENV === 'development' && (
            <div className="bg-yellow-50 p-2 text-xs text-yellow-700 border rounded mb-4">
              🔍 Debug documentos: loadingDocuments={loadingDocuments.toString()},
              customerDocuments.length={customerDocuments.length},
              solicitanteIdNumber={solicitanteIdNumber}
            </div>
-         )}
+         )} */}
 
          {loadingDocuments && (
            <div className="flex items-center mb-4">
@@ -858,9 +858,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
              documentsArray = [];
            }
 
-           console.log('📋 Documentos procesados:', documentsArray);
-           console.log('📋 Tipo de customerDocuments:', typeof customerDocuments);
-           console.log('📋 customerDocuments raw:', customerDocuments);
+           // console.log('📋 Documentos procesados:', documentsArray);
+           // console.log('📋 Tipo de customerDocuments:', typeof customerDocuments);
+           // console.log('📋 customerDocuments raw:', customerDocuments);
 
            if (!loadingDocuments && documentsArray.length === 0) {
              return (
@@ -878,8 +878,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
            return (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                {documentsArray.map((doc: any, index: number) => {
-                 console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, doc);
-                 console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(doc));
+                 // console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, doc);
+                 // console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(doc));
 
                  // Intentar obtener el nombre del archivo de diferentes formas
                  const possibleNames = [
@@ -895,12 +895,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                  const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                  const isMarkedForDeletion = filesToDelete.includes(doc.id);
 
-                 console.log(`📄 Procesando documento ${index + 1}:`, {
-                   possibleNames,
-                   fileName,
-                   fileUrl,
-                   isImage
-                 });
+                 // console.log(`📄 Procesando documento ${index + 1}:`, {
+                 //   possibleNames,
+                 //   fileName,
+                 //   fileUrl,
+                 //   isImage
+                 // });
 
                  return (
                    <div
@@ -1055,18 +1055,18 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       </div>
 
        {/* Datos Completos (Solo en desarrollo) */}
-       {process.env.NODE_ENV === 'development' && datosCompletos && (
-         <div className="md:col-span-2">
-           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">
-             Datos Completos (Debug)
-           </h3>
-           <div className="bg-gray-50 p-4 rounded-md">
-             <pre className="text-xs overflow-auto max-h-96">
-               {JSON.stringify(datosCompletos, null, 2)}
-             </pre>
-           </div>
-         </div>
-       )}
+      {/* {process.env.NODE_ENV === 'development' && datosCompletos && (
+        <div className="md:col-span-2">
+          <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">
+            Datos Completos (Debug)
+          </h3>
+          <div className="bg-gray-50 p-4 rounded-md">
+            <pre className="text-xs overflow-auto max-h-96">
+              {JSON.stringify(datosCompletos, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )} */}
       <div className="flex justify-end space-x-2">
         {isEditing ? (
           <>
