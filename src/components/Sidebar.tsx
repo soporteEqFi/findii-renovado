@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, Settings, LogOut, UserCog, User, CreditCard } from 'lucide-react';
+import { Users, Settings, LogOut, UserCog, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { buildApiUrl, API_CONFIG } from '../config/constants';
 
@@ -38,7 +38,6 @@ const Sidebar = () => {
 
   // Agregar elementos solo para administradores
   const adminMenuItems = [
-    { icon: CreditCard, label: 'Tipos de Crédito', path: '/credit-types' },
     { icon: Settings, label: 'Configuración', path: '/config' },
     { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];

@@ -1,7 +1,8 @@
 // Re-export types from their specific files
-export * from './customer';
 export * from './user';
-export * from './creditTypes';
+export * from './customer';
+export * from './esquemas';
+export * from './fieldDefinition';
 
 // Tipo para estados de crédito
 export type CreditStatus =

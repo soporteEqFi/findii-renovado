@@ -22,13 +22,7 @@ export const API_CONFIG = {
     USUARIOS: '/usuarios',                    // GET /usuarios/?empresa_id=1, POST /usuarios/?empresa_id=1
     USUARIO_BY_ID: '/usuarios',               // GET /usuarios/{id}?empresa_id=1, PUT /usuarios/{id}?empresa_id=1, DELETE /usuarios/{id}?empresa_id=1
 
-    // Credit Types
-    GET_CREDIT_TYPES: '/get-credit-types',
-    CREATE_CREDIT_TYPE: '/create-credit-type',
-    UPDATE_CREDIT_TYPE: '/update-credit-type',
-    DELETE_CREDIT_TYPE: '/delete-credit-type',
-
-        // Nuevos endpoints para esquemas dinámicos
+    // Nuevos endpoints para esquemas dinámicos
     GET_ESQUEMA: '/json/schema',
     UPDATE_JSON: '/json',
 
@@ -99,14 +93,13 @@ export const ROUTES = {
   LOGIN: '/login',
   USERS: '/users',
   PROFILE: '/profile',
-  CREDIT_TYPES: '/credit-types',
   SEGUIMIENTO: '/seguimiento',
   CONFIG: '/config',
 } as const;
 
 // Permisos por rol
 export const PERMISSIONS = {
-  [USER_ROLES.ADMIN]: ['create', 'read', 'update', 'delete', 'manage_users', 'manage_credit_types'],
+  [USER_ROLES.ADMIN]: ['create', 'read', 'update', 'delete', 'manage_users'],
   [USER_ROLES.MANAGER]: ['create', 'read', 'update'],
   [USER_ROLES.USER]: ['read'],
   [USER_ROLES.BANCO]: ['view_customer', 'download_sales'],

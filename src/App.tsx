@@ -9,7 +9,6 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import AcuerdoFirma from './pages/AcuerdoFirma';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
-import CreditTypeAdmin from './pages/CreditTypeAdmin';
 import { CreditTracking } from './components/tracking/CreditTracking';
 import ConfiguracionAdmin from './pages/ConfiguracionAdmin';
 
@@ -87,13 +86,6 @@ function App() {
               {/* <Route path="customers" element={<Customers />} /> */}
               {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
               <Route path="profile" element={<Profile />} />
-
-              {/* Ruta para la administración de tipos de crédito (solo admin) */}
-              <Route path="credit-types" element={
-                <AdminRoute>
-                  <CreditTypeAdmin />
-                </AdminRoute>
-              } />
 
               {/* Ruta para la administración de configuración de campos (solo admin) */}
               <Route path="config" element={
