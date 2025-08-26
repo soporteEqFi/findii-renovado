@@ -4,6 +4,17 @@ export * from './customer';
 export * from './esquemas';
 export * from './fieldDefinition';
 
+// Tipo para documentos
+export interface Document {
+  id: number;
+  nombre: string;
+  documento_url: string;
+  solicitante_id: number;
+  created_at: string;
+  updated_at: string;
+  file_size?: number;
+}
+
 // Tipo para estados de crédito
 export type CreditStatus =
   | 'Pendiente'
@@ -15,23 +26,10 @@ export type CreditStatus =
   | 'Negado'
   | 'Desistido';
 
-// API response types
-export interface LoginResponse {
-  acceso: string;
-  usuario: Array<{
-    id?: string;
-    id_usuario?: number;
-    nombre?: string;
-    username?: string;
-    [key: string]: any;
-  }>;
-  rol: string;
-  access_token: string;
-}
-
+// Tipo para respuesta de API
 export interface ApiResponse<T> {
-  success: boolean;
-  data?: T;
+  ok: boolean;
+  data: T;
   message?: string;
   error?: string;
 }

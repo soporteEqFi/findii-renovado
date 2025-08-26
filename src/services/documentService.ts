@@ -1,4 +1,5 @@
 import { API_CONFIG } from '../config/constants';
+import { Document } from '../types';
 
 // Función para obtener headers con autenticación (sin Content-Type para FormData)
 const getFormDataHeaders = (): HeadersInit => {
@@ -76,7 +77,7 @@ export const uploadDocument = async (file: File, solicitanteId: number): Promise
 };
 
 // Función para obtener documentos de un solicitante
-export const getDocuments = async (solicitanteId: number): Promise<any[]> => {
+export const getDocuments = async (solicitanteId: number): Promise<Document[]> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`;
 
   console.log('📥 === OBTENIENDO DOCUMENTOS DEL SOLICITANTE ===');
@@ -115,17 +116,34 @@ export const getDocuments = async (solicitanteId: number): Promise<any[]> => {
     console.log('✅ Tipo de resultado:', typeof result);
     console.log('✅ Es array:', Array.isArray(result));
 
-    // Asegurar que devolvemos un array
+    // Procesar la respuesta según la estructura esperada
+    let documents: Document[] = [];
+
     if (Array.isArray(result)) {
-      return result;
+      // Si la respuesta es directamente un array
+      documents = result;
     } else if (result && Array.isArray(result.data)) {
-      return result.data;
+      // Si la respuesta tiene estructura { ok: true, data: [...] }
+      documents = result.data;
     } else if (result && Array.isArray(result.documents)) {
-      return result.documents;
+      // Si la respuesta tiene estructura { documents: [...] }
+      documents = result.documents;
     } else {
       console.warn('⚠️ Resultado no es un array, devolviendo array vacío:', result);
       return [];
     }
+
+    // Validar que cada documento tenga los campos requeridos
+    const validDocuments = documents.filter(doc => {
+      const isValid = doc.id && doc.nombre && doc.documento_url;
+      if (!isValid) {
+        console.warn('⚠️ Documento inválido encontrado:', doc);
+      }
+      return isValid;
+    });
+
+    console.log('✅ Documentos válidos encontrados:', validDocuments.length);
+    return validDocuments;
   } catch (error) {
     console.error('❌ Error en fetch getDocuments:', error);
     console.error('❌ URL que causó el error:', url);

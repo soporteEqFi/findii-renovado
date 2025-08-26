@@ -8,6 +8,11 @@ const Profile = () => {
   const { userInfo, loading, error, updateProfile } = useProfile();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Debug: Verificar datos del usuario
+  console.log('🔍 Profile: userInfo recibido:', userInfo);
+  console.log('🔍 Profile: loading:', loading);
+  console.log('🔍 Profile: error:', error);
+
   const handleSaveProfile = async (updatedInfo: any) => {
     try {
       await updateProfile(updatedInfo);
@@ -18,7 +23,8 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
+  // Mostrar loading solo cuando está cargando y no hay datos
+  if (loading && !userInfo) {
     return (
       <div className="flex justify-center items-center min-h-[80vh]">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>

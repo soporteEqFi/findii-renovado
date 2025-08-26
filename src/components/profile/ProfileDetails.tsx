@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 
 interface UserInfo {
-  id: string;
+  id: number;
   nombre: string;
   correo: string;
   rol: string;
   cedula: string;
-  empresa: string;
-  imagen_aliado: string;
+  empresa?: string;
+  imagen_aliado?: string | null;
+  apellido?: string;
+  usuario?: string;
+  info_extra?: any;
 }
 
 interface ProfileDetailsProps {
@@ -36,7 +39,7 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
     onSave(formData);
     onClose();
   };
- 
+
   if (!open) return null;
 
   return (
@@ -45,7 +48,7 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
         <div className="px-6 py-4 border-b">
           <h2 className="text-xl font-semibold text-gray-800">Editar Perfil</h2>
         </div>
-        
+
         <div className="px-6 py-4">
           <div className="space-y-4">
             <div>
@@ -58,7 +61,7 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Correo</label>
               <input
@@ -69,7 +72,7 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Cédula</label>
               <input
@@ -81,19 +84,19 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Empresa</label>
               <input
                 type="text"
                 name="empresa"
-                value={formData.empresa}
+                value={formData.empresa || ''}
                 onChange={handleChange}
                 disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
               />
             </div>
-            
+
             {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">URL de Imagen</label>
               <input
@@ -106,13 +109,13 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-not-allowed"
               />
             </div> */}
-            
+
             {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Rol</label>
               <input
                 type="text"
                 name="rol"
-                value={formData.rol}  
+                value={formData.rol}
                 onChange={handleChange}
                 disabled
                 className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 cursor-not-allowed"
@@ -120,15 +123,15 @@ const ProfileDetails = ({ userInfo, open, onClose, onSave }: ProfileDetailsProps
             </div> */}
           </div>
         </div>
-        
+
         <div className="px-6 py-4 border-t flex justify-end space-x-3">
-          <button 
+          <button
             onClick={onClose}
             className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Cancelar
           </button>
-          <button 
+          <button
             onClick={handleSubmit}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >

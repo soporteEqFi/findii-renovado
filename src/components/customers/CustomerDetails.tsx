@@ -5,6 +5,7 @@ import { usePermissions } from '../../utils/permissions';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
 import { documentService } from '../../services/documentService';
+import { Document } from '../../types';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -49,7 +50,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   // const [productInfo, setProductInfo] = useState<Record<string, string>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filesToDelete, setFilesToDelete] = useState<number[]>([]);
-  const [customerDocuments, setCustomerDocuments] = useState<any[]>([]);
+  const [customerDocuments, setCustomerDocuments] = useState<Document[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -469,9 +470,39 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Mostrar documentos existentes desde el API */}
             {filteredDocuments.map((document, index) => {
-              const isImage = document.filename && document.filename.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-              const fileName = document.filename || document.original_filename || `Documento ${index + 1}`;
-              const fileUrl = document.url || document.file_path;
+              console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, document);
+              console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(document));
+              console.log(`📄 Documento ${index + 1}:`, {
+                id: document.id,
+                nombre: document.nombre,
+                documento_url: document.documento_url,
+                solicitante_id: document.solicitante_id,
+                // Verificar otros posibles nombres de campos
+                filename: (document as any).filename,
+                original_filename: (document as any).original_filename,
+                file_name: (document as any).file_name,
+                name: (document as any).name
+              });
+
+              // Intentar obtener el nombre del archivo de diferentes formas
+              const possibleNames = [
+                document.nombre,
+                (document as any).filename,
+                (document as any).original_filename,
+                (document as any).file_name,
+                (document as any).name
+              ];
+
+              const fileName = possibleNames.find(name => name && name !== '') || `Documento ${index + 1}`;
+              const isImage = fileName && fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+              const fileUrl = document.documento_url;
+
+              console.log(`📄 Procesando documento ${index + 1}:`, {
+                possibleNames,
+                fileName,
+                fileUrl,
+                isImage
+              });
 
               return (
                 <div key={`document-${document.id}`} className="mb-4">
@@ -847,10 +878,29 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
            return (
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                {documentsArray.map((doc: any, index: number) => {
-                 const fileName = doc.filename || doc.original_filename || `Documento ${index + 1}`;
+                 console.log(`📄 Documento ${index + 1} - ESTRUCTURA COMPLETA:`, doc);
+                 console.log(`📄 Documento ${index + 1} - TODAS LAS CLAVES:`, Object.keys(doc));
+
+                 // Intentar obtener el nombre del archivo de diferentes formas
+                 const possibleNames = [
+                   doc.nombre,
+                   doc.filename,
+                   doc.original_filename,
+                   doc.file_name,
+                   doc.name
+                 ];
+
+                 const fileName = possibleNames.find(name => name && name !== '') || `Documento ${index + 1}`;
                  const fileUrl = doc.documento_url || doc.url || doc.file_path;
                  const isImage = fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
                  const isMarkedForDeletion = filesToDelete.includes(doc.id);
+
+                 console.log(`📄 Procesando documento ${index + 1}:`, {
+                   possibleNames,
+                   fileName,
+                   fileUrl,
+                   isImage
+                 });
 
                  return (
                    <div
