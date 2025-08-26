@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (correo: string, password: string) => Promise<void>;
   logout: () => void;
   token: string | null;
 }
@@ -64,11 +64,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (correo: string, password: string) => {
     setIsLoading(true);
     try {
       // Use the loginUser function from our API service
-      const data = await loginUser(email, password);
+      const data = await loginUser(correo, password);
+
+      // Debug: Verificar respuesta completa del backend
+      console.log('🔍 Respuesta completa del backend:', data);
 
       // Extract user data from the response (handle different formats)
       let userData: any;
@@ -83,20 +86,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error('No se encontraron datos de usuario en la respuesta');
       }
+
+      // Debug: Verificar datos del usuario extraídos
+      console.log('👤 Datos del usuario extraídos:', userData);
+      console.log('🏢 Campo empresa en userData:', userData.empresa);
+      console.log('🖼️ Campo imagen_aliado en userData:', userData.imagen_aliado);
+
+      // Extraer información de la empresa del objeto separado
+      const empresaData = data.empresa || {};
+      console.log('🏢 Datos de la empresa:', empresaData);
+
       // Map API response to our User type
       const userObj: User = {
         id: Number(userData.id || userData.id_usuario || 1),
-        nombre: (userData.nombre || userData.name || userData.username || email),
+        nombre: (userData.nombre || userData.name || userData.username || correo),
         rol: (data.rol || userData.rol || userData.role || 'user').toLowerCase() as string,
         cedula: (userData.cedula || userData.numero_documento || '1'),
-        email: email,
-        empresa: userData.empresa || '',
-        password: undefined,
-        imagen_aliado: userData.imagen_aliado || null,
+        correo: correo,
+        empresa: empresaData.nombre || userData.empresa || '',
+        imagen_aliado: empresaData.imagen || userData.imagen_aliado || null,
         apellido: userData.apellido || '',
         usuario: userData.usuario || '',
         info_extra: data.info_extra || userData.info_extra || null
       };
+
+      // Debug: Verificar objeto final del usuario
+      console.log('✅ Objeto final del usuario:', userObj);
+      console.log('🏢 Empresa final:', userObj.empresa);
+      console.log('🖼️ Imagen aliado final:', userObj.imagen_aliado);
+
       // Save token and user data
       setToken(data.access_token || '');
       setUser(userObj);

@@ -6,6 +6,10 @@ export interface User {
   contraseña?: string;
   rol: string;
   created_at?: string;
+  empresa?: string;
+  imagen_aliado?: string | null;
+  apellido?: string;
+  usuario?: string;
   info_extra?: UserInfoExtra;
 }
 

@@ -8,10 +8,26 @@ const Sidebar = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [image, setImage] = useState<string | null>(null);
-  const [businessName, setBusinessName] = useState<string | null>(null);
 
   const isAdmin = user && user.rol === 'admin';
+
+  // Debug: Verificar datos del usuario
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 Datos del usuario en Sidebar:', user);
+      console.log('🏢 Empresa:', user.empresa);
+      console.log('🖼️ Imagen aliado:', user.imagen_aliado);
+    }
+
+    // Debug: Verificar datos en localStorage
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log('💾 Usuario guardado en localStorage:', parsedUser);
+      console.log('🏢 Empresa en localStorage:', parsedUser.empresa);
+      console.log('🖼️ Imagen aliado en localStorage:', parsedUser.imagen_aliado);
+    }
+  }, [user]);
 
   // Definir elementos de menú basados en el rol
   const menuItems = [
@@ -27,39 +43,6 @@ const Sidebar = () => {
     { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];
 
-  const loadStats = async () => {
-    try {
-
-      const user_document = localStorage.getItem('user');
-      const userData = JSON.parse(user_document || '{}');
-      const user_document_obj = userData.cedula;
-
-      localStorage.setItem('cedula', user_document_obj)
-      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.USER_INFO}/${user_document_obj}`), {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        }
-      });
-
-
-      if (!response.ok) {
-        throw new Error('Error al cargar estadísticas');
-      }
-
-      const data = await response.json();
-       // Asignamos la imagen del aliado
-      setImage(data["imagen"]);
-      // Asignamos el nombre de la empresa
-      setBusinessName(data["empresa"]);
-    } catch (error) {
-      console.error('Error al cargar los datos:', error);
-    }
-  };
-
-  useEffect(() => {
-    loadStats();
-  }, []);
-
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -68,12 +51,12 @@ const Sidebar = () => {
   return (
     <div className="w-64 bg-slate-900 shadow-lg">
       <div className="flex justify-center mt-6">
-        {image && (
-          <img src={image} alt="Logo del aliado" className="h-20 object-contain" />
+        {user?.imagen_aliado && (
+          <img src={user.imagen_aliado} alt="Logo del aliado" className="h-20 object-contain" />
         )}
       </div>
       <div className="flex flex-col items-center p-6">
-        <h1 className="text-2xl font-bold text-white">{businessName}</h1>
+        <h1 className="text-2xl font-bold text-white">{user?.empresa || 'Empresa'}</h1>
         {user && (
           <div className="mt-2 text-sm text-gray-600">
             <p className="text-red">{user.nombre}</p>

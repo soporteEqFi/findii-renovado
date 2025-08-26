@@ -108,6 +108,30 @@ Content-Type: application/json
 }
 ```
 
+### **Formato 7 (Con empresa separada)**
+```json
+{
+  "ok": true,
+  "access_token": "jwt_token_here",
+  "user": {
+    "id": 1,
+    "nombre": "Juan Pérez",
+    "email": "juan@empresa.com",
+    "rol": "admin",
+    "cedula": "12345678",
+    "empresa_id": 1,
+    "info_extra": {}
+  },
+  "empresa": {
+    "id": 1,
+    "nombre": "Mi Empresa S.A.",
+    "imagen": "https://ejemplo.com/logo.png",
+    "created_at": "2024-01-01T00:00:00Z"
+  },
+  "message": "Login exitoso"
+}
+```
+
 ## 🎯 **Campos Requeridos**
 
 ### **Campo de Autorización (uno de estos):**
@@ -138,8 +162,19 @@ Content-Type: application/json
 - **`apellido`**: Apellido del usuario
 - **`correo`**: Correo electrónico
 - **`rol`**: Rol del usuario
-- **`empresa`**: Nombre de la empresa
-- **`imagen_aliado`**: URL de la imagen
+- **`empresa_id`**: ID de la empresa asociada
+- **`info_extra`**: Información adicional en formato JSON
+
+### **Objeto Empresa (Separado):**
+Cuando la API envía información de la empresa, puede venir en un objeto separado llamado `empresa`:
+- **`empresa.id`**: ID de la empresa
+- **`empresa.nombre`**: Nombre de la empresa
+- **`empresa.imagen`**: URL de la imagen/logo de la empresa
+- **`empresa.created_at`**: Fecha de creación de la empresa
+
+### **Campos Legacy (Dentro del usuario):**
+- **`empresa`**: Nombre de la empresa (formato legacy)
+- **`imagen_aliado`**: URL de la imagen (formato legacy)
 
 ## 🔍 **Debugging**
 
