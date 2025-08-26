@@ -1,20 +1,223 @@
-import { User } from '../types/user';
-import { apiGet, apiPost, apiPut, apiDelete } from './baseService';
-import { API_CONFIG } from '../config/constants';
+import { User, UserInfoExtra } from '../types/user';
+import { buildApiUrl } from '../config/constants';
 
-export const fetchUsers = async (): Promise<User[]> => {
-  // Obtener la cédula del asesor
-  const cedula = localStorage.getItem('cedula') || '';
+export const userService = {
+  // Listar todos los usuarios de una empresa
+  async getUsers(empresaId: number = 1): Promise<User[]> {
+    try {
+      const response = await fetch(
+        buildApiUrl(`/usuarios/?empresa_id=${empresaId}`),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
+      );
 
-  if (!cedula) {
-    throw new Error('No se encontró la información del asesor');
+      if (!response.ok) {
+        throw new Error(`Error al obtener usuarios: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const users = result.data || result || [];
+
+      // Procesar info_extra para asegurar que sea un objeto
+      return users.map((user: User) => ({
+        ...user,
+        info_extra: this.processInfoExtra(user.info_extra)
+      }));
+    } catch (error) {
+      console.error('Error obteniendo usuarios:', error);
+      throw error;
+    }
+  },
+
+  // Obtener un usuario específico por ID
+  async getUserById(userId: number, empresaId: number = 1): Promise<User> {
+    try {
+      const response = await fetch(
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error al obtener usuario: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const user = result.data || result;
+
+      return {
+        ...user,
+        info_extra: this.processInfoExtra(user.info_extra)
+      };
+    } catch (error) {
+      console.error('Error obteniendo usuario:', error);
+      throw error;
+    }
+  },
+
+  // Crear un nuevo usuario
+  async createUser(userData: {
+    nombre: string;
+    cedula: string;
+    correo: string;
+    contraseña: string;
+    rol: string;
+    info_extra?: UserInfoExtra;
+  }, empresaId: number = 1): Promise<User> {
+    try {
+      // Limpiar info_extra si está vacío
+      const cleanUserData = {
+        ...userData,
+        info_extra: this.cleanInfoExtra(userData.info_extra)
+      };
+
+      const response = await fetch(
+        buildApiUrl(`/usuarios/?empresa_id=${empresaId}`),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify(cleanUserData)
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(errorData.error || `Error al crear usuario: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const user = result.data || result;
+
+      return {
+        ...user,
+        info_extra: this.processInfoExtra(user.info_extra)
+      };
+    } catch (error) {
+      console.error('Error creando usuario:', error);
+      throw error;
+    }
+  },
+
+  // Actualizar usuario
+  async updateUser(
+    userId: number,
+    updateData: {
+      nombre?: string;
+      cedula?: string;
+      correo?: string;
+      contraseña?: string;
+      rol?: string;
+      info_extra?: UserInfoExtra;
+    },
+    empresaId: number = 1
+  ): Promise<User> {
+    try {
+      // Limpiar info_extra si está presente
+      const cleanUpdateData = {
+        ...updateData,
+        info_extra: updateData.info_extra ? this.cleanInfoExtra(updateData.info_extra) : undefined
+      };
+
+      const response = await fetch(
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          },
+          body: JSON.stringify(cleanUpdateData)
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(errorData.error || `Error al actualizar usuario: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const user = result.data || result;
+
+      return {
+        ...user,
+        info_extra: this.processInfoExtra(user.info_extra)
+      };
+    } catch (error) {
+      console.error('Error actualizando usuario:', error);
+      throw error;
+    }
+  },
+
+  // Eliminar usuario
+  async deleteUser(userId: number, empresaId: number = 1): Promise<void> {
+    try {
+      const response = await fetch(
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Error desconocido' }));
+        throw new Error(errorData.error || `Error al eliminar usuario: ${response.statusText}`);
+      }
+    } catch (error) {
+      console.error('Error eliminando usuario:', error);
+      throw error;
+    }
+  },
+
+  // Helper para procesar info_extra
+  processInfoExtra(infoExtra: any): UserInfoExtra | undefined {
+    if (!infoExtra) return undefined;
+
+    try {
+      if (typeof infoExtra === 'string') {
+        return JSON.parse(infoExtra);
+      }
+      return infoExtra;
+    } catch {
+      return undefined;
+    }
+  },
+
+  // Helper para limpiar info_extra (remover campos vacíos)
+  cleanInfoExtra(infoExtra: UserInfoExtra | undefined): UserInfoExtra | undefined {
+    if (!infoExtra) return undefined;
+
+    const cleaned: UserInfoExtra = {};
+    Object.keys(infoExtra).forEach(key => {
+      const value = infoExtra[key];
+      if (value !== undefined && value !== null && value !== '') {
+        cleaned[key] = value;
+      }
+    });
+
+    return Object.keys(cleaned).length > 0 ? cleaned : undefined;
   }
+};
 
-  // Usar POST para enviar la cédula en el body
-  const data = await apiPost<any>(API_CONFIG.ENDPOINTS.GET_ALL_USERS, {
-    cedula: cedula
-  });
-  return data.users || [];
+// Mantener compatibilidad con el código existente
+export const fetchUsers = async (): Promise<User[]> => {
+  return await userService.getUsers();
 };
 
 export const createUser = async (userData: {
@@ -25,59 +228,28 @@ export const createUser = async (userData: {
   cedula: string;
   empresa: string;
 }): Promise<User> => {
-  console.log('Creating user with data:', userData);
-
-  // Obtener la cédula del asesor
-  const asesorCedula = localStorage.getItem('cedula') || '';
-
-  if (!asesorCedula) {
-    throw new Error('No se encontró la información del asesor');
-  }
-
-  // Incluir la cédula del asesor en los datos
-  const dataWithCedula = {
-    ...userData,
-    asesor_cedula: asesorCedula
-  };
-
-  return await apiPost<User>(API_CONFIG.ENDPOINTS.CREATE_USER, dataWithCedula);
+  return await userService.createUser({
+    nombre: userData.nombre,
+    cedula: userData.cedula,
+    correo: userData.email,
+    contraseña: userData.password,
+    rol: userData.rol
+  });
 };
 
 export const updateUser = async (user: User): Promise<User> => {
-  console.log('Updating user:', user);
+  const updateData: any = {};
 
-  // Obtener la cédula del asesor
-  const asesorCedula = localStorage.getItem('cedula') || '';
+  if (user.nombre) updateData.nombre = user.nombre;
+  if (user.cedula) updateData.cedula = user.cedula;
+  if (user.correo) updateData.correo = user.correo;
+  if (user.contraseña) updateData.contraseña = user.contraseña;
+  if (user.rol) updateData.rol = user.rol;
+  if (user.info_extra) updateData.info_extra = user.info_extra;
 
-  if (!asesorCedula) {
-    throw new Error('No se encontró la información del asesor');
-  }
-
-  const updateData = {
-    email: user.email,
-    password: user.password || '',
-    nombre: user.nombre,
-    rol: user.rol,
-    cedula: user.cedula,
-    empresa: user.empresa,
-    id: user.id,
-    asesor_cedula: asesorCedula
-  };
-
-  console.log('Sending update data:', updateData);
-  return await apiPut<User>(API_CONFIG.ENDPOINTS.UPDATE_USER, updateData);
+  return await userService.updateUser(user.id, updateData);
 };
 
 export const deleteUser = async (userId: number): Promise<void> => {
-  // Obtener la cédula del asesor
-  const asesorCedula = localStorage.getItem('cedula') || '';
-
-  if (!asesorCedula) {
-    throw new Error('No se encontró la información del asesor');
-  }
-
-  // Usar POST para enviar la cédula en el body
-  await apiPost(`${API_CONFIG.ENDPOINTS.DELETE_USER}/${userId}`, {
-    cedula: asesorCedula
-  });
+  return await userService.deleteUser(userId);
 };

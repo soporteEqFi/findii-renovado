@@ -3,7 +3,7 @@
 const IS_PRODUCTION = true; // Cambia a true para producción
 
 export const API_CONFIG = {
-  BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:8000',
+  BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:5000',
   ENDPOINTS: {
     LOGIN: '/auth/login',
     VALIDATE_TOKEN: '/validate-token',
@@ -18,11 +18,9 @@ export const API_CONFIG = {
     // Dashboard tabla nuevo origen de datos
     DASHBOARD_TABLA: '/dashboard/tabla',
 
-    // Users
-    GET_ALL_USERS: '/get-all-user/',
-    CREATE_USER: '/create-user/',
-    UPDATE_USER: '/update-user/',
-    DELETE_USER: '/delete-user',
+    // Users - Nuevos endpoints con sistema de empresas
+    USUARIOS: '/usuarios',                    // GET /usuarios/?empresa_id=1, POST /usuarios/?empresa_id=1
+    USUARIO_BY_ID: '/usuarios',               // GET /usuarios/{id}?empresa_id=1, PUT /usuarios/{id}?empresa_id=1, DELETE /usuarios/{id}?empresa_id=1
 
     // Credit Types
     GET_CREDIT_TYPES: '/get-credit-types',
@@ -66,7 +64,8 @@ export const USER_ROLES = {
   ADMIN: 'admin',
   MANAGER: 'manager',
   USER: 'user',
-  BANCO: 'banco'
+  BANCO: 'banco',
+  ASESOR: 'asesor'
 } as const;
 
 // Estados de clientes

@@ -6,7 +6,7 @@ import { useUsers } from '../hooks/useUsers';
 import { UserTable } from '../components/users/UserTable';
 import { UserDetails } from '../components/users/UserDetails';
 import { NewUserForm } from '../components/users/NewUserForm';
-import { User } from '../types/user';
+import { User, CreateUserData, UpdateUserData } from '../types/user';
 
 const Users = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -27,11 +27,14 @@ const Users = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
 
+  // Obtener empresa_id del usuario autenticado o usar valor por defecto
+  const empresaId = 1; // Valor por defecto para empresa_id
+
   useEffect(() => {
     if (isAuthenticated) {
-      loadUsers();
+      loadUsers(empresaId);
     }
-  }, [isAuthenticated, loadUsers]);
+  }, [isAuthenticated, loadUsers, empresaId]);
 
   // Definir los permisos para cada usuario
   const canEdit = (): boolean => user?.rol === 'admin';
@@ -54,21 +57,38 @@ const Users = () => {
   const handleSave = async () => {
     if (!editedUser) return;
     try {
-      const updatedUser = await updateUser(editedUser);
+      const updateData: UpdateUserData = {};
+
+      // Solo incluir campos que han cambiado
+      if (editedUser.nombre !== selectedUser?.nombre) updateData.nombre = editedUser.nombre;
+      if (editedUser.cedula !== selectedUser?.cedula) updateData.cedula = editedUser.cedula;
+      if (editedUser.correo !== selectedUser?.correo) updateData.correo = editedUser.correo;
+      if (editedUser.rol !== selectedUser?.rol) updateData.rol = editedUser.rol;
+      if (editedUser.info_extra !== selectedUser?.info_extra) updateData.info_extra = editedUser.info_extra;
+
+      const updatedUser = await updateUser(editedUser.id, updateData, empresaId);
       setSelectedUser(updatedUser);
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating user:', error);
+      console.error('Error actualizando usuario:', error);
     }
   };
 
   const handleDelete = async () => {
     if (!selectedUser || !canDelete()) return;
+
+    // Confirmación antes de eliminar
+    const confirmacion = window.confirm(
+      `¿Estás seguro de que deseas eliminar al usuario "${selectedUser.nombre}"?\n\nEsta acción no se puede deshacer.`
+    );
+
+    if (!confirmacion) return;
+
     try {
-      await deleteUser(selectedUser.id);
+      await deleteUser(selectedUser.id, empresaId);
       setIsModalOpen(false);
     } catch (error) {
-      console.error('Error deleting user:', error);
+      console.error('Error eliminando usuario:', error);
     }
   };
 
@@ -77,19 +97,12 @@ const Users = () => {
     setEditedUser({ ...editedUser, [field]: value });
   };
 
-  const handleCreateUser = async (userData: {
-    email: string;
-    password: string;
-    nombre: string;
-    rol: string;
-    cedula: string;
-    empresa: string;
-  }) => {
+  const handleCreateUser = async (userData: CreateUserData) => {
     try {
-      await createUser(userData);
+      await createUser(userData, empresaId);
       setIsNewUserModalOpen(false);
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('Error creando usuario:', error);
     }
   };
 
@@ -106,8 +119,8 @@ const Users = () => {
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Authentication Required</h2>
-        <p className="text-gray-600">Please log in to view user information.</p>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Autenticación Requerida</h2>
+        <p className="text-gray-600">Por favor inicia sesión para ver la información de usuarios.</p>
       </div>
     );
   }
@@ -121,7 +134,7 @@ const Users = () => {
           <div className="flex items-center space-x-4">
             {user && (
               <span className="text-sm text-gray-600">
-                Logged in as: <span className="font-medium">{user.nombre}</span>
+                Conectado como: <span className="font-medium">{user.nombre}</span>
                 {user.rol && (
                   <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
                     {user.rol}
@@ -197,4 +210,4 @@ const Users = () => {
   );
 };
 
-export default Users; 
+export default Users;

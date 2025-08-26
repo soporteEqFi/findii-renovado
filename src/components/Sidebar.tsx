@@ -48,7 +48,7 @@ const Sidebar = () => {
 
       const data = await response.json();
        // Asignamos la imagen del aliado
-      setImage(data["imagen_aliado"]);
+      setImage(data["imagen"]);
       // Asignamos el nombre de la empresa
       setBusinessName(data["empresa"]);
     } catch (error) {

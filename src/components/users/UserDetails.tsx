@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from '../../types/user';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MapPin, Building, CreditCard } from 'lucide-react';
 
 interface UserDetailsProps {
   user: User;
@@ -29,7 +29,37 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   onDelete,
   onInputChange,
 }) => {
-  if (!user) return <div>No user selected</div>;
+  if (!user) return <div>No se seleccionó ningún usuario</div>;
+
+  // Función para manejar cambios en info_extra
+  const handleInfoExtraChange = (field: string, value: string) => {
+    if (!editedUser) return;
+
+    const currentInfoExtra = editedUser.info_extra || {};
+    const newInfoExtra = {
+      ...currentInfoExtra,
+      [field]: value
+    };
+
+    // Si el campo está vacío, eliminarlo del objeto
+    if (!value.trim()) {
+      delete newInfoExtra[field];
+    }
+
+    onInputChange('info_extra', JSON.stringify(newInfoExtra));
+  };
+
+  // Función para obtener el valor de info_extra de forma segura
+  const getInfoExtraValue = (field: string, userData: User) => {
+    try {
+      const infoExtra = typeof userData.info_extra === 'string'
+        ? JSON.parse(userData.info_extra)
+        : userData.info_extra;
+      return infoExtra?.[field] || '';
+    } catch {
+      return '';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -37,7 +67,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       <div className="flex justify-center">
         <div className="relative">
           <img
-            src={user.imagen_aliado || 'https://via.placeholder.com/150'}
+            src="https://via.placeholder.com/150"
             alt={user.nombre}
             className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
           />
@@ -58,26 +88,26 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           {isEditing ? (
             <input
               type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md border-2 border-black-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
               value={editedUser.nombre}
               onChange={(e) => onInputChange('nombre', e.target.value)}
             />
           ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.nombre}</p>
+            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.nombre}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Email</label>
+          <label className="block text-sm font-medium text-gray-700">Correo</label>
           {isEditing ? (
             <input
               type="email"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={editedUser.email}
-              onChange={(e) => onInputChange('email', e.target.value)}
+              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+              value={editedUser.correo}
+              onChange={(e) => onInputChange('correo', e.target.value)}
             />
           ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.email}</p>
+            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.correo}</p>
           )}
         </div>
 
@@ -86,26 +116,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           {isEditing ? (
             <input
               type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
               value={editedUser.cedula}
               onChange={(e) => onInputChange('cedula', e.target.value)}
             />
           ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.cedula}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Empresa</label>
-          {isEditing ? (
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={editedUser.empresa}
-              onChange={(e) => onInputChange('empresa', e.target.value)}
-            />
-          ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.empresa}</p>
+            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.cedula}</p>
           )}
         </div>
 
@@ -113,46 +129,171 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           <label className="block text-sm font-medium text-gray-700">Rol</label>
           {isEditing ? (
             <select
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
               value={editedUser.rol}
               onChange={(e) => onInputChange('rol', e.target.value)}
             >
               <option value="admin">Admin</option>
-              <option value="rh">RH</option>
               <option value="banco">Banco</option>
+              <option value="asesor">Asesor</option>
             </select>
           ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.rol}</p>
+            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.rol}</p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Imagen (URL)</label>
-          {isEditing ? (
-            <input
-              type="text"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={editedUser.imagen_aliado || ''}
-              onChange={(e) => onInputChange('imagen_aliado', e.target.value)}
-            />
-          ) : (
-            <p className="mt-1 text-sm text-gray-900">{user.imagen_aliado || 'No disponible'}</p>
-          )}
+          <label className="block text-sm font-medium text-gray-700">ID</label>
+          <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.id}</p>
         </div>
 
-        {isEditing && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-            <input
-              type="password"
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              value={editedUser.password}
-              onChange={(e) => onInputChange('password', e.target.value)}
-              placeholder="Dejar en blanco para mantener"
-            />
-          </div>
-        )}
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
+          <p className="mt-1 text-sm text-gray-600 p-2 bg-gray-50 rounded border">
+            {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}
+          </p>
+        </div>
       </div>
+
+      {/* Información adicional */}
+      {(user.info_extra || editedUser.info_extra) && (
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Información Adicional</h3>
+
+          {isEditing ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Ciudad</label>
+                <div className="mt-1 relative">
+                  <MapPin className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    value={getInfoExtraValue('ciudad', editedUser)}
+                    onChange={(e) => handleInfoExtraChange('ciudad', e.target.value)}
+                    placeholder="Ej: Barranquilla"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Banco</label>
+                <div className="mt-1 relative">
+                  <Building className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    value={getInfoExtraValue('banco_nombre', editedUser)}
+                    onChange={(e) => handleInfoExtraChange('banco_nombre', e.target.value)}
+                    placeholder="Ej: Bancolombia"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Línea de Crédito</label>
+                <div className="mt-1 relative">
+                  <CreditCard className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <select
+                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    value={getInfoExtraValue('linea_credito', editedUser)}
+                    onChange={(e) => handleInfoExtraChange('linea_credito', e.target.value)}
+                  >
+                    <option value="">Seleccionar...</option>
+                    <option value="hipotecario">Hipotecario</option>
+                    <option value="consumo">Consumo</option>
+                    <option value="comercial">Comercial</option>
+                    <option value="microcredito">Microcrédito</option>
+                    <option value="libranza">Libranza</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {getInfoExtraValue('ciudad', user) && (
+                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                  <div>
+                    <p className="text-xs text-gray-500">Ciudad</p>
+                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('ciudad', user)}</p>
+                  </div>
+                </div>
+              )}
+
+              {getInfoExtraValue('banco_nombre', user) && (
+                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                  <Building className="w-4 h-4 mr-2 text-gray-500" />
+                  <div>
+                    <p className="text-xs text-gray-500">Banco</p>
+                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('banco_nombre', user)}</p>
+                  </div>
+                </div>
+              )}
+
+              {getInfoExtraValue('linea_credito', user) && (
+                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                  <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
+                  <div>
+                    <p className="text-xs text-gray-500">Línea de Crédito</p>
+                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('linea_credito', user)}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Mostrar otros campos de info_extra si existen */}
+          {!isEditing && user.info_extra && (
+            (() => {
+              try {
+                const infoExtra = typeof user.info_extra === 'string'
+                  ? JSON.parse(user.info_extra)
+                  : user.info_extra;
+
+                const otherFields = Object.keys(infoExtra).filter(key =>
+                  !['ciudad', 'banco_nombre', 'linea_credito'].includes(key)
+                );
+
+                if (otherFields.length > 0) {
+                  return (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">Otros Campos</h4>
+                      <div className="p-3 bg-gray-50 rounded-md">
+                        <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                          {JSON.stringify(
+                            Object.fromEntries(
+                              otherFields.map(key => [key, infoExtra[key]])
+                            ),
+                            null,
+                            2
+                          )}
+                        </pre>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              } catch {
+                return null;
+              }
+            })()
+          )}
+        </div>
+      )}
+
+      {isEditing && (
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700">Contraseña</label>
+                      <input
+              type="password"
+              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+              value={editedUser.contraseña || ''}
+              onChange={(e) => onInputChange('contraseña', e.target.value)}
+              placeholder="Dejar en blanco para mantener la actual"
+            />
+        </div>
+      )}
 
       {/* Actions */}
       <div className="flex justify-end space-x-3 pt-4 border-t">
@@ -199,4 +340,4 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       </div>
     </div>
   );
-}; 
+};
