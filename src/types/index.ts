@@ -3,6 +3,7 @@ export * from './user';
 export * from './customer';
 export * from './esquemas';
 export * from './fieldDefinition';
+export * from './notification';
 
 // Tipo para documentos
 export interface Document {

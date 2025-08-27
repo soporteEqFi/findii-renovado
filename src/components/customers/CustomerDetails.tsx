@@ -6,6 +6,7 @@ import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
 import { documentService } from '../../services/documentService';
 import { Document } from '../../types';
+import { NotificationHistory } from '../NotificationHistory';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -1111,7 +1112,17 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           </>
         )}
       </div>
-    </div>
+
+      {/* Historial de Notificaciones */}
+      {customer.id_solicitud && (
+        <div className="mt-8">
+          <NotificationHistory
+            solicitudId={typeof customer.id_solicitud === 'string' ? parseInt(customer.id_solicitud) : customer.id_solicitud}
+            empresaId={parseInt(localStorage.getItem('empresa_id') || '1')}
+          />
+        </div>
+      )}
+     </div>
 
   );
 };

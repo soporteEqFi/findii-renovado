@@ -45,6 +45,11 @@ export const API_CONFIG = {
 
     // Endpoint para traer todos los registros de un solicitante
     TRAER_TODOS_REGISTROS: '/solicitantes',
+
+    // Endpoints para notificaciones
+    NOTIFICACIONES: '/notificaciones',
+    NOTIFICACIONES_PENDIENTES: '/notificaciones/pendientes',
+    MARCAR_LEIDA: '/notificaciones/{id}/marcar-leida',
   }
 };
 

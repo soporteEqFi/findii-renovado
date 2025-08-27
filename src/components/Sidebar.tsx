@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Users, Settings, LogOut, UserCog, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { buildApiUrl, API_CONFIG } from '../config/constants';
+import { NotificationBadge } from './NotificationBadge';
 
 const Sidebar = () => {
   const { logout, user } = useAuth();
@@ -60,6 +61,9 @@ const Sidebar = () => {
           <div className="mt-2 text-sm text-gray-600">
             <p className="text-red">{user.nombre}</p>
             <p className="text-xs bg-white text-slate-900 inline-block px-4 py-1 rounded-full mt-1">{user.rol}</p>
+            <div className="mt-2">
+              <NotificationBadge empresaId={parseInt(localStorage.getItem('empresa_id') || '1')} />
+            </div>
           </div>
         )}
       </div>
