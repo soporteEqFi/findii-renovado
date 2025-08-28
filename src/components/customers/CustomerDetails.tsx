@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Customer } from '../../types/customer';
-import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon, ExternalLink } from 'lucide-react';
+import { Mail, Phone, Save, Loader2, Trash2, X, Edit2, File, Image, Download, Upload, X as XIcon, ExternalLink, AlertCircle } from 'lucide-react';
 import { usePermissions } from '../../utils/permissions';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
@@ -41,13 +41,15 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const solicitanteId = customer.id_solicitante || customer.solicitante_id || customer.id;
   const solicitanteIdNumber = typeof solicitanteId === 'number' ? solicitanteId : parseInt(solicitanteId as string, 10);
 
-  const { datos: datosCompletos, datosMapeados, loading: loadingCompletos, error: errorCompletos } = useSolicitanteCompleto(
+  const { datos: datosCompletos, datosMapeados, loading: loadingCompletos, error: errorCompletos, refetch } = useSolicitanteCompleto(
     isNaN(solicitanteIdNumber) || solicitanteIdNumber <= 0 ? null : solicitanteIdNumber
   );
   const [isEditing, setIsEditing] = useState(initialIsEditing);
   const [editedCustomer, setEditedCustomer] = useState<Customer>(initialEditedCustomer);
   const [loading, setLoading] = useState(isLoading);
   const [apiError, setApiError] = useState<string | null>(error);
+  const [editedData, setEditedData] = useState<any>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   // const [productInfo, setProductInfo] = useState<Record<string, string>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filesToDelete, setFilesToDelete] = useState<number[]>([]);
@@ -112,6 +114,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
          id_solicitante: solicitanteIdNumber,
       };
       setEditedCustomer(mappedCustomer);
+      // Inicializar datos editables con la estructura completa
+      if (datosCompletos) {
+        setEditedData(JSON.parse(JSON.stringify(datosCompletos)));
+      }
     } else {
       console.log('📊 Campos específicos del customer:');
       console.log('  - nombre_completo:', customer.nombre_completo);
@@ -170,12 +176,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
   const handleEdit = () => {
     setEditedCustomer({ ...customer }); // Reset to current customer data when starting edit
+    setEditedData(datosCompletos ? JSON.parse(JSON.stringify(datosCompletos)) : null);
+    setValidationErrors({});
     setIsEditing(true);
   };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
     setEditedCustomer(customer);
+    setEditedData(datosCompletos ? JSON.parse(JSON.stringify(datosCompletos)) : null);
+    setValidationErrors({});
   };
 
   const handleDelete = async () => {
@@ -342,76 +352,241 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
     }
   };
 
+  // Función de validación
+  const validateData = (data: any): Record<string, string> => {
+    const errors: Record<string, string> = {};
+
+    // Validar solicitante
+    if (data?.solicitante) {
+      if (!data.solicitante.nombres?.trim()) {
+        errors['solicitante.nombres'] = 'El nombre es obligatorio';
+      }
+      if (!data.solicitante.primer_apellido?.trim()) {
+        errors['solicitante.primer_apellido'] = 'El primer apellido es obligatorio';
+      }
+      if (!data.solicitante.numero_documento?.trim()) {
+        errors['solicitante.numero_documento'] = 'El número de documento es obligatorio';
+      }
+      if (data.solicitante.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.solicitante.correo)) {
+        errors['solicitante.correo'] = 'El formato del correo es inválido';
+      }
+    }
+
+    return errors;
+  };
+
+  // Función para actualizar datos anidados
+  const updateNestedData = (path: string, value: any) => {
+    if (!editedData) return;
+
+    const pathArray = path.split('.');
+    const newData = JSON.parse(JSON.stringify(editedData));
+    
+    // Manejar campos que van en info_extra pero se muestran en la sección básica
+    if (pathArray[0] === 'solicitante' && pathArray.length === 2) {
+      const fieldName = pathArray[1];
+      const infoExtraFields = ['telefono', 'celular', 'estado_civil', 'personas_a_cargo', 'nacionalidad'];
+      
+      if (infoExtraFields.includes(fieldName)) {
+        // Estos campos van en info_extra
+        if (!newData.solicitante.info_extra) {
+          newData.solicitante.info_extra = {};
+        }
+        newData.solicitante.info_extra[fieldName] = value;
+      } else {
+        // Campos normales del solicitante
+        newData.solicitante[fieldName] = value;
+      }
+    } else {
+      // Lógica normal para otros paths
+      let current = newData;
+      for (let i = 0; i < pathArray.length - 1; i++) {
+        if (!current[pathArray[i]]) {
+          current[pathArray[i]] = {};
+        }
+        current = current[pathArray[i]];
+      }
+      current[pathArray[pathArray.length - 1]] = value;
+    }
+    
+    setEditedData(newData);
+    
+    // Limpiar error de validación si existe
+    if (validationErrors[path]) {
+      const newErrors = { ...validationErrors };
+      delete newErrors[path];
+      setValidationErrors(newErrors);
+    }
+  };
+
   const handleSave = async () => {
     if (!canEditCustomer()) return;
 
+    // Validar datos antes de enviar
+    const errors = validateData(editedData);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setApiError('Por favor corrige los errores antes de continuar');
+      return;
+    }
+
     setLoading(true);
     setApiError(null);
+    setValidationErrors({});
 
     try {
-      console.log('Enviando datos actualizados:', editedCustomer);
+      console.log('Enviando datos actualizados:', editedData);
 
       // Verificar que tengamos un ID válido
-      if (!editedCustomer.id_solicitante) {
+      if (!solicitanteIdNumber) {
         throw new Error('ID del solicitante no encontrado');
       }
 
-      // Obtener la cédula del asesor al inicio de la función
-      const cedula = localStorage.getItem('cedula') || '';
+      // Obtener empresa_id y user_id
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const userId = localStorage.getItem('user_id') || localStorage.getItem('cedula') || '123';
 
-      if (!cedula) {
-        throw new Error('No se encontró la información del asesor');
+      // Preparar datos en el formato esperado por el backend (siguiendo estructura de crear-registro-completo)
+      const requestData: any = {};
+
+      // Solicitante - campos fijos + info_extra como JSON
+      if (editedData?.solicitante) {
+        requestData.solicitante = {
+          nombres: editedData.solicitante.nombres,
+          primer_apellido: editedData.solicitante.primer_apellido,
+          segundo_apellido: editedData.solicitante.segundo_apellido,
+          correo: editedData.solicitante.correo,
+          numero_documento: editedData.solicitante.numero_documento,
+          tipo_identificacion: editedData.solicitante.tipo_identificacion,
+          fecha_nacimiento: editedData.solicitante.fecha_nacimiento,
+          genero: editedData.solicitante.genero
+        };
+
+        // Campos dinámicos van en info_extra
+        if (editedData.solicitante.info_extra) {
+          requestData.solicitante.info_extra = editedData.solicitante.info_extra;
+        }
       }
 
-      // Estructurar los datos simplificados
-      const mappedCustomer = {
-        solicitante_id: editedCustomer.id_solicitante,
-        SOLICITANTES: {
-          nombre_completo: editedCustomer.nombre_completo,
-          tipo_documento: editedCustomer.tipo_documento || '',
-          numero_documento: editedCustomer.numero_documento || '',
-          fecha_nacimiento: editedCustomer.fecha_nacimiento || '',
-          numero_celular: editedCustomer.numero_celular || '',
-          correo_electronico: editedCustomer.correo_electronico
-        },
-        INFORMACION_FINANCIERA: {
-          ingresos: Number(editedCustomer.ingresos) || 0,
-          valor_inmueble: Number(editedCustomer.valor_inmueble) || 0,
-          cuota_inicial: Number(editedCustomer.cuota_inicial) || 0
-        },
-        PRODUCTO_SOLICITADO: {
-          tipo_de_credito: editedCustomer.tipo_credito,
-          plazo_meses: Number(editedCustomer.plazo_meses) || 0,
-          estado: editedCustomer.estado
-        },
-        SOLICITUDES: {
-          banco: editedCustomer.banco
-        }
-      };
+      // Ubicaciones - campos fijos + detalle_direccion como JSON
+      if (editedData?.ubicaciones && editedData.ubicaciones.length > 0) {
+        requestData.ubicaciones = editedData.ubicaciones.map((ubicacion: any) => {
+          const ubicacionData: any = {
+            ciudad_residencia: ubicacion.ciudad_residencia,
+            departamento_residencia: ubicacion.departamento_residencia
+          };
 
-      // Luego, enviar los datos del cliente
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_RECORD), {
-        method: 'PUT',
+          // Campos dinámicos van en detalle_direccion
+          if (ubicacion.detalle_direccion) {
+            ubicacionData.detalle_direccion = ubicacion.detalle_direccion;
+          }
+
+          return ubicacionData;
+        });
+      }
+
+      // Actividad económica - campos fijos + detalle_actividad como JSON
+      if (editedData?.actividad_economica) {
+        requestData.actividad_economica = {};
+
+        // Campos dinámicos van en detalle_actividad
+        if (editedData.actividad_economica.detalle_actividad) {
+          requestData.actividad_economica.detalle_actividad = editedData.actividad_economica.detalle_actividad;
+        }
+      }
+
+      // Información financiera - campos fijos + detalle_financiera como JSON
+      if (editedData?.informacion_financiera) {
+        requestData.informacion_financiera = {
+          total_ingresos_mensuales: editedData.informacion_financiera.total_ingresos_mensuales,
+          total_egresos_mensuales: editedData.informacion_financiera.total_egresos_mensuales,
+          total_activos: editedData.informacion_financiera.total_activos,
+          total_pasivos: editedData.informacion_financiera.total_pasivos
+        };
+
+        // Campos dinámicos van en detalle_financiera
+        if (editedData.informacion_financiera.detalle_financiera) {
+          requestData.informacion_financiera.detalle_financiera = editedData.informacion_financiera.detalle_financiera;
+        }
+      }
+
+      // Referencias - campos fijos + detalle_referencia como JSON
+      if (editedData?.referencias && editedData.referencias.length > 0) {
+        requestData.referencias = editedData.referencias.map((referencia: any) => {
+          const referenciaData: any = {
+            tipo_referencia: referencia.tipo_referencia
+          };
+
+          // Campos dinámicos van en detalle_referencia
+          if (referencia.detalle_referencia) {
+            referenciaData.detalle_referencia = referencia.detalle_referencia;
+          }
+
+          return referenciaData;
+        });
+      }
+
+      // Solicitudes - campos fijos + detalle_credito como JSON
+      if (editedData?.solicitudes && editedData.solicitudes.length > 0) {
+        requestData.solicitudes = editedData.solicitudes.map((solicitud: any) => {
+          const solicitudData: any = {
+            estado: solicitud.estado,
+            banco_nombre: solicitud.banco_nombre,
+            ciudad_solicitud: solicitud.ciudad_solicitud
+          };
+
+          // Campos dinámicos van en detalle_credito
+          if (solicitud.detalle_credito) {
+            solicitudData.detalle_credito = solicitud.detalle_credito;
+          }
+
+          return solicitudData;
+        });
+      }
+
+      console.log('Datos preparados para envío:', requestData);
+
+      // Construir URL del endpoint
+      const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());
+      const url = buildApiUrl(endpoint);
+
+      console.log('URL de la solicitud:', url);
+
+      // Enviar solicitud PATCH
+      const response = await fetch(url, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'X-Empresa-Id': empresaId,
+          'X-User-Id': userId,
         },
-        body: JSON.stringify({
-          ...mappedCustomer,
-          cedula: cedula
-        }),
+        body: JSON.stringify(requestData),
       });
 
+      console.log('Respuesta del servidor:', response.status, response.statusText);
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || errorData.error || 'Error al actualizar el registro');
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
       }
 
       const updatedCustomer = await response.json();
       console.log('Respuesta exitosa:', updatedCustomer);
 
-      onSave();
+      // Refrescar los datos del hook para obtener la información actualizada
+      await refetch();
 
+      // Mostrar mensaje de éxito
+      alert('Registro actualizado exitosamente');
+
+      // Salir del modo edición
       setIsEditing(false);
+      
+      // Limpiar datos editados
+      setEditedData(null);
+      
+      // Notificar al componente padre
+      onSave();
     } catch (error: any) {
       console.error('Error en la actualización:', error);
       setApiError(error.message);
@@ -700,97 +875,154 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
        {datosCompletos ? (
          <>
                        {/* Información Básica del Solicitante */}
-            <DynamicSection
+            <EditableDynamicSection
               title="Información Básica del Solicitante"
-              data={datosCompletos.solicitante}
+              data={isEditing ? {
+                ...editedData?.solicitante,
+                ...editedData?.solicitante?.info_extra
+              } : {
+                ...datosCompletos.solicitante,
+                ...datosCompletos.solicitante.info_extra
+              }}
+              basePath="solicitante"
               excludeKeys={['info_extra']}
+              isEditing={isEditing}
+              canEdit={canEditCustomer()}
+              onUpdate={updateNestedData}
+              validationErrors={validationErrors}
             />
 
-            {/* Información Adicional del Solicitante */}
-            {datosCompletos.solicitante.info_extra && (
-              <DynamicSection
-                title="Información Adicional del Solicitante"
-                data={datosCompletos.solicitante.info_extra}
-              />
-            )}
-
             {/* Información de Ubicación */}
-            {datosCompletos.ubicaciones.length > 0 && (
-              <DynamicSection
+            {(datosCompletos.ubicaciones.length > 0 || editedData?.ubicaciones?.length > 0) && (
+              <EditableDynamicSection
                 title="Información de Ubicación"
-                data={datosCompletos.ubicaciones[0]}
+                data={isEditing ? editedData?.ubicaciones?.[0] : datosCompletos.ubicaciones[0]}
+                basePath="ubicaciones.0"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Detalles de Dirección */}
-            {datosCompletos.ubicaciones[0]?.detalle_direccion && (
-              <DynamicSection
+            {(datosCompletos.ubicaciones[0]?.detalle_direccion || editedData?.ubicaciones?.[0]?.detalle_direccion) && (
+              <EditableDynamicSection
                 title="Detalles de Dirección"
-                data={datosCompletos.ubicaciones[0].detalle_direccion}
+                data={isEditing ? editedData?.ubicaciones?.[0]?.detalle_direccion : datosCompletos.ubicaciones[0].detalle_direccion}
+                basePath="ubicaciones.0.detalle_direccion"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Información de Actividad Económica */}
-            {datosCompletos.actividad_economica && (
-              <DynamicSection
+            {(datosCompletos.actividad_economica || editedData?.actividad_economica) && (
+              <EditableDynamicSection
                 title="Actividad Económica"
-                data={datosCompletos.actividad_economica}
+                data={isEditing ? editedData?.actividad_economica : datosCompletos.actividad_economica}
+                basePath="actividad_economica"
+                excludeKeys={['detalle_actividad']}
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Detalles de Actividad Económica */}
-            {datosCompletos.actividad_economica?.detalle_actividad && (
-              <DynamicSection
+            {(datosCompletos.actividad_economica?.detalle_actividad || editedData?.actividad_economica?.detalle_actividad) && (
+              <EditableDynamicSection
                 title="Detalles de Actividad Económica"
-                data={datosCompletos.actividad_economica.detalle_actividad}
+                data={isEditing ? editedData?.actividad_economica?.detalle_actividad : datosCompletos.actividad_economica.detalle_actividad}
+                basePath="actividad_economica.detalle_actividad"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Información Financiera */}
-            {datosCompletos.informacion_financiera && (
-              <DynamicSection
+            {(datosCompletos.informacion_financiera || editedData?.informacion_financiera) && (
+              <EditableDynamicSection
                 title="Información Financiera"
-                data={datosCompletos.informacion_financiera}
+                data={isEditing ? editedData?.informacion_financiera : datosCompletos.informacion_financiera}
+                basePath="informacion_financiera"
+                excludeKeys={['detalle_financiera']}
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Detalles Financieros */}
-            {datosCompletos.informacion_financiera?.detalle_financiera && (
-              <DynamicSection
+            {(datosCompletos.informacion_financiera?.detalle_financiera || editedData?.informacion_financiera?.detalle_financiera) && (
+              <EditableDynamicSection
                 title="Detalles Financieros"
-                data={datosCompletos.informacion_financiera.detalle_financiera}
+                data={isEditing ? editedData?.informacion_financiera?.detalle_financiera : datosCompletos.informacion_financiera.detalle_financiera}
+                basePath="informacion_financiera.detalle_financiera"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Información de Referencias */}
-            {datosCompletos.referencias.length > 0 && (
-              <DynamicSection
+            {(datosCompletos.referencias.length > 0 || editedData?.referencias?.length > 0) && (
+              <EditableDynamicSection
                 title="Información de Referencias"
-                data={datosCompletos.referencias[0]}
+                data={isEditing ? editedData?.referencias?.[0] : datosCompletos.referencias[0]}
+                basePath="referencias.0"
+                excludeKeys={['detalle_referencia']}
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Detalles de Referencias */}
-            {datosCompletos.referencias[0]?.detalle_referencia && (
-              <DynamicSection
+            {(datosCompletos.referencias[0]?.detalle_referencia || editedData?.referencias?.[0]?.detalle_referencia) && (
+              <EditableDynamicSection
                 title="Detalles de Referencias"
-                data={datosCompletos.referencias[0].detalle_referencia}
+                data={isEditing ? editedData?.referencias?.[0]?.detalle_referencia : datosCompletos.referencias[0].detalle_referencia}
+                basePath="referencias.0.detalle_referencia"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Información de Solicitudes */}
-            {datosCompletos.solicitudes.length > 0 && (
-              <DynamicSection
+            {(datosCompletos.solicitudes.length > 0 || editedData?.solicitudes?.length > 0) && (
+              <EditableDynamicSection
                 title="Información de Solicitudes"
-                data={datosCompletos.solicitudes[0]}
+                data={isEditing ? editedData?.solicitudes?.[0] : datosCompletos.solicitudes[0]}
+                basePath="solicitudes.0"
+                excludeKeys={['detalle_credito']}
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
 
             {/* Detalles de Crédito */}
-            {datosCompletos.solicitudes[0]?.detalle_credito && (
-              <DynamicSection
+            {(datosCompletos.solicitudes[0]?.detalle_credito || editedData?.solicitudes?.[0]?.detalle_credito) && (
+              <EditableDynamicSection
                 title="Detalles de Crédito"
-                data={datosCompletos.solicitudes[0].detalle_credito}
+                data={isEditing ? editedData?.solicitudes?.[0]?.detalle_credito : datosCompletos.solicitudes[0].detalle_credito}
+                basePath="solicitudes.0.detalle_credito"
+                isEditing={isEditing}
+                canEdit={canEditCustomer()}
+                onUpdate={updateNestedData}
+                validationErrors={validationErrors}
               />
             )}
          </>
@@ -1142,7 +1374,192 @@ const Section: React.FC<{
   </div>
 );
 
-// Componente para secciones dinámicas que renderiza todos los campos de un objeto
+// Componente para secciones dinámicas editables
+const EditableDynamicSection: React.FC<{
+  title: string;
+  data: Record<string, any>;
+  basePath: string;
+  excludeKeys?: string[];
+  isEditing: boolean;
+  canEdit: boolean;
+  onUpdate: (path: string, value: any) => void;
+  validationErrors: Record<string, string>;
+}> = ({ title, data, basePath, excludeKeys = [], isEditing, canEdit, onUpdate, validationErrors }) => {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  const filteredKeys = Object.keys(data).filter(key => {
+    const value = data[key];
+
+    // Excluir claves específicas
+    if (excludeKeys.includes(key)) {
+      return false;
+    }
+
+    // Excluir campos de timestamps y IDs automáticamente
+    if (key === 'created_at' || key === 'updated_at' || key === 'id' ||
+        key.endsWith('_id') || key.includes('_id_') ||
+        key === 'created_by_user_id' || key === 'assigned_to_user_id') {
+      return false;
+    }
+
+    // Excluir objetos JSON complejos
+    if (typeof value === 'object' && !Array.isArray(value)) {
+      return false;
+    }
+
+    // Excluir arrays muy largos
+    if (Array.isArray(value) && value.length > 10) {
+      return false;
+    }
+
+    // Mostrar todos los campos relevantes tanto en edición como en visualización
+    return true;
+  });
+
+  if (filteredKeys.length === 0) {
+    return null;
+  }
+
+  const formatFieldName = (key: string) => {
+    return key
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  const getFieldType = (key: string, value: any) => {
+    if (key.includes('fecha') || key.includes('date')) return 'date';
+    if (key.includes('correo') || key.includes('email')) return 'email';
+    if (key.includes('telefono') || key.includes('celular') || key.includes('phone')) return 'tel';
+    if (typeof value === 'number' || key.includes('ingreso') || key.includes('gasto') || key.includes('valor') || key.includes('monto')) return 'number';
+    if (typeof value === 'boolean') return 'checkbox';
+    return 'text';
+  };
+
+  const formatDisplayValue = (value: any, key: string) => {
+    if (value === null || value === undefined) {
+      return '-';
+    }
+    
+    // Para strings vacíos, mostrar el campo vacío pero editable
+    if (value === '') {
+      return isEditing ? '' : '-';
+    }
+
+    if (typeof value === 'boolean') {
+      return value ? 'Sí' : 'No';
+    }
+
+    if (typeof value === 'number') {
+      return value.toLocaleString();
+    }
+
+    if (typeof value === 'string') {
+      if (key.includes('correo') || key.includes('email')) {
+        return (
+          <div className="flex items-center">
+            <Mail className="w-4 h-4 mr-2 text-gray-500" />
+            {value}
+          </div>
+        );
+      }
+
+      if (key.includes('telefono') || key.includes('celular') || /^\d{10,}$/.test(value)) {
+        return (
+          <div className="flex items-center">
+            <Phone className="w-4 h-4 mr-2 text-gray-500" />
+            {value}
+          </div>
+        );
+      }
+
+      return value;
+    }
+
+    return String(value);
+  };
+
+  const renderField = (key: string, value: any) => {
+    const fieldPath = `${basePath}.${key}`;
+    const fieldType = getFieldType(key, value);
+    const hasError = validationErrors[fieldPath];
+    const displayValue = formatDisplayValue(value, key);
+
+    // Debugging: log the value being rendered
+    console.log(`🔍 Rendering field ${key}:`, { value, fieldPath, displayValue });
+
+    return (
+      <div key={key} className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 mt-2">
+          {formatFieldName(key)}
+          {hasError && (
+            <span className="ml-1 text-red-500 text-xs">*</span>
+          )}
+        </label>
+        
+        {isEditing && canEdit ? (
+          <div className="space-y-1">
+            {fieldType === 'checkbox' ? (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={Boolean(value)}
+                  onChange={(e) => onUpdate(fieldPath, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  {Boolean(value) ? 'Sí' : 'No'}
+                </span>
+              </div>
+            ) : fieldType === 'number' ? (
+              <input
+                type="number"
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value ? Number(e.target.value) : 0)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+                step="0.01"
+              />
+            ) : (
+              <input
+                type={fieldType}
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+              />
+            )}
+            {hasError && (
+              <div className="flex items-center text-red-600 text-xs mt-1">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                {validationErrors[fieldPath]}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 mt-2">
+            {displayValue}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+        {filteredKeys.map((key) => renderField(key, data[key]))}
+      </div>
+    </div>
+  );
+};
+
+// Componente para secciones dinámicas que renderiza todos los campos de un objeto (solo lectura)
 const DynamicSection: React.FC<{
   title: string;
   data: Record<string, any>;
@@ -1152,7 +1569,7 @@ const DynamicSection: React.FC<{
     return null;
   }
 
-      const filteredKeys = Object.keys(data).filter(key => {
+  const filteredKeys = Object.keys(data).filter(key => {
     const value = data[key];
 
     // Excluir claves específicas
@@ -1174,7 +1591,7 @@ const DynamicSection: React.FC<{
 
     // Excluir objetos JSON ya que los expandiremos en formatValue
     if (typeof value === 'object' && !Array.isArray(value)) {
-      return false; // No incluir objetos JSON aquí, se expandirán en formatValue
+      return false;
     }
 
     // Excluir arrays muy largos
@@ -1197,109 +1614,23 @@ const DynamicSection: React.FC<{
   };
 
   const formatValue = (value: any) => {
-    // Si es null o undefined, mostrar '-'
     if (value === null || value === undefined) {
       return '-';
     }
 
-    // Si es un objeto, expandir todos sus campos individualmente
-    if (typeof value === 'object' && !Array.isArray(value)) {
-      const keys = Object.keys(value);
-      if (keys.length === 0) {
-        return '[Objeto vacío]';
-      }
-
-      // Expandir cada campo del objeto
-      return keys.map(key => {
-        const fieldValue = value[key];
-        const fieldName = formatFieldName(key);
-
-        // Formatear el valor del campo
-        let formattedValue;
-        if (typeof fieldValue === 'boolean') {
-          formattedValue = fieldValue ? 'Sí' : 'No';
-        } else if (typeof fieldValue === 'number') {
-          formattedValue = fieldValue.toLocaleString();
-        } else if (typeof fieldValue === 'string') {
-          if (fieldValue.trim() === '') {
-            formattedValue = '-';
-          } else if (fieldValue.includes('@')) {
-            formattedValue = (
-              <div className="flex items-center">
-                <Mail className="w-4 h-4 mr-2 text-gray-500" />
-                {fieldValue}
-              </div>
-            );
-          } else if (/^\d{10,}$/.test(fieldValue)) {
-            formattedValue = (
-              <div className="flex items-center">
-                <Phone className="w-4 h-4 mr-2 text-gray-500" />
-                {fieldValue}
-              </div>
-            );
-          } else {
-            formattedValue = fieldValue;
-          }
-        } else if (typeof fieldValue === 'object' && fieldValue !== null) {
-          // Para objetos anidados, mostrar un resumen
-          const nestedKeys = Object.keys(fieldValue);
-          formattedValue = `[${nestedKeys.length} campos anidados]`;
-        } else {
-          formattedValue = String(fieldValue);
-        }
-
-        return (
-          <div key={key} className="mb-3 p-2 bg-gray-100 rounded">
-            <div className="text-sm font-medium text-gray-700 mb-1">{fieldName}</div>
-            <div className="text-sm text-gray-800">{formattedValue}</div>
-          </div>
-        );
-      });
-    }
-
-    // Si es un array, mostrar los valores principales
-    if (Array.isArray(value)) {
-      if (value.length === 0) {
-        return '[Array vacío]';
-      }
-
-      // Para arrays pequeños, mostrar los valores
-      if (value.length <= 3) {
-        const formattedValues = value.map(item => {
-          if (typeof item === 'object' && item !== null) {
-            // Si es un objeto, mostrar las claves principales
-            const keys = Object.keys(item);
-            if (keys.length <= 2) {
-              return keys.map(key => String(item[key])).join(', ');
-            }
-            return `${keys.length} campos`;
-          }
-          return String(item);
-        });
-        return formattedValues.join(', ');
-      }
-
-      return `${value.length} elementos`;
-    }
-
-    // Si es boolean
     if (typeof value === 'boolean') {
       return value ? 'Sí' : 'No';
     }
 
-    // Si es número
     if (typeof value === 'number') {
       return value.toLocaleString();
     }
 
-    // Si es string
     if (typeof value === 'string') {
-      // Si está vacío, mostrar '-'
       if (value.trim() === '') {
         return '-';
       }
 
-      // Si es email
       if (value.includes('@')) {
         return (
           <div className="flex items-center">
@@ -1309,7 +1640,6 @@ const DynamicSection: React.FC<{
         );
       }
 
-      // Si es teléfono (10+ dígitos)
       if (/^\d{10,}$/.test(value)) {
         return (
           <div className="flex items-center">
@@ -1322,45 +1652,29 @@ const DynamicSection: React.FC<{
       return value;
     }
 
-    // Para cualquier otro tipo, convertir a string
     return String(value);
   };
 
   return (
     <div className="md:col-span-2">
       <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-         {filteredKeys.map((key) => {
-           const value = data[key];
-           const formattedValue = formatValue(value);
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+        {filteredKeys.map((key) => {
+          const value = data[key];
+          const formattedValue = formatValue(value);
 
-           // Si formatValue devuelve un array (objetos expandidos), renderizar de manera especial
-           if (Array.isArray(formattedValue)) {
-             return (
-               <div key={key} className="col-span-3">
-                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                   {formatFieldName(key)}
-                 </label>
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                   {formattedValue}
-                 </div>
-               </div>
-             );
-           }
-
-           // Para valores normales
-           return (
-             <div key={key} className="space-y-2">
-               <label className="block text-sm font-medium text-gray-700 mt-2">
-                 {formatFieldName(key)}
-               </label>
-               <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 mt-2">
-                 {formattedValue}
-               </div>
-             </div>
-           );
-         })}
-       </div>
+          return (
+            <div key={key} className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 mt-2">
+                {formatFieldName(key)}
+              </label>
+              <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800 mt-2">
+                {formattedValue}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
