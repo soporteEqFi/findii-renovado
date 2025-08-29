@@ -7,9 +7,11 @@ import {
   getSortedRowModel,
   flexRender,
   ColumnFiltersState,
+  ColumnDef,
 } from '@tanstack/react-table';
 import { Customer } from '../../types/customer';
-import { columns } from './CustomerColumns';
+import { createDynamicColumns } from './DynamicCustomerColumns';
+import { fetchColumnConfig, getDefaultColumns } from '../../services/columnConfigService';
 import { Search, Calendar } from 'lucide-react';
 
 interface CustomerTableProps {
@@ -17,6 +19,7 @@ interface CustomerTableProps {
   onRowClick: (customer: Customer) => void;
   onStatusChange: (customer: Customer, newStatus: string) => void;
   totalRecords: number;
+  empresaId?: number;
 }
 
 // Función para convertir fecha dd/mm/yyyy a Date
@@ -46,7 +49,8 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
   onRowClick,
   onStatusChange,
-  totalRecords
+  totalRecords,
+  empresaId = 1
 }) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -56,6 +60,30 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   });
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [columns, setColumns] = useState<ColumnDef<Customer>[]>([]);
+  const [isLoadingColumns, setIsLoadingColumns] = useState(true);
+
+  // Cargar configuración de columnas al montar el componente
+  useEffect(() => {
+    const loadColumnConfig = async () => {
+      try {
+        setIsLoadingColumns(true);
+        const columnNames = await fetchColumnConfig(empresaId);
+        const dynamicColumns = createDynamicColumns(columnNames);
+        setColumns(dynamicColumns);
+      } catch (error) {
+        console.error('Error cargando columnas:', error);
+        // Usar columnas por defecto en caso de error
+        const defaultColumnNames = getDefaultColumns();
+        const dynamicColumns = createDynamicColumns(defaultColumnNames);
+        setColumns(dynamicColumns);
+      } finally {
+        setIsLoadingColumns(false);
+      }
+    };
+
+    loadColumnConfig();
+  }, [empresaId]);
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
@@ -130,6 +158,15 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     setPageSize(newSize);
     setPageIndex(0);
   };
+
+  // Mostrar loading mientras se cargan las columnas
+  if (isLoadingColumns) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-gray-500">Cargando configuración de columnas...</div>
+      </div>
+    );
+  }
 
   return (
     <div>

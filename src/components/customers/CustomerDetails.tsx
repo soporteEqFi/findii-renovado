@@ -379,6 +379,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const updateNestedData = (path: string, value: any) => {
     if (!editedData) return;
 
+    console.log('🔄 updateNestedData called:', { path, value });
+
     const pathArray = path.split('.');
     const newData = JSON.parse(JSON.stringify(editedData));
     
@@ -398,17 +400,49 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         newData.solicitante[fieldName] = value;
       }
     } else {
-      // Lógica normal para otros paths
+      // Lógica mejorada para otros paths, manejando arrays correctamente
       let current = newData;
       for (let i = 0; i < pathArray.length - 1; i++) {
-        if (!current[pathArray[i]]) {
-          current[pathArray[i]] = {};
+        const currentKey = pathArray[i];
+        const nextKey = pathArray[i + 1];
+        
+        // Si la clave actual no existe, crearla
+        if (!current[currentKey]) {
+          // Si el siguiente elemento es un número, crear un array
+          if (!isNaN(parseInt(nextKey))) {
+            current[currentKey] = [];
+          } else {
+            current[currentKey] = {};
+          }
         }
-        current = current[pathArray[i]];
+        
+        // Si necesitamos acceder a un índice de array específico
+        if (!isNaN(parseInt(currentKey))) {
+          const index = parseInt(currentKey);
+          // Asegurar que el array tenga suficientes elementos
+          while (current.length <= index) {
+            current.push({});
+          }
+          current = current[index];
+        } else {
+          current = current[currentKey];
+        }
       }
-      current[pathArray[pathArray.length - 1]] = value;
+      
+      // Establecer el valor final
+      const finalKey = pathArray[pathArray.length - 1];
+      if (!isNaN(parseInt(finalKey))) {
+        const index = parseInt(finalKey);
+        while (current.length <= index) {
+          current.push({});
+        }
+        current[index] = value;
+      } else {
+        current[finalKey] = value;
+      }
     }
     
+    console.log('✅ Updated data structure:', newData);
     setEditedData(newData);
     
     // Limpiar error de validación si existe
@@ -526,7 +560,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         });
       }
 
-      // Solicitudes - campos fijos + detalle_credito como JSON
+      // Solicitudes - campos fijos + campos específicos del tipo de crédito al mismo nivel
       if (editedData?.solicitudes && editedData.solicitudes.length > 0) {
         requestData.solicitudes = editedData.solicitudes.map((solicitud: any) => {
           const solicitudData: any = {
@@ -535,9 +569,19 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             ciudad_solicitud: solicitud.ciudad_solicitud
           };
 
-          // Campos dinámicos van en detalle_credito
+          // Agregar campos básicos de detalle_credito
           if (solicitud.detalle_credito) {
-            solicitudData.detalle_credito = solicitud.detalle_credito;
+            if (solicitud.detalle_credito.tipo_credito) {
+              solicitudData.tipo_credito = solicitud.detalle_credito.tipo_credito;
+            }
+
+            // Buscar y agregar campos específicos del tipo de crédito al mismo nivel
+            Object.keys(solicitud.detalle_credito).forEach(key => {
+              if (key !== 'tipo_credito' && typeof solicitud.detalle_credito[key] === 'object' && solicitud.detalle_credito[key] !== null) {
+                // Agregar los campos del tipo específico de crédito (ej: credito_hipotecario)
+                solicitudData[key] = solicitud.detalle_credito[key];
+              }
+            });
           }
 
           return solicitudData;
@@ -1015,15 +1059,40 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
             {/* Detalles de Crédito */}
             {(datosCompletos.solicitudes[0]?.detalle_credito || editedData?.solicitudes?.[0]?.detalle_credito) && (
-              <EditableDynamicSection
-                title="Detalles de Crédito"
-                data={isEditing ? editedData?.solicitudes?.[0]?.detalle_credito : datosCompletos.solicitudes[0].detalle_credito}
-                basePath="solicitudes.0.detalle_credito"
-                isEditing={isEditing}
-                canEdit={canEditCustomer()}
-                onUpdate={updateNestedData}
-                validationErrors={validationErrors}
-              />
+              <>
+                <EditableDynamicSection
+                  title="Detalles de Crédito"
+                  data={isEditing ? editedData?.solicitudes?.[0]?.detalle_credito : datosCompletos.solicitudes[0].detalle_credito}
+                  basePath="solicitudes.0.detalle_credito"
+                  isEditing={isEditing}
+                  canEdit={canEditCustomer()}
+                  onUpdate={updateNestedData}
+                  validationErrors={validationErrors}
+                />
+                
+                {/* Detalles específicos del tipo de crédito */}
+                {(() => {
+                  const creditoData = isEditing ? editedData?.solicitudes?.[0]?.detalle_credito : datosCompletos.solicitudes[0].detalle_credito;
+                  const tipoCreditoKey = Object.keys(creditoData || {}).find(key => 
+                    key !== 'tipo_credito' && typeof creditoData[key] === 'object' && creditoData[key] !== null
+                  );
+                  
+                  if (tipoCreditoKey && creditoData[tipoCreditoKey]) {
+                    return (
+                      <EditableDynamicSection
+                        title={`Detalles de ${creditoData.tipo_credito || tipoCreditoKey.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}`}
+                        data={creditoData[tipoCreditoKey]}
+                        basePath={`solicitudes.0.detalle_credito.${tipoCreditoKey}`}
+                        isEditing={isEditing}
+                        canEdit={canEditCustomer()}
+                        onUpdate={updateNestedData}
+                        validationErrors={validationErrors}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
+              </>
             )}
          </>
        ) : (

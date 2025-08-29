@@ -53,6 +53,9 @@ export const API_CONFIG = {
     NOTIFICACIONES: '/notificaciones',
     NOTIFICACIONES_PENDIENTES: '/notificaciones/pendientes',
     MARCAR_LEIDA: '/notificaciones/{id}/marcar-leida',
+
+    // Endpoint para configuración de columnas dinámicas
+    COLUMNAS_TABLA: '/configuraciones/columnas-tabla',
   }
 };
 

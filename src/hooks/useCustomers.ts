@@ -54,12 +54,15 @@ export const useCustomers = () => {
       }
 
       // Map the API response to the Customer type
-      const mappedCustomers = responseData.data.map((item, index) => {
+      const mappedCustomers = responseData.data.map((item) => {
         const s = item.solicitante || {};
         const ue = item.ubicacion || {};
         const act = item.actividad_economica || {};
         const fin = item.informacion_financiera || {};
         const sol = item.solicitud || {};
+
+        // Handle direct API fields (from the new API structure)
+        const directFields = item;
 
         // Build full name from available name fields
         const fullName = [
@@ -81,7 +84,7 @@ export const useCustomers = () => {
           tipo_documento: s.tipo_identificacion || '',
           fecha_nacimiento: s.fecha_nacimiento || '',
           genero: s.genero || '',
-          numero_celular: ue.detalle_direccion?.celular || ue.celular || '',
+          numero_celular: directFields.celular || ue.detalle_direccion?.celular || ue.celular || s.info_extra?.telefono || '',
           ciudad_gestion: ue.ciudad_residencia || ue.ciudad || '',
           direccion: ue.detalle_direccion?.direccion_residencia || ue.direccion || '',
           direccion_residencia: ue.detalle_direccion?.direccion_residencia || ue.direccion || '',
@@ -101,9 +104,9 @@ export const useCustomers = () => {
           telefono_empresa: act.detalle_actividad?.telefono_empresa || act.telefono_empresa || '',
           fecha_vinculacion: act.detalle_actividad?.fecha_ingreso || act.fecha_ingreso || '',
           cargo_actual: act.cargo_actual || '',
-          banco: sol.banco || '',
-          tipo_credito: sol.tipo_credito || '',
-          tipo_de_credito: sol.tipo_credito || '',
+          banco: sol.banco_nombre || sol.detalle_credito?.banco || directFields.banco_nombre || sol.banco || '',
+          tipo_credito: sol.detalle_credito?.tipo_credito || directFields.tipo_credito || sol.tipo_credito || '',
+          tipo_de_credito: sol.detalle_credito?.tipo_credito || directFields.tipo_credito || sol.tipo_credito || '',
           valor_inmueble: fin.valor_inmueble || 0,
           total_egresos: fin.total_egresos_mensuales || fin.total_egresos || 0,
           egresos: fin.total_egresos_mensuales || fin.total_egresos || 0,
@@ -111,7 +114,7 @@ export const useCustomers = () => {
           total_pasivos: fin.total_pasivos || 0,
           plazo_meses: fin.plazo_meses || '',
           ingresos: fin.total_ingresos_mensuales || fin.ingresos || 0,
-          estado: sol.estado || 'Pendiente',
+          estado: directFields.estado_solicitud || sol.estado || 'Pendiente',
           created_at: sol.created_at || new Date().toISOString(),
           observacion: sol.observacion || '',
           archivos: '',
@@ -241,7 +244,7 @@ export const useCustomers = () => {
         throw new Error(`Error ${response.status}: ${errorText}`);
       }
 
-      const result = await response.json();
+      await response.json();
 
       // Update local state
       setCustomers(prev =>

@@ -238,6 +238,7 @@ const Customers = () => {
           onRowClick={handleRowClick}
           onStatusChange={handleStatusChange}
           totalRecords={totalRecords}
+          empresaId={1}
         />
       </div>
 
