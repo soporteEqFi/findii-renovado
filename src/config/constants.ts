@@ -1,6 +1,6 @@
 // Configuración de la API
 // Cambia esta variable para cambiar entre desarrollo y producción
-const IS_PRODUCTION = false; // Cambia a true para producción
+const IS_PRODUCTION = true; // Cambia a true para producción
 
 export const API_CONFIG = {
   BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:5000',
