@@ -136,6 +136,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               <option value="admin">Admin</option>
               <option value="banco">Banco</option>
               <option value="asesor">Asesor</option>
+              <option value="supervisor">Supervisor</option>
             </select>
           ) : (
             <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.rol}</p>

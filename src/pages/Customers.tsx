@@ -183,7 +183,8 @@ const Customers = () => {
                 Gestionar Usuarios
               </Link>
             )} */}
-            { user && user.rol && (
+            {/* Información del usuario (comentada para evitar confusión con filtros) */}
+            {/* { user && user.rol && (
                   <span className="text-sm text-gray-600">
                   Rol: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
                     {user.rol}
@@ -203,7 +204,7 @@ const Customers = () => {
                   {user.info_extra.linea_credito}
                 </span>
               </span>
-            )}
+            )} */}
           </div>
         </div>
 

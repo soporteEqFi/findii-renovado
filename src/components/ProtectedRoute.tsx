@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Loader2 } from 'lucide-react';
 
 type ProtectedRouteProps = {
-  requiredRole?: 'admin' | 'manager' | 'user';
+  requiredRole?: 'admin' | 'manager' | 'user' | 'supervisor';
 };
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
@@ -37,4 +37,4 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ requiredRole }) => {
   return <Outlet />;
 };
 
-export default ProtectedRoute; 
+export default ProtectedRoute;

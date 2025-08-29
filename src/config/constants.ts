@@ -1,6 +1,6 @@
 // Configuración de la API
 // Cambia esta variable para cambiar entre desarrollo y producción
-const IS_PRODUCTION = true; // Cambia a true para producción
+const IS_PRODUCTION = false; // Cambia a true para producción
 
 export const API_CONFIG = {
   BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:5000',
@@ -67,7 +67,8 @@ export const USER_ROLES = {
   MANAGER: 'manager',
   USER: 'user',
   BANCO: 'banco',
-  ASESOR: 'asesor'
+  ASESOR: 'asesor',
+  SUPERVISOR: 'supervisor'
 } as const;
 
 // Estados de clientes
@@ -108,6 +109,7 @@ export const ROUTES = {
 // Permisos por rol
 export const PERMISSIONS = {
   [USER_ROLES.ADMIN]: ['create', 'read', 'update', 'delete', 'manage_users'],
+  [USER_ROLES.SUPERVISOR]: ['create', 'read', 'update', 'delete', 'manage_users'],
   [USER_ROLES.MANAGER]: ['create', 'read', 'update'],
   [USER_ROLES.USER]: ['read'],
   [USER_ROLES.BANCO]: ['view_customer', 'download_sales'],

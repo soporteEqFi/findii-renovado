@@ -37,8 +37,8 @@ const Users = () => {
   }, [isAuthenticated, loadUsers, empresaId]);
 
   // Definir los permisos para cada usuario
-  const canEdit = (): boolean => user?.rol === 'admin';
-  const canDelete = (): boolean => user?.rol === 'admin';
+  const canEdit = (): boolean => user?.rol === 'admin' || user?.rol === 'supervisor';
+  const canDelete = (): boolean => user?.rol === 'admin' || user?.rol === 'supervisor';
 
   // Manejadores de eventos
   const handleRowClick = (user: User) => {

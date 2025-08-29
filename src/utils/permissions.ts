@@ -15,6 +15,7 @@ const permissionMapping: Record<string, Permission[]> = {
   [USER_ROLES.MANAGER]: ['edit_customer', 'change_status', 'create_customer', 'view_customer'],
   [USER_ROLES.USER]: ['view_customer'],
   [USER_ROLES.BANCO]: ['view_customer', 'change_status'],
+  [USER_ROLES.SUPERVISOR]: ['delete_customer', 'edit_customer', 'change_status', 'create_customer', 'view_customer'],
 };
 
 // Hook personalizado para manejar permisos

@@ -114,6 +114,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
             <option value="">Seleccionar...</option>
             <option value="admin">Admin</option>
             <option value="banco">Banco</option>
+            <option value="supervisor">Supervisor</option>
             <option value="asesor">Asesor</option>
           </select>
         </div>

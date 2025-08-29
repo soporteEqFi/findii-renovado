@@ -10,7 +10,7 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user && user.rol === 'admin';
+  const isAdmin = user && (user.rol === 'admin' || user.rol === 'supervisor');
 
   // Debug: Verificar datos del usuario
   useEffect(() => {

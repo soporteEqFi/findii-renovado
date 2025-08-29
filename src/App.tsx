@@ -27,7 +27,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
-// Componente para proteger rutas que requieren rol de administrador
+// Componente para proteger rutas que requieren rol de administrador o supervisor
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
 
@@ -39,7 +39,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.rol !== 'admin') {
+  if (user?.rol !== 'admin' && user?.rol !== 'supervisor') {
     return <Navigate to="/" replace />;
   }
 
