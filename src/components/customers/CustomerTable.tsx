@@ -11,7 +11,7 @@ import {
 } from '@tanstack/react-table';
 import { Customer } from '../../types/customer';
 import { createDynamicColumns } from './DynamicCustomerColumns';
-import { fetchColumnConfig, getDefaultColumns } from '../../services/columnConfigService';
+import { fetchColumnConfig, getDefaultColumns, detectAvailableColumns } from '../../services/columnConfigService';
 import { Search, Calendar } from 'lucide-react';
 
 interface CustomerTableProps {
@@ -68,9 +68,33 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     const loadColumnConfig = async () => {
       try {
         setIsLoadingColumns(true);
-        const columnNames = await fetchColumnConfig(empresaId);
+        
+        // Solo proceder si tenemos datos de clientes
+        if (!customers || customers.length === 0) {
+          console.log('No hay datos de clientes, usando columnas por defecto');
+          const defaultColumnNames = getDefaultColumns();
+          const dynamicColumns = createDynamicColumns(defaultColumnNames);
+          setColumns(dynamicColumns);
+          return;
+        }
+
+        console.log('🔄 Cargando configuración de columnas para', customers.length, 'clientes');
+        
+        // Primero intentar obtener columnas desde la API de configuración
+        let columnNames;
+        try {
+          columnNames = await fetchColumnConfig(empresaId, customers);
+          console.log('✅ Columnas obtenidas desde API de configuración:', columnNames);
+        } catch (configError) {
+          console.warn('Error obteniendo configuración de columnas, detectando automáticamente:', configError);
+          // Si falla la configuración, detectar automáticamente desde los datos procesados
+          columnNames = detectAvailableColumns(customers);
+          console.log('✅ Columnas detectadas automáticamente desde datos procesados:', columnNames);
+        }
+        
         const dynamicColumns = createDynamicColumns(columnNames);
         setColumns(dynamicColumns);
+        console.log('🎯 Columnas dinámicas creadas:', dynamicColumns.length);
       } catch (error) {
         console.error('Error cargando columnas:', error);
         // Usar columnas por defecto en caso de error
@@ -83,7 +107,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     };
 
     loadColumnConfig();
-  }, [empresaId]);
+  }, [empresaId, customers]);
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
