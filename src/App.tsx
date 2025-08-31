@@ -5,6 +5,8 @@ import Login from './pages/Login';
 import Customers from './pages/Customers';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
+import Statistics from './pages/Statistics';
+import TestPage from './pages/TestPage';
 import TermsAndConditions from './pages/TermsAndConditions';
 import AcuerdoFirma from './pages/AcuerdoFirma';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -86,6 +88,8 @@ function App() {
               {/* <Route path="customers" element={<Customers />} /> */}
               {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
               <Route path="profile" element={<Profile />} />
+              <Route path="statistics" element={<Statistics />} />
+              <Route path="test" element={<TestPage />} />
 
               {/* Ruta para la administración de configuración de campos (solo admin) */}
               <Route path="config" element={
