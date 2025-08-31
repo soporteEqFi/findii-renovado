@@ -7,6 +7,7 @@ export interface EstadisticasGenerales {
   solicitudes_por_banco: Record<string, number>;
   solicitudes_por_ciudad: Record<string, number>;
   total_documentos: number;
+  solicitudes_por_dia: Record<string, number>;
 }
 
 export interface EstadisticasRendimiento {
@@ -24,6 +25,13 @@ export interface EstadisticasFinancieras {
   documentos_promedio: number;
   total_referencias: number;
   total_documentos: number;
+}
+
+export interface EstadisticasUsuarios {
+  total_usuarios: number;
+  usuarios_por_rol: Record<string, number>;
+  usuarios_por_banco: Record<string, number>;
+  usuarios_por_ciudad: Record<string, number>;
 }
 
 export interface EstadisticasCompletas {
@@ -55,9 +63,21 @@ const getEmpresaId = (): string => {
   return localStorage.getItem('empresa_id') || '1';
 };
 
+const getUserId = (): string => {
+  return localStorage.getItem('user_id') || '1';
+};
+
 export const getEstadisticasGenerales = async (): Promise<EstadisticasResponse<EstadisticasGenerales>> => {
   const empresaId = getEmpresaId();
-  const response = await fetch(`${API_BASE_URL}/estadisticas/generales?empresa_id=${empresaId}`, {
+  const userId = getUserId();
+  const url = `${API_BASE_URL}/estadisticas/generales?empresa_id=${empresaId}&user_id=${userId}`;
+  
+  console.log('🔍 Statistics Service - getEstadisticasGenerales');
+  console.log('📍 URL:', url);
+  console.log('🏢 Empresa ID:', empresaId);
+  console.log('👤 User ID:', userId);
+  
+  const response = await fetch(url, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -71,7 +91,8 @@ export const getEstadisticasGenerales = async (): Promise<EstadisticasResponse<E
 
 export const getEstadisticasRendimiento = async (dias: number = 30): Promise<EstadisticasResponse<EstadisticasRendimiento>> => {
   const empresaId = getEmpresaId();
-  const response = await fetch(`${API_BASE_URL}/estadisticas/rendimiento?empresa_id=${empresaId}&dias=${dias}`, {
+  const userId = getUserId();
+  const response = await fetch(`${API_BASE_URL}/estadisticas/rendimiento?empresa_id=${empresaId}&user_id=${userId}&dias=${dias}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -85,7 +106,8 @@ export const getEstadisticasRendimiento = async (dias: number = 30): Promise<Est
 
 export const getEstadisticasFinancieras = async (): Promise<EstadisticasResponse<EstadisticasFinancieras>> => {
   const empresaId = getEmpresaId();
-  const response = await fetch(`${API_BASE_URL}/estadisticas/financieras?empresa_id=${empresaId}`, {
+  const userId = getUserId();
+  const response = await fetch(`${API_BASE_URL}/estadisticas/financieras?empresa_id=${empresaId}&user_id=${userId}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -99,7 +121,8 @@ export const getEstadisticasFinancieras = async (): Promise<EstadisticasResponse
 
 export const getEstadisticasCompletas = async (dias: number = 30): Promise<EstadisticasResponse<EstadisticasCompletas>> => {
   const empresaId = getEmpresaId();
-  const response = await fetch(`${API_BASE_URL}/estadisticas/completas?empresa_id=${empresaId}&dias=${dias}`, {
+  const userId = getUserId();
+  const response = await fetch(`${API_BASE_URL}/estadisticas/completas?empresa_id=${empresaId}&user_id=${userId}&dias=${dias}`, {
     method: 'GET',
     headers: getAuthHeaders(),
   });
@@ -109,4 +132,33 @@ export const getEstadisticasCompletas = async (dias: number = 30): Promise<Estad
   }
 
   return response.json();
+};
+
+export const getEstadisticasUsuarios = async (): Promise<EstadisticasResponse<EstadisticasUsuarios>> => {
+  const empresaId = getEmpresaId();
+  const userId = getUserId();
+  const url = `${API_BASE_URL}/estadisticas/usuarios?empresa_id=${empresaId}&user_id=${userId}`;
+  
+  console.log('🔍 Statistics Service - getEstadisticasUsuarios');
+  console.log('📍 URL:', url);
+  console.log('🏢 Empresa ID:', empresaId);
+  console.log('👤 User ID:', userId);
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: getAuthHeaders(),
+  });
+
+  console.log('📊 Response status:', response.status);
+  console.log('📊 Response ok:', response.ok);
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('❌ Error response:', errorText);
+    throw new Error(`Error al obtener estadísticas de usuarios: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json();
+  console.log('📊 Users statistics response:', data);
+  return data;
 };

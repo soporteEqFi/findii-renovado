@@ -3,29 +3,36 @@ import { useAuth } from '../contexts/AuthContext';
 import StatisticsCard from '../components/statistics/StatisticsCard';
 import ChartCard from '../components/statistics/ChartCard';
 import SimpleChart from '../components/statistics/SimpleChart';
+import { LineChart } from '../components/statistics/LineChart';
 import {
   getEstadisticasGenerales,
   getEstadisticasRendimiento,
   getEstadisticasFinancieras,
   getEstadisticasCompletas,
+  getEstadisticasUsuarios,
   EstadisticasGenerales,
   EstadisticasRendimiento,
   EstadisticasFinancieras,
-  EstadisticasCompletas
+  EstadisticasCompletas,
+  EstadisticasUsuarios
 } from '../services/statisticsService';
 import toast from 'react-hot-toast';
 
-type StatisticsType = 'generales' | 'rendimiento' | 'financieras' | 'completas';
+type StatisticsType = 'generales' | 'rendimiento' | 'financieras' | 'completas' | 'usuarios';
 
 const Statistics: React.FC = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<StatisticsType>('generales');
+  
+  // Check if user has admin/supervisor permissions for users statistics
+  const isAdminOrSupervisor = user?.rol === 'admin' || user?.rol === 'supervisor';
   const [periodDays, setPeriodDays] = useState(30);
   const [estadisticasGenerales, setEstadisticasGenerales] = useState<EstadisticasGenerales | null>(null);
   const [estadisticasRendimiento, setEstadisticasRendimiento] = useState<EstadisticasRendimiento | null>(null);
   const [estadisticasFinancieras, setEstadisticasFinancieras] = useState<EstadisticasFinancieras | null>(null);
   const [estadisticasCompletas, setEstadisticasCompletas] = useState<EstadisticasCompletas | null>(null);
+  const [estadisticasUsuarios, setEstadisticasUsuarios] = useState<EstadisticasUsuarios | null>(null);
 
   const loadStatistics = async () => {
     setLoading(true);
@@ -46,6 +53,20 @@ const Statistics: React.FC = () => {
         case 'completas':
           const completasResponse = await getEstadisticasCompletas(periodDays);
           setEstadisticasCompletas(completasResponse.data.estadisticas);
+          break;
+        case 'usuarios':
+          try {
+            const usuariosResponse = await getEstadisticasUsuarios();
+            setEstadisticasUsuarios(usuariosResponse.data.estadisticas);
+          } catch (error) {
+            console.error('Error específico en estadísticas de usuarios:', error);
+            if (error instanceof Error && error.message.includes('403')) {
+              toast.error('Sin permisos para ver estadísticas de usuarios');
+            } else {
+              toast.error('Error al cargar estadísticas de usuarios');
+            }
+            throw error; // Re-throw para que se maneje en el catch principal
+          }
           break;
       }
     } catch (error) {
@@ -89,6 +110,19 @@ const Statistics: React.FC = () => {
             icon={<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
           />
         </div>
+
+        {/* Gráfico de línea de tiempo - Solicitudes por día */}
+        {estadisticasGenerales.solicitudes_por_dia && Object.keys(estadisticasGenerales.solicitudes_por_dia).length > 0 && (
+          <div className="flex justify-center">
+            <div className="w-full max-w-4xl">
+              <LineChart
+                data={estadisticasGenerales.solicitudes_por_dia}
+                title="Solicitudes por Día"
+                color="#3B82F6"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -297,6 +331,90 @@ const Statistics: React.FC = () => {
     );
   };
 
+  const renderUsersStatistics = () => {
+    if (!estadisticasUsuarios) return null;
+
+    return (
+      <div className="space-y-6">
+        {/* Cards de resumen */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatisticsCard
+            title="Total Usuarios"
+            value={estadisticasUsuarios.total_usuarios}
+            icon={<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
+          />
+          <StatisticsCard
+            title="Empresa"
+            value={user?.empresa || 'N/A'}
+            subtitle="Solo admin/supervisor"
+            icon={<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm8 8v2a1 1 0 01-1 1H6a1 1 0 01-1-1v-2h10z" clipRule="evenodd" /></svg>}
+          />
+          <StatisticsCard
+            title="Rol Actual"
+            value={user?.rol?.toUpperCase() || 'N/A'}
+            subtitle="Tu nivel de acceso"
+            icon={<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-0.257-0.257A6 6 0 1118 8zM2 8a8 8 0 1016 0A8 8 0 002 8zm8-3a3 3 0 100 6 3 3 0 000-6z" clipRule="evenodd" /></svg>}
+          />
+          <StatisticsCard
+            title="Acceso Especial"
+            value="✓ Autorizado"
+            subtitle="Admin/Supervisor"
+            icon={<svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>}
+          />
+        </div>
+
+        {/* Gráficos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {Object.keys(estadisticasUsuarios.usuarios_por_rol).length > 0 && (
+            <ChartCard title="Usuarios por Rol">
+              <SimpleChart
+                data={estadisticasUsuarios.usuarios_por_rol}
+                type="pie"
+                colors={['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6']}
+              />
+            </ChartCard>
+          )}
+
+          {Object.keys(estadisticasUsuarios.usuarios_por_banco).length > 0 && (
+            <ChartCard title="Usuarios por Banco">
+              <SimpleChart
+                data={estadisticasUsuarios.usuarios_por_banco}
+                type="bar"
+                colors={['#06B6D4', '#F97316', '#84CC16', '#EC4899']}
+              />
+            </ChartCard>
+          )}
+
+          {Object.keys(estadisticasUsuarios.usuarios_por_ciudad).length > 0 && (
+            <ChartCard title="Usuarios por Ciudad">
+              <SimpleChart
+                data={estadisticasUsuarios.usuarios_por_ciudad}
+                type="bar"
+                colors={['#8B5CF6', '#06B6D4', '#F97316', '#10B981']}
+              />
+            </ChartCard>
+          )}
+        </div>
+
+        {/* Información adicional para admin/supervisor */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 text-blue-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <h4 className="text-sm font-medium text-blue-800">Acceso Administrativo</h4>
+              <p className="text-sm text-blue-600">
+                Estas estadísticas solo están disponibles para usuarios con rol de administrador o supervisor.
+                Los datos incluyen información sensible de usuarios de la empresa.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -322,6 +440,9 @@ const Statistics: React.FC = () => {
               <option value="rendimiento">Rendimiento</option>
               <option value="financieras">Estadísticas Financieras</option>
               <option value="completas">Vista Completa</option>
+              {isAdminOrSupervisor && (
+                <option value="usuarios">Estadísticas de Usuarios</option>
+              )}
             </select>
           </div>
 
@@ -367,6 +488,7 @@ const Statistics: React.FC = () => {
           {selectedType === 'rendimiento' && renderPerformanceStatistics()}
           {selectedType === 'financieras' && renderFinancialStatistics()}
           {selectedType === 'completas' && renderCompleteStatistics()}
+          {selectedType === 'usuarios' && renderUsersStatistics()}
         </div>
       )}
     </div>

@@ -32,13 +32,6 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
       value: valorEsperado
     };
 
-    console.log('ConditionalFieldConfig - handleSave:', {
-      campoKey: campo.key,
-      conditionalConfig,
-      campoActivador,
-      valorEsperado
-    });
-
     onSave(campo.key, conditionalConfig);
   };
 
