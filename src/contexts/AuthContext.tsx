@@ -110,11 +110,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         info_extra: data.info_extra || userData.info_extra || null
       };
 
-      // Debug: Verificar objeto final del usuario
-      console.log('✅ Objeto final del usuario:', userObj);
-      console.log('🏢 Empresa final:', userObj.empresa);
-      console.log('🖼️ Imagen aliado final:', userObj.imagen_aliado);
-
       // Save token and user data
       setToken(data.access_token || '');
       setUser(userObj);

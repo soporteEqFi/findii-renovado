@@ -60,28 +60,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   // Cargar documentos del cliente cuando se obtiene el solicitante_id
   useEffect(() => {
     const loadCustomerDocuments = async () => {
-      console.log('🔄 === INICIANDO CARGA DE DOCUMENTOS ===');
-      console.log('🆔 solicitanteIdNumber:', solicitanteIdNumber);
-      console.log('🆔 customer.id_solicitante:', customer.id_solicitante);
-      console.log('🆔 customer.solicitante_id:', customer.solicitante_id);
-      console.log('🆔 customer.id:', customer.id);
 
       if (solicitanteIdNumber && !isNaN(solicitanteIdNumber) && solicitanteIdNumber > 0) {
         setLoadingDocuments(true);
         try {
-          console.log('📥 === CARGANDO DOCUMENTOS DEL CLIENTE SELECCIONADO ===');
-          console.log('🆔 Solicitante ID del cliente seleccionado para editar:', solicitanteIdNumber);
-          console.log('🌐 URL que se llamará: GET /documentos/?solicitante_id=' + solicitanteIdNumber);
 
           const documents = await documentService.getDocuments(solicitanteIdNumber);
-          console.log('📄 Respuesta del servicio getDocuments:', documents);
-
           // Asegurar que documents sea un array
           const documentsArray = Array.isArray(documents) ? documents : [];
           setCustomerDocuments(documentsArray);
 
-          console.log('✅ Documentos cargados para el cliente:', documentsArray);
-          console.log('📊 Total documentos encontrados:', documentsArray.length);
         } catch (error) {
           console.error('❌ Error al cargar documentos del cliente:', error);
           setCustomerDocuments([]);
@@ -101,10 +89,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   // MOVER ESTO DESPUÉS DE TODOS LOS HOOKS
 
   useEffect(() => {
-    console.log('🔍 === DIAGNÓSTICO DE DATOS DEL CLIENTE ===');
-    console.log('📦 Customer data received:', customer);
-    console.log('📋 All customer keys:', Object.keys(customer));
-
     // Si tenemos datos completos del solicitante, usarlos
     if (datosMapeados) {
       console.log('📊 Datos completos disponibles:', datosMapeados);
@@ -119,22 +103,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         setEditedData(JSON.parse(JSON.stringify(datosCompletos)));
       }
     } else {
-      console.log('📊 Campos específicos del customer:');
-      console.log('  - nombre_completo:', customer.nombre_completo);
-      console.log('  - tipo_documento:', customer.tipo_documento);
-      console.log('  - numero_documento:', customer.numero_documento);
-      console.log('  - fecha_nacimiento:', customer.fecha_nacimiento);
-      console.log('  - numero_celular:', customer.numero_celular);
-      console.log('  - correo_electronico:', customer.correo_electronico);
-      console.log('  - tipo_credito:', customer.tipo_credito);
-      console.log('  - banco:', customer.banco);
-      console.log('  - estado:', customer.estado);
-      console.log('  - plazo_meses:', customer.plazo_meses);
-      console.log('  - ingresos:', customer.ingresos);
-      console.log('  - valor_inmueble:', customer.valor_inmueble);
-      console.log('  - cuota_inicial:', customer.cuota_inicial);
-      console.log('  - archivos:', customer.archivos);
-
       // Mapear los campos del customer al formato correcto cuando se recibe
       const mappedCustomer = {
         ...customer,
@@ -383,12 +351,12 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
     const pathArray = path.split('.');
     const newData = JSON.parse(JSON.stringify(editedData));
-    
+
     // Manejar campos que van en info_extra pero se muestran en la sección básica
     if (pathArray[0] === 'solicitante' && pathArray.length === 2) {
       const fieldName = pathArray[1];
       const infoExtraFields = ['telefono', 'celular', 'estado_civil', 'personas_a_cargo', 'nacionalidad'];
-      
+
       if (infoExtraFields.includes(fieldName)) {
         // Estos campos van en info_extra
         if (!newData.solicitante.info_extra) {
@@ -405,7 +373,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       for (let i = 0; i < pathArray.length - 1; i++) {
         const currentKey = pathArray[i];
         const nextKey = pathArray[i + 1];
-        
+
         // Si la clave actual no existe, crearla
         if (!current[currentKey]) {
           // Si el siguiente elemento es un número, crear un array
@@ -415,7 +383,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
             current[currentKey] = {};
           }
         }
-        
+
         // Si necesitamos acceder a un índice de array específico
         if (!isNaN(parseInt(currentKey))) {
           const index = parseInt(currentKey);
@@ -428,7 +396,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
           current = current[currentKey];
         }
       }
-      
+
       // Establecer el valor final
       const finalKey = pathArray[pathArray.length - 1];
       if (!isNaN(parseInt(finalKey))) {
@@ -441,10 +409,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         current[finalKey] = value;
       }
     }
-    
+
     console.log('✅ Updated data structure:', newData);
     setEditedData(newData);
-    
+
     // Limpiar error de validación si existe
     if (validationErrors[path]) {
       const newErrors = { ...validationErrors };
@@ -625,10 +593,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
       // Salir del modo edición
       setIsEditing(false);
-      
+
       // Limpiar datos editados
       setEditedData(null);
-      
+
       // Notificar al componente padre
       onSave();
     } catch (error: any) {
@@ -1069,14 +1037,14 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                   onUpdate={updateNestedData}
                   validationErrors={validationErrors}
                 />
-                
+
                 {/* Detalles específicos del tipo de crédito */}
                 {(() => {
                   const creditoData = isEditing ? editedData?.solicitudes?.[0]?.detalle_credito : datosCompletos.solicitudes[0].detalle_credito;
-                  const tipoCreditoKey = Object.keys(creditoData || {}).find(key => 
+                  const tipoCreditoKey = Object.keys(creditoData || {}).find(key =>
                     key !== 'tipo_credito' && typeof creditoData[key] === 'object' && creditoData[key] !== null
                   );
-                  
+
                   if (tipoCreditoKey && creditoData[tipoCreditoKey]) {
                     return (
                       <EditableDynamicSection
@@ -1511,7 +1479,7 @@ const EditableDynamicSection: React.FC<{
     if (value === null || value === undefined) {
       return '-';
     }
-    
+
     // Para strings vacíos, mostrar el campo vacío pero editable
     if (value === '') {
       return isEditing ? '' : '-';
@@ -1567,7 +1535,7 @@ const EditableDynamicSection: React.FC<{
             <span className="ml-1 text-red-500 text-xs">*</span>
           )}
         </label>
-        
+
         {isEditing && canEdit ? (
           <div className="space-y-1">
             {fieldType === 'checkbox' ? (

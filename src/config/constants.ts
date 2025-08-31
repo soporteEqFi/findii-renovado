@@ -1,6 +1,6 @@
 // Configuración de la API
 // Cambia esta variable para cambiar entre desarrollo y producción
-const IS_PRODUCTION = true; // Cambia a true para producción
+const IS_PRODUCTION = false; // Cambia a false para desarrollo
 
 export const API_CONFIG = {
   BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:5000',
@@ -56,8 +56,17 @@ export const API_CONFIG = {
 
     // Endpoint para configuración de columnas dinámicas
     COLUMNAS_TABLA: '/configuraciones/columnas-tabla',
+
+    // Endpoints para estadísticas
+    ESTADISTICAS_GENERALES: '/estadisticas/generales',
+    ESTADISTICAS_RENDIMIENTO: '/estadisticas/rendimiento',
+    ESTADISTICAS_FINANCIERAS: '/estadisticas/financieras',
+    ESTADISTICAS_COMPLETAS: '/estadisticas/completas',
   }
 };
+
+// Export API_BASE_URL for backward compatibility
+export const API_BASE_URL = API_CONFIG.BASE_URL;
 
 // Función helper para construir URLs completas
 export const buildApiUrl = (endpoint: string): string => {

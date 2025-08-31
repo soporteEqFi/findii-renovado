@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, Settings, LogOut, UserCog, User } from 'lucide-react';
+import { Users, Settings, LogOut, UserCog, User, BarChart3 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { buildApiUrl, API_CONFIG } from '../config/constants';
 import { NotificationBadge } from './NotificationBadge';
 
 const Sidebar = () => {
@@ -12,29 +11,12 @@ const Sidebar = () => {
 
   const isAdmin = user && (user.rol === 'admin' || user.rol === 'supervisor');
 
-  // Debug: Verificar datos del usuario
-  useEffect(() => {
-    if (user) {
-      console.log('🔍 Datos del usuario en Sidebar:', user);
-      console.log('🏢 Empresa:', user.empresa);
-      console.log('🖼️ Imagen aliado:', user.imagen_aliado);
-    }
-
-    // Debug: Verificar datos en localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      console.log('💾 Usuario guardado en localStorage:', parsedUser);
-      console.log('🏢 Empresa en localStorage:', parsedUser.empresa);
-      console.log('🖼️ Imagen aliado en localStorage:', parsedUser.imagen_aliado);
-    }
-  }, [user]);
-
   // Definir elementos de menú basados en el rol
   const menuItems = [
     { icon: Users, label: 'Inicio', path: '/' },
+    { icon: BarChart3, label: 'Estadísticas', path: '/statistics' },
     { icon: User, label: 'Perfil', path: '/profile' },
-    // { icon: Settings, label: 'Settings', path: '/settings' },
+    { icon: Settings, label: 'Test', path: '/test' },
   ];
 
   // Agregar elementos solo para administradores

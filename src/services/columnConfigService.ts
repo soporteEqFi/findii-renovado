@@ -27,13 +27,13 @@ export const detectAvailableColumns = (customerData: any[]): string[] => {
   console.log('📊 Primer registro procesado:', customerData[0]);
 
   const allFields = new Set<string>();
-  
+
   // Analizar todos los registros de clientes procesados para encontrar campos con valores
   customerData.forEach(customer => {
     Object.keys(customer).forEach(key => {
       const value = customer[key];
       // Solo incluir campos que tienen valores no vacíos en al menos un registro
-      if (value !== null && value !== undefined && value !== '' && 
+      if (value !== null && value !== undefined && value !== '' &&
           (typeof value === 'string' || typeof value === 'number')) {
         const fieldName = formatFieldName(key);
         console.log(`➕ Campo con valor detectado: ${key} -> ${fieldName} = ${value}`);
@@ -41,21 +41,21 @@ export const detectAvailableColumns = (customerData: any[]): string[] => {
       }
     });
   });
-  
+
   // Filtrar campos no deseados y campos internos
-  const filteredFields = Array.from(allFields).filter(field => 
+  const filteredFields = Array.from(allFields).filter(field =>
     !['Id', 'Created At', 'Updated At', 'Empresa Id', 'Id Solicitante', 'Solicitante Id', 'Id Solicitud'].includes(field)
   );
-  
+
   console.log('🎯 Campos detectados después del filtrado:', filteredFields);
-  
+
   // Priorizar campos importantes al inicio
   const priorityFields = ['Fecha', 'Nombre', 'Número Documento', 'Correo', 'Estado', 'Celular', 'Tipo Crédito', 'Banco'];
   const otherFields = filteredFields.filter(field => !priorityFields.includes(field));
-  
+
   const finalColumns = [...priorityFields.filter(field => filteredFields.includes(field)), ...otherFields];
   console.log('✅ Columnas finales ordenadas:', finalColumns);
-  
+
   return finalColumns;
 };
 
@@ -104,11 +104,11 @@ const formatFieldName = (fieldName: string): string => {
     'total_activos': 'Total Activos',
     'total_pasivos': 'Total Pasivos'
   };
-  
+
   if (fieldMappings[fieldName]) {
     return fieldMappings[fieldName];
   }
-  
+
   // Convertir snake_case a Title Case
   return fieldName
     .split('_')
@@ -125,7 +125,7 @@ const formatFieldName = (fieldName: string): string => {
 export const fetchColumnConfig = async (empresaId: number, apiData?: any[]): Promise<string[]> => {
   try {
     const url = `${buildApiUrl(API_CONFIG.ENDPOINTS.COLUMNAS_TABLA)}?empresa_id=${empresaId}`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -139,7 +139,7 @@ export const fetchColumnConfig = async (empresaId: number, apiData?: any[]): Pro
     }
 
     const result: ColumnConfigResponse = await response.json();
-    
+
     if (result.ok && result.data?.columnas) {
       return result.data.columnas;
     } else {
@@ -241,32 +241,26 @@ const normalizeForComparison = (str: string): string => {
  */
 const findFieldRecursively = (obj: any, targetField: string, equivalences: Record<string, string> = {}): any => {
   if (!obj || typeof obj !== 'object') return null;
-  
+
   const normalizedTarget = normalizeForComparison(targetField);
-  console.log(`🔍 Buscando campo: "${targetField}" (normalizado: "${normalizedTarget}")`);
-  
+
   // Verificar equivalencias primero
   if (equivalences[targetField]) {
     const equivalentField = equivalences[targetField];
-    console.log(`📝 Usando equivalencia: "${targetField}" -> "${equivalentField}"`);
     const result = findFieldRecursively(obj, equivalentField);
     if (result !== null) return result;
   }
-  
+
   // Función recursiva para buscar en el objeto
   const searchInObject = (currentObj: any, path: string = ''): any => {
     if (!currentObj || typeof currentObj !== 'object') return null;
-    
+
     // Primero buscar coincidencias exactas que no sean IDs
     for (const [key, value] of Object.entries(currentObj)) {
       const normalizedKey = normalizeForComparison(key);
       const currentPath = path ? `${path}.${key}` : key;
-      
-      console.log(`  🔎 Comparando "${normalizedKey}" con "${normalizedTarget}" en ${currentPath}`);
-      
       // Coincidencia exacta - priorizar valores string no-ID
       if (normalizedKey === normalizedTarget) {
-        console.log(`  ✅ Coincidencia exacta encontrada en ${currentPath}:`, value);
         if (typeof value === 'string' && value.trim() !== '') {
           return value;
         }
@@ -275,17 +269,16 @@ const findFieldRecursively = (obj: any, targetField: string, equivalences: Recor
         }
       }
     }
-    
+
     // Luego buscar coincidencias parciales que no sean IDs
     for (const [key, value] of Object.entries(currentObj)) {
       const normalizedKey = normalizeForComparison(key);
       const currentPath = path ? `${path}.${key}` : key;
-      
+
       // Coincidencia parcial - evitar campos que contengan 'id'
-      if ((normalizedKey.includes(normalizedTarget) || normalizedTarget.includes(normalizedKey)) && 
-          !key.toLowerCase().includes('id') && 
+      if ((normalizedKey.includes(normalizedTarget) || normalizedTarget.includes(normalizedKey)) &&
+          !key.toLowerCase().includes('id') &&
           !key.toLowerCase().includes('_id')) {
-        console.log(`  🎯 Coincidencia parcial encontrada en ${currentPath}:`, value);
         if (typeof value === 'string' && value.trim() !== '') {
           return value;
         }
@@ -294,7 +287,7 @@ const findFieldRecursively = (obj: any, targetField: string, equivalences: Recor
         }
       }
     }
-    
+
     // Buscar recursivamente en objetos anidados
     for (const [key, value] of Object.entries(currentObj)) {
       if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -302,10 +295,10 @@ const findFieldRecursively = (obj: any, targetField: string, equivalences: Recor
         if (result !== null) return result;
       }
     }
-    
+
     return null;
   };
-  
+
   return searchInObject(obj);
 };
 
@@ -333,104 +326,96 @@ const getFieldEquivalences = (): Record<string, string> => {
  * Obtiene el valor de una columna específica desde los datos del cliente
  */
 export const getColumnValue = (customer: any, columnName: string): any => {
-  console.log(`🔍 Getting value for column: ${columnName}`);
-  console.log(`📊 Customer data keys:`, Object.keys(customer));
-  
   const fieldMapping = getColumnFieldMapping();
   const n = normalize(columnName);
   const fieldName = fieldMapping[n] || n.replace(/\s+/g, '_');
-  
+
   // Casos especiales para campos que pueden tener múltiples fuentes
   switch (n) {
     case normalize('Nombre'):
-      return customer.nombre_completo || 
+      return customer.nombre_completo ||
              `${customer.nombres || ''} ${customer.primer_apellido || ''}`.trim() ||
              customer.nombres;
-    
+
     case normalize('Ciudad'):
       return customer.ciudad_gestion ||
-             customer.ciudad_residencia || 
-             customer.ciudad_solicitud || 
+             customer.ciudad_residencia ||
+             customer.ciudad_solicitud ||
              customer.ciudad;
-    
+
     case normalize('Ciudad Residencia'):
       return customer.ciudad_gestion || customer.ciudad_residencia;
-    
+
     case normalize('Ciudad Solicitud'):
       return customer.ciudad_solicitud;
 
     case normalize('Dirección Residencia'):
       return customer.direccion_residencia;
-    
+
     case normalize('Correo'):
-      return customer.correo_electronico || 
+      return customer.correo_electronico ||
              customer.correo;
-    
+
     case normalize('Teléfono'):
-      return customer.telefono || 
+      return customer.telefono ||
              customer.info_extra?.telefono;
-    
+
     case normalize('Celular'):
       return customer.numero_celular || customer.celular || customer.telefono;
-    
+
     case normalize('Tipo Crédito'):
-      console.log('Tipo Crédito - checking:', customer.tipo_credito, customer.tipo_de_credito);
       return customer.tipo_credito || customer.tipo_de_credito;
-    
+
     case normalize('Banco'):
-      console.log('Banco - checking:', customer.banco, customer.banco_nombre);
       return customer.banco || customer.banco_nombre;
-    
+
     case normalize('Estado'):
       return customer.estado || customer.estado_solicitud;
-    
+
     case normalize('Monto Solicitado'):
       return customer.monto_solicitado;
-    
+
     case normalize('Valor Inmueble'):
       return customer.valor_inmueble;
-    
+
     case normalize('Plazo'):
       return customer.plazo_tiempo;
-    
+
     case normalize('Fecha Nacimiento'):
       return customer.fecha_nacimiento;
-    
+
     case normalize('Género'):
       return customer.genero;
-    
+
     case normalize('Tipo Documento'):
       return customer.tipo_identificacion || customer.tipo_documento;
-    
+
     case normalize('Nacionalidad'):
       return customer.nacionalidad;
-    
+
     case normalize('Personas a Cargo'):
       return customer.personas_a_cargo;
-    
+
     case normalize('Estado Civil'):
       return customer.estado_civil;
-    
+
     case normalize('Nivel Estudio'):
       return customer.nivel_estudio;
-    
+
     case normalize('Profesión'):
       return customer.profesion;
-    
+
     case normalize('Tipo Contrato'):
       return customer.tipo_contrato || customer.tipo_de_contrato;
-    
+
     case normalize('Actividad Económica'):
     case normalize('Tipo Actividad Económica'):
-      console.log('🔍 Debug Actividad Económica completo:', customer);
-      
       // Usar búsqueda recursiva específica para actividad económica
       const actividadValue = findFieldRecursively(customer, 'tipo_actividad_economica', getFieldEquivalences());
       if (actividadValue && typeof actividadValue === 'string' && actividadValue.trim() !== '') {
-        console.log('✅ Tipo actividad económica encontrada recursivamente:', actividadValue);
         return actividadValue;
       }
-      
+
       // Fallback a fuentes alternativas
       const sources = [
         customer.actividad_economica,
@@ -440,60 +425,57 @@ export const getColumnValue = (customer: any, columnName: string): any => {
         customer.cargo,
         customer.profesion
       ];
-      
+
       for (const source of sources) {
         if (source && typeof source === 'string' && source.trim() !== '') {
-          console.log('✅ Actividad económica encontrada en fallback:', source);
           return source;
         }
         if (source && typeof source === 'object') {
           const objValue = source.sector_economico || source.nombre || source.descripcion || source.tipo_actividad;
           if (objValue && typeof objValue === 'string' && objValue.trim() !== '') {
-            console.log('✅ Actividad económica desde objeto:', objValue);
             return objValue;
           }
         }
       }
-      
+
       console.log('❌ No se encontró actividad económica');
       return '';
-    
+
     case normalize('Sector Económico'):
       return customer.sector_economico;
-    
+
     case normalize('Empresa'):
       return customer.empresa || customer.empresa_labora;
-    
+
     case normalize('Cargo'):
       return customer.cargo || customer.cargo_actual;
-    
+
     case normalize('Ingresos Mensuales'):
       return customer.total_ingresos_mensuales || customer.ingresos;
-    
+
     case normalize('Egresos Mensuales'):
       return customer.total_egresos_mensuales || customer.egresos;
-    
+
     case normalize('Total Activos'):
       return customer.total_activos;
-    
+
     case normalize('Total Pasivos'):
       return customer.total_pasivos;
-    
+
     default:
       // Usar búsqueda recursiva con equivalencias
       const equivalences = getFieldEquivalences();
       const foundValue = findFieldRecursively(customer, columnName, equivalences);
-      
+
       if (foundValue !== null && foundValue !== undefined && foundValue !== '') {
-        console.log(`✅ Valor encontrado recursivamente para "${columnName}":`, foundValue);
         return foundValue;
       }
-      
+
       // Fallback a métodos anteriores
       console.log(`🔄 Fallback: buscando valor para columna: ${columnName}`);
-      
+
       let directValue = customer[fieldName] || customer[columnName];
-      
+
       if (directValue && typeof directValue === 'object') {
         if (directValue.nombre) directValue = directValue.nombre;
         else if (directValue.descripcion) directValue = directValue.descripcion;
@@ -501,15 +483,14 @@ export const getColumnValue = (customer: any, columnName: string): any => {
         else if (directValue.texto) directValue = directValue.texto;
         else directValue = JSON.stringify(directValue);
       }
-      
+
       if (directValue !== undefined && directValue !== null && directValue !== '') {
-        console.log(`✅ Valor encontrado directo:`, directValue);
         return directValue;
       }
-      
+
       const snakeCaseField = columnName.toLowerCase().replace(/\s+/g, '_');
       let snakeCaseValue = customer[snakeCaseField];
-      
+
       if (snakeCaseValue && typeof snakeCaseValue === 'object') {
         if (snakeCaseValue.nombre) snakeCaseValue = snakeCaseValue.nombre;
         else if (snakeCaseValue.descripcion) snakeCaseValue = snakeCaseValue.descripcion;
@@ -517,12 +498,11 @@ export const getColumnValue = (customer: any, columnName: string): any => {
         else if (snakeCaseValue.texto) snakeCaseValue = snakeCaseValue.texto;
         else snakeCaseValue = JSON.stringify(snakeCaseValue);
       }
-      
+
       if (snakeCaseValue !== undefined && snakeCaseValue !== null && snakeCaseValue !== '') {
-        console.log(`✅ Valor encontrado snake_case:`, snakeCaseValue);
         return snakeCaseValue;
       }
-      
+
       console.log(`❌ No se encontró valor para: ${columnName}`);
       return '';
   }
