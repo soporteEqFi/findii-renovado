@@ -1,0 +1,6 @@
+# Rutas internas cuando ya están en el dominio principal
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+ 
