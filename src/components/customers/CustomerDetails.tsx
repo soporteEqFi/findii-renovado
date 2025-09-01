@@ -7,6 +7,10 @@ import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
 import { documentService } from '../../services/documentService';
 import { Document } from '../../types';
 import { NotificationHistory } from '../NotificationHistory';
+import { useConfiguraciones } from '../../hooks/useConfiguraciones';
+import { departments, getCitiesByDepartment } from '../../data/colombianCities';
+import { useEsquemaCompleto } from '../../hooks/useEsquemaCompleto';
+import { emailService } from '../../services/emailService';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -56,6 +60,18 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [customerDocuments, setCustomerDocuments] = useState<Document[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para rastrear el valor original del banco
+  const [originalBankValue, setOriginalBankValue] = useState<string>('');
+
+  // Configuraciones dinámicas (bancos, ciudades)
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { bancos, ciudades, loading: loadingConfig } = useConfiguraciones(empresaId);
+  // Esquema para actividad económica
+  const { esquema: esquemaActividad } = useEsquemaCompleto('actividad_economica', empresaId);
+  
+  // Esquema para solicitud (incluye tipo_credito)
+  const { esquema: esquemaSolicitud } = useEsquemaCompleto('solicitud', empresaId);
 
   // Cargar documentos del cliente cuando se obtiene el solicitante_id
   useEffect(() => {
@@ -81,6 +97,11 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         setCustomerDocuments([]);
       }
     };
+  // Mapa del tipo seleccionado -> clave de detalle a usar (vehiculo reutiliza hipotecario)
+  const detailKeyForTipoCredito = (normalized: string): string => {
+    if (normalized === 'vehiculo') return 'hipotecario';
+    return normalized;
+  };
 
     loadCustomerDocuments();
   }, [solicitanteIdNumber, customer.id_solicitante, customer.solicitante_id, customer.id]);
@@ -101,6 +122,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Inicializar datos editables con la estructura completa
       if (datosCompletos) {
         setEditedData(JSON.parse(JSON.stringify(datosCompletos)));
+        // Capturar el valor original del banco
+        const originalBank = (datosCompletos?.solicitudes?.[0] as any)?.banco_nombre || '';
+        setOriginalBankValue(originalBank);
       }
     } else {
       // Mapear los campos del customer al formato correcto cuando se recibe
@@ -118,6 +142,9 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         plazo_meses: customer.plazo_meses || 0,
       };
       setEditedCustomer(mappedCustomer);
+      // Capturar el valor original del banco desde customer
+      const originalBank = customer.banco || '';
+      setOriginalBankValue(originalBank);
     }
 
          console.log('🔍 === FIN DIAGNÓSTICO ===');
@@ -143,6 +170,25 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   // };
 
   const handleEdit = () => {
+    // Validar que el usuario banco solo pueda editar registros de su banco
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj.rol === 'banco') {
+          const userBanco = userObj.info_extra?.banco_nombre || '';
+          const customerBanco = customer.banco || editedCustomer.banco || '';
+          
+          if (userBanco && customerBanco && userBanco !== customerBanco) {
+            alert(`No tienes permisos para editar registros de ${customerBanco}. Solo puedes editar registros de ${userBanco}.`);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error validating bank permissions:', error);
+      }
+    }
+
     setEditedCustomer({ ...customer }); // Reset to current customer data when starting edit
     setEditedData(datosCompletos ? JSON.parse(JSON.stringify(datosCompletos)) : null);
     setValidationErrors({});
@@ -157,6 +203,25 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   };
 
   const handleDelete = async () => {
+    // Validar que el usuario banco solo pueda eliminar registros de su banco
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj.rol === 'banco') {
+          const userBanco = userObj.info_extra?.banco_nombre || '';
+          const customerBanco = customer.banco || editedCustomer.banco || '';
+          
+          if (userBanco && customerBanco && userBanco !== customerBanco) {
+            alert(`No tienes permisos para eliminar registros de ${customerBanco}. Solo puedes eliminar registros de ${userBanco}.`);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error validating bank permissions for delete:', error);
+      }
+    }
+
     // Confirmar antes de eliminar
     const confirmDelete = window.confirm(
       `¿Estás seguro de que deseas eliminar el registro de "${customer.nombre_completo || customer.nombre || 'este cliente'}"?\n\nEsta acción no se puede deshacer.`
@@ -424,6 +489,25 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const handleSave = async () => {
     if (!canEditCustomer()) return;
 
+    // Validar que el usuario banco solo pueda guardar registros de su banco
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userObj = JSON.parse(userStr);
+        if (userObj.rol === 'banco') {
+          const userBanco = userObj.info_extra?.banco_nombre || '';
+          const customerBanco = customer.banco || editedCustomer.banco || '';
+          
+          if (userBanco && customerBanco && userBanco !== customerBanco) {
+            alert(`No tienes permisos para guardar cambios en registros de ${customerBanco}. Solo puedes editar registros de ${userBanco}.`);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error validating bank permissions for save:', error);
+      }
+    }
+
     // Validar datos antes de enviar
     const errors = validateData(editedData);
     if (Object.keys(errors).length > 0) {
@@ -447,6 +531,16 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Obtener empresa_id y user_id
       const empresaId = localStorage.getItem('empresa_id') || '1';
       const userId = localStorage.getItem('user_id') || localStorage.getItem('cedula') || '123';
+
+      // Detectar cambio de banco
+      const currentBankValue = editedData?.solicitudes?.[0]?.banco_nombre || '';
+      const bankHasChanged = originalBankValue && currentBankValue && originalBankValue !== currentBankValue;
+      
+      console.log('🏦 Detección de cambio de banco:', {
+        original: originalBankValue,
+        current: currentBankValue,
+        hasChanged: bankHasChanged
+      });
 
       // Preparar datos en el formato esperado por el backend (siguiendo estructura de crear-registro-completo)
       const requestData: any = {};
@@ -588,8 +682,48 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Refrescar los datos del hook para obtener la información actualizada
       await refetch();
 
+      // Enviar notificación de cambio de banco si es necesario
+      if (bankHasChanged) {
+        console.log('📧 Enviando notificación de cambio de banco...');
+        
+        try {
+          // Obtener información del usuario actual
+          const userData = localStorage.getItem('user');
+          let userName = 'Usuario';
+          if (userData) {
+            const userObj = JSON.parse(userData);
+            userName = userObj.nombre || userObj.nombres || 'Usuario';
+          }
+
+          // Preparar datos para la notificación
+          const emailData = {
+            customerName: editedData?.solicitante?.nombres + ' ' + (editedData?.solicitante?.primer_apellido || ''),
+            customerDocument: editedData?.solicitante?.numero_documento || '',
+            previousBank: originalBankValue,
+            newBank: currentBankValue,
+            solicitudId: Number(customer.id_solicitud || solicitanteIdNumber),
+            changedBy: userName,
+            changeDate: new Date().toISOString()
+          };
+
+          // Enviar email de notificación
+          await emailService.sendBankChangeNotification(emailData, parseInt(empresaId));
+          
+          // Crear notificación interna
+          await emailService.createBankChangeNotification(emailData, parseInt(empresaId));
+          
+          console.log('✅ Notificaciones de cambio de banco enviadas exitosamente');
+        } catch (emailError) {
+          console.error('❌ Error al enviar notificaciones de cambio de banco:', emailError);
+          // No interrumpir el flujo principal por errores de notificación
+        }
+      }
+
       // Mostrar mensaje de éxito
-      alert('Registro actualizado exitosamente');
+      const successMessage = bankHasChanged 
+        ? 'Registro actualizado exitosamente. Se ha notificado el cambio de banco.'
+        : 'Registro actualizado exitosamente';
+      alert(successMessage);
 
       // Salir del modo edición
       setIsEditing(false);
@@ -824,6 +958,58 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               <option value="libre_inversion">Libre Inversión</option>
               <option value="vehiculo">Vehículo</option>
             </select>
+          ) : key === 'banco_nombre' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading || loadingConfig}
+            >
+              <option value="">{loadingConfig ? 'Cargando bancos...' : 'Seleccionar banco...'}</option>
+              {bancos.map((banco) => (
+                <option key={banco} value={banco}>{banco}</option>
+              ))}
+            </select>
+          ) : key === 'estado_civil' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            >
+              <option value="">Seleccionar estado civil...</option>
+              <option value="Soltero">Soltero</option>
+              <option value="Casado">Casado</option>
+              <option value="Unión Libre">Unión Libre</option>
+              <option value="Divorciado">Divorciado</option>
+              <option value="Viudo">Viudo</option>
+            </select>
+          ) : key === 'departamento' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading}
+            >
+              <option value="">Seleccionar departamento...</option>
+              {departments.map((dep) => (
+                <option key={dep} value={dep}>{dep}</option>
+              ))}
+            </select>
+          ) : key === 'ciudad' || key === 'ciudad_solicitud' || key === 'lugar_nacimiento' ? (
+            <select
+              value={editedCustomer[key] || ''}
+              onChange={(e) => handleInputChange(key, e.target.value)}
+              className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+              disabled={loading || loadingConfig}
+            >
+              <option value="">{loadingConfig ? 'Cargando ciudades...' : 'Seleccionar ciudad...'}</option>
+              {(editedCustomer['departamento']
+                ? getCitiesByDepartment(String(editedCustomer['departamento']))
+                : ciudades).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+            </select>
           ) : key === 'estado' ? (
             <select
               value={editedCustomer[key] || ''}
@@ -944,7 +1130,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
               />
             )}
 
-            {/* Detalles de Actividad Económica */}
+            {/* Detalles de Actividad Económica con campos condicionales integrados */}
             {(datosCompletos.actividad_economica?.detalle_actividad || editedData?.actividad_economica?.detalle_actividad) && (
               <EditableDynamicSection
                 title="Detalles de Actividad Económica"
@@ -954,6 +1140,8 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 canEdit={canEditCustomer()}
                 onUpdate={updateNestedData}
                 validationErrors={validationErrors}
+                includeConditionalFields={true}
+                esquemaActividad={esquemaActividad}
               />
             )}
 
@@ -1421,10 +1609,76 @@ const EditableDynamicSection: React.FC<{
   canEdit: boolean;
   onUpdate: (path: string, value: any) => void;
   validationErrors: Record<string, string>;
-}> = ({ title, data, basePath, excludeKeys = [], isEditing, canEdit, onUpdate, validationErrors }) => {
+  includeConditionalFields?: boolean;
+  esquemaActividad?: any;
+}> = ({ title, data, basePath, excludeKeys = [], isEditing, canEdit, onUpdate, validationErrors, includeConditionalFields = false, esquemaActividad: propEsquemaActividad }) => {
   if (!data || typeof data !== 'object') {
     return null;
   }
+
+  // Configuraciones dinámicas disponibles también aquí
+  const empresaIdLocal = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { bancos: bancosCfg, ciudades: ciudadesCfg, loading: loadingCfg } = useConfiguraciones(empresaIdLocal);
+  const { esquema: esquemaActividad } = useEsquemaCompleto('actividad_economica', empresaIdLocal);
+  const { esquema: esquemaSolicitudLocal } = useEsquemaCompleto('solicitud', empresaIdLocal);
+
+  // Helper: normalizar valor de BD a opciones del select tipo_credito
+  const normalizeTipoCredito = (v: any): string => {
+    if (!v) return '';
+    const s = String(v).toLowerCase();
+    if (s.includes('vehicul')) return 'vehiculo';
+    if (s.includes('hipotec') || s.includes('vivienda')) return 'hipotecario';
+    if (s.includes('libre')) return 'libre_inversion';
+    if (s.includes('consumo')) return 'consumo';
+    // si ya viene uno válido
+    const valid = ['hipotecario','consumo','libre_inversion','vehiculo'];
+    return valid.includes(s) ? s : '';
+  };
+
+  // Mapa del tipo seleccionado -> clave de detalle a usar (vehiculo reutiliza hipotecario)
+  const detailKeyForTipoCredito = (normalized: string): string => {
+    if (normalized === 'vehiculo') return 'hipotecario';
+    return normalized;
+  };
+
+  // Get conditional fields if includeConditionalFields is enabled
+  const getConditionalFields = () => {
+    if (!includeConditionalFields) {
+      return [];
+    }
+
+    let conditionalFields: string[] = [];
+
+    // Handle tipo_actividad_economica conditional fields
+    if (esquemaActividad && data.tipo_actividad_economica) {
+      const selected = String(data.tipo_actividad_economica);
+      const condCampos = [
+        ...(esquemaActividad.campos_dinamicos || []),
+        ...(esquemaActividad.campos_fijos || [])
+      ]
+        .filter(c => c.conditional_on && c.conditional_on.field === 'tipo_actividad_economica' && c.conditional_on.value === selected)
+        .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
+
+      conditionalFields.push(...condCampos.map(campo => campo.key));
+    }
+
+    // Handle tipo_credito conditional fields using schema
+    if (esquemaSolicitudLocal && data.tipo_credito) {
+      const selected = String(data.tipo_credito);
+      const condCampos = [
+        ...(esquemaSolicitudLocal.campos_dinamicos || []),
+        ...(esquemaSolicitudLocal.campos_fijos || [])
+      ]
+        .filter(c => c.conditional_on && c.conditional_on.field === 'tipo_credito' && c.conditional_on.value === selected)
+        .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
+
+      conditionalFields.push(...condCampos.map(campo => campo.key));
+    }
+
+    return conditionalFields;
+  };
+
+  const conditionalFieldKeys = getConditionalFields();
 
   const filteredKeys = Object.keys(data).filter(key => {
     const value = data[key];
@@ -1455,7 +1709,74 @@ const EditableDynamicSection: React.FC<{
     return true;
   });
 
-  if (filteredKeys.length === 0) {
+  // Add conditional fields to the filtered keys if they should be included
+  const allKeys = [...filteredKeys];
+  if (includeConditionalFields) {
+    // Handle tipo_actividad_economica conditional fields
+    const tipoActividadIndex = allKeys.indexOf('tipo_actividad_economica');
+    let insertIndex = tipoActividadIndex !== -1 ? tipoActividadIndex + 1 : allKeys.length;
+    
+    conditionalFieldKeys.forEach(condKey => {
+      if (!allKeys.includes(condKey)) {
+        // Handle activity economic conditional fields
+        if (!condKey.includes('.')) {
+          const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === condKey) || 
+                            esquemaActividad?.campos_fijos?.find(c => c.key === condKey);
+          
+          if (campoSchema?.type === 'object' && campoSchema?.list_values && 'object_structure' in campoSchema.list_values) {
+            // Add individual subfields instead of the object field
+            const structure = ((campoSchema.list_values as any).object_structure as any[])
+              .slice()
+              .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
+            
+            structure.forEach(sub => {
+              const subFieldKey = `${condKey}.${sub.key}`;
+              allKeys.splice(insertIndex, 0, subFieldKey);
+              insertIndex++;
+            });
+          } else {
+            // Add the field normally
+            allKeys.splice(insertIndex, 0, condKey);
+            insertIndex++;
+          }
+        }
+      }
+    });
+
+    // Handle tipo_credito conditional fields
+    const tipoCreditoIndex = allKeys.indexOf('tipo_credito');
+    let creditInsertIndex = tipoCreditoIndex !== -1 ? tipoCreditoIndex + 1 : allKeys.length;
+    
+    conditionalFieldKeys.forEach(condKey => {
+      if (!allKeys.includes(condKey) && !condKey.includes('.')) {
+        // Check if this is a credit conditional field (not activity field)
+        const isCreditField = esquemaSolicitudLocal?.campos_dinamicos?.find(c => c.key === condKey && c.conditional_on?.field === 'tipo_credito') ||
+                             esquemaSolicitudLocal?.campos_fijos?.find(c => c.key === condKey && c.conditional_on?.field === 'tipo_credito');
+        
+        if (isCreditField) {
+          // Check if this is an object field with structure - if so, add its subfields individually
+          if (isCreditField.type === 'object' && isCreditField.list_values && 'object_structure' in isCreditField.list_values) {
+            // Add individual subfields instead of the object field
+            const structure = ((isCreditField.list_values as any).object_structure as any[])
+              .slice()
+              .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
+            
+            structure.forEach(sub => {
+              const subFieldKey = `${condKey}.${sub.key}`;
+              allKeys.splice(creditInsertIndex, 0, subFieldKey);
+              creditInsertIndex++;
+            });
+          } else {
+            // Add the field normally
+            allKeys.splice(creditInsertIndex, 0, condKey);
+            creditInsertIndex++;
+          }
+        }
+      }
+    });
+  }
+
+  if (allKeys.length === 0) {
     return null;
   }
 
@@ -1518,6 +1839,170 @@ const EditableDynamicSection: React.FC<{
     return String(value);
   };
 
+  // Function to render individual subfields as separate grid items
+  const renderSubField = (fullKey: string, parentKey: string, subKey: string, value: any, subSchema: any) => {
+    const fieldPath = `${basePath}.${parentKey}.${subKey}`;
+    const hasError = validationErrors[fieldPath];
+    const baseClasses = `border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'}`;
+
+    return (
+      <div key={fullKey} className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 mt-2">
+          {formatFieldName(subKey)}
+          {hasError && (
+            <span className="ml-1 text-red-500 text-xs">*</span>
+          )}
+        </label>
+
+        {isEditing && canEdit ? (
+          <div className="space-y-1">
+            {subSchema?.type === 'boolean' ? (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={Boolean(value)}
+                  onChange={(e) => onUpdate(fieldPath, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  {Boolean(value) ? 'Sí' : 'No'}
+                </span>
+              </div>
+            ) : subSchema?.type === 'number' || subSchema?.type === 'integer' ? (
+              <input
+                type="number"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value === '' ? '' : Number(e.target.value))}
+                className={baseClasses}
+              />
+            ) : subSchema?.type === 'date' ? (
+              <input
+                type="date"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={baseClasses}
+              />
+            ) : (
+              <input
+                type="text"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={baseClasses}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+            {subSchema?.type === 'boolean' ? (value ? 'Sí' : 'No') : (value || '-')}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Function to render conditional fields with schema information
+  const renderConditionalField = (key: string, value: any, campoSchema: any) => {
+    const fieldPath = `${basePath}.${key}`;
+    const hasError = validationErrors[fieldPath];
+    const baseClasses = `border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'}`;
+
+    return (
+      <div key={key} className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700 mt-2">
+          {formatFieldName(key)}
+          {hasError && (
+            <span className="ml-1 text-red-500 text-xs">*</span>
+          )}
+        </label>
+
+        {isEditing && canEdit ? (
+          <div className="space-y-1">
+            {campoSchema?.type === 'boolean' ? (
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={Boolean(value)}
+                  onChange={(e) => onUpdate(fieldPath, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  {Boolean(value) ? 'Sí' : 'No'}
+                </span>
+              </div>
+            ) : campoSchema?.type === 'number' || campoSchema?.type === 'integer' ? (
+              <input
+                type="number"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value === '' ? '' : Number(e.target.value))}
+                className={baseClasses}
+              />
+            ) : campoSchema?.type === 'date' ? (
+              <input
+                type="date"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={baseClasses}
+              />
+            ) : campoSchema?.type === 'object' && campoSchema?.list_values && 'object_structure' in campoSchema.list_values ? (
+              <div className="p-3 rounded-md border border-gray-200">
+                <div className="text-sm font-medium text-gray-700 mb-2">{formatFieldName(key)}</div>
+                {((campoSchema.list_values as any).object_structure as any[])
+                  .slice()
+                  .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999))
+                  .map((sub: any) => {
+                    const subPath = `${fieldPath}.${sub.key}`;
+                    const subVal = value ? value[sub.key] : undefined;
+                    
+                    if (sub.type === 'number' || sub.type === 'integer') {
+                      return (
+                        <div key={sub.key} className="mt-2">
+                          <label className="block text-xs font-medium text-gray-700">{formatFieldName(sub.key)}</label>
+                          <input type="number" value={subVal ?? ''} onChange={(e) => onUpdate(subPath, e.target.value === '' ? '' : Number(e.target.value))} className={baseClasses} />
+                        </div>
+                      );
+                    }
+                    if (sub.type === 'boolean') {
+                      return (
+                        <div key={sub.key} className="mt-2">
+                          <label className="block text-xs font-medium text-gray-700">{formatFieldName(sub.key)}</label>
+                          <input type="checkbox" checked={!!subVal} onChange={(e) => onUpdate(subPath, e.target.checked)} />
+                        </div>
+                      );
+                    }
+                    if (sub.type === 'date') {
+                      return (
+                        <div key={sub.key} className="mt-2">
+                          <label className="block text-xs font-medium text-gray-700">{formatFieldName(sub.key)}</label>
+                          <input type="date" value={subVal ?? ''} onChange={(e) => onUpdate(subPath, e.target.value)} className={baseClasses} />
+                        </div>
+                      );
+                    }
+                    return (
+                      <div key={sub.key} className="mt-2">
+                        <label className="block text-xs font-medium text-gray-700">{formatFieldName(sub.key)}</label>
+                        <input type="text" value={subVal ?? ''} onChange={(e) => onUpdate(subPath, e.target.value)} className={baseClasses} />
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <input
+                type="text"
+                value={value ?? ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={baseClasses}
+              />
+            )}
+          </div>
+        ) : (
+          <div className="bg-gray-50 px-3 py-2 rounded-md text-gray-800">
+            {campoSchema?.type === 'boolean' ? (value ? 'Sí' : 'No') : (value || '-')}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderField = (key: string, value: any) => {
     const fieldPath = `${basePath}.${key}`;
     const fieldType = getFieldType(key, value);
@@ -1538,7 +2023,130 @@ const EditableDynamicSection: React.FC<{
 
         {isEditing && canEdit ? (
           <div className="space-y-1">
-            {fieldType === 'checkbox' ? (
+            {key === 'banco_nombre' ? (
+              <select
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+                disabled={loadingCfg}
+              >
+                <option value="">{loadingCfg ? 'Cargando bancos...' : 'Seleccionar banco...'}</option>
+                {bancosCfg.map((b) => (
+                  <option key={b} value={b}>{b}</option>
+                ))}
+              </select>
+            ) : key === 'tipo_credito' ? (
+              <>
+                {(() => {
+                  let opciones: string[] = [];
+                  const campoSchema = esquemaSolicitudLocal?.campos_dinamicos?.find(c => c.key === key) || 
+                                    esquemaSolicitudLocal?.campos_fijos?.find(c => c.key === key);
+                  
+                  if (campoSchema && campoSchema.list_values && typeof campoSchema.list_values === 'object' && 'enum' in campoSchema.list_values) {
+                    opciones = (campoSchema.list_values as any).enum as string[];
+                  } else {
+                    // Fallback to hardcoded options if schema not available
+                    opciones = ['hipotecario', 'consumo', 'libre_inversion', 'vehiculo'];
+                  }
+
+                  return (
+                    <select
+                      value={value || ''}
+                      onChange={(e) => {
+                        const nuevo = e.target.value;
+                        onUpdate(fieldPath, nuevo);
+                      }}
+                      className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                        hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Seleccionar tipo de crédito...</option>
+                      {opciones.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  );
+                })()}
+                {/* Conditional fields for tipo_credito will be rendered inline in the main grid */}
+              </>
+            ) : key === 'tipo_actividad' || key === 'tipo_actividad_economica' ? (
+              <>
+                {(() => {
+                  let opciones: string[] = [];
+                  const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === key) || esquemaActividad?.campos_fijos?.find(c => c.key === key);
+                  if (campoSchema && campoSchema.list_values && typeof campoSchema.list_values === 'object' && 'enum' in campoSchema.list_values) {
+                    opciones = (campoSchema.list_values as any).enum as string[];
+                  } else {
+                    opciones = ['Empleado', 'Pensionado', 'Independiente'];
+                  }
+
+                  return (
+                    <select
+                      value={value || ''}
+                      onChange={(e) => {
+                        const nuevo = e.target.value;
+                        onUpdate(fieldPath, nuevo);
+                      }}
+                      className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                        hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Seleccionar tipo de actividad...</option>
+                      {opciones.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  );
+                })()}
+
+              </>
+            ) : key === 'ciudad' || key === 'ciudad_solicitud' || key === 'lugar_nacimiento' || key === 'ciudad_residencia' ? (
+              <select
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+                disabled={loadingCfg}
+              >
+                <option value="">{loadingCfg ? 'Cargando ciudades...' : 'Seleccionar ciudad...'}</option>
+                {((data['departamento'] || data['departamento_residencia']) ? getCitiesByDepartment(String(data['departamento'] || data['departamento_residencia'])) : ciudadesCfg).map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            ) : key === 'estado_civil' ? (
+              <select
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Seleccionar estado civil...</option>
+                <option value="Soltero">Soltero</option>
+                <option value="Casado">Casado</option>
+                <option value="Unión Libre">Unión Libre</option>
+                <option value="Divorciado">Divorciado</option>
+                <option value="Viudo">Viudo</option>
+              </select>
+            ) : key === 'estado' ? (
+              <select
+                value={value || ''}
+                onChange={(e) => onUpdate(fieldPath, e.target.value)}
+                className={`border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
+                  hasError ? 'border-red-300 focus:border-red-500' : 'border-gray-300'
+                }`}
+              >
+                <option value="">Seleccionar...</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="En estudio">En estudio</option>
+                <option value="Aprobado">Aprobado</option>
+                <option value="Negado">Negado</option>
+                <option value="Desembolsado">Desembolsado</option>
+              </select>
+            ) : fieldType === 'checkbox' ? (
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -1590,7 +2198,43 @@ const EditableDynamicSection: React.FC<{
     <div className="md:col-span-2">
       <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3 mt-4">{title}</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-x-4">
-        {filteredKeys.map((key) => renderField(key, data[key]))}
+        {allKeys.map((key) => {
+          // Handle dot-notation keys for subfields (e.g., "datos_empleado.nombre_empresa")
+          let value = data[key];
+          let isSubField = false;
+          let parentKey = '';
+          let subKey = '';
+          
+          if (key.includes('.')) {
+            isSubField = true;
+            [parentKey, subKey] = key.split('.');
+            value = data[parentKey] ? data[parentKey][subKey] : undefined;
+          }
+          
+          // If this is a conditional field and includeConditionalFields is enabled, 
+          // render it with schema information
+          if (includeConditionalFields && (conditionalFieldKeys.includes(key) || conditionalFieldKeys.includes(parentKey))) {
+            if (isSubField) {
+              // Find the parent schema and then the subfield schema
+              const parentSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === parentKey) || 
+                                 esquemaActividad?.campos_fijos?.find(c => c.key === parentKey);
+              
+              if (parentSchema?.type === 'object' && parentSchema?.list_values && 'object_structure' in parentSchema.list_values) {
+                const subSchema = ((parentSchema.list_values as any).object_structure as any[])
+                  .find(sub => sub.key === subKey);
+                
+                return renderSubField(key, parentKey, subKey, value, subSchema);
+              }
+            } else {
+              const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === key) || 
+                                esquemaActividad?.campos_fijos?.find(c => c.key === key);
+              
+              return renderConditionalField(key, value, campoSchema);
+            }
+          }
+          
+          return renderField(key, value);
+        })}
       </div>
     </div>
   );

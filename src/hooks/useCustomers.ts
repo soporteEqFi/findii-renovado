@@ -20,21 +20,51 @@ export const useCustomers = () => {
 
       const empresaId = localStorage.getItem('empresa_id') || '1';
       let userId = localStorage.getItem('user_id') || '';
+      let userRole = '';
 
-      // Si no hay user_id directo, intentar obtenerlo del objeto user
-      if (!userId) {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-          try {
-            const userObj = JSON.parse(userStr);
-            userId = userObj.id?.toString() || '';
-          } catch (error) {
-            console.error('Error parsing user object:', error);
-          }
+      // Obtener información del usuario y rol
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const userObj = JSON.parse(userStr);
+          userId = userId || userObj.id?.toString() || '';
+          userRole = userObj.rol || '';
+        } catch (error) {
+          console.error('Error parsing user object:', error);
         }
       }
 
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}${userId ? `&user_id=${userId}` : ''}`;
+      // Para el rol banco, filtrar por banco_nombre en lugar de user_id
+      let bancoNombre = '';
+      if (userRole === 'banco' && userStr) {
+        try {
+          const userObj = JSON.parse(userStr);
+          bancoNombre = userObj.info_extra?.banco_nombre || '';
+        } catch (error) {
+          console.error('Error getting banco_nombre:', error);
+        }
+      }
+      
+      console.log('🔍 Filtrado de datos:', {
+        userRole,
+        userId,
+        bancoNombre,
+        empresaId
+      });
+
+      // Construir URL según el rol
+      let url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`;
+      
+      if (userRole === 'banco' && bancoNombre) {
+        // Para banco, filtrar por banco_nombre
+        url += `&banco_nombre=${encodeURIComponent(bancoNombre)}`;
+      } else if (userRole !== 'banco' && userId) {
+        // Para otros roles, filtrar por user_id
+        url += `&user_id=${userId}`;
+      }
+      
+      console.log('📡 URL de la API:', url);
+      
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -53,8 +83,23 @@ export const useCustomers = () => {
         throw new Error('Invalid response format: missing data array');
       }
 
+      // Filtrar datos del lado del cliente para el rol banco
+      let filteredData = responseData.data;
+      if (userRole === 'banco' && bancoNombre) {
+        filteredData = responseData.data.filter((item) => {
+          const solicitudBanco = item.solicitud?.banco_nombre || item.banco_nombre || '';
+          return solicitudBanco === bancoNombre;
+        });
+        
+        console.log('🏦 Filtrado por banco:', {
+          totalRecords: responseData.data.length,
+          filteredRecords: filteredData.length,
+          bancoNombre
+        });
+      }
+
       // Map the API response to the Customer type
-      const mappedCustomers = responseData.data.map((item) => {
+      const mappedCustomers = filteredData.map((item) => {
         const s = item.solicitante || {};
         const ue = item.ubicacion || {};
         const act = item.actividad_economica || {};
