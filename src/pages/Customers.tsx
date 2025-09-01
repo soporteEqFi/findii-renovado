@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, Download, UserCog } from 'lucide-react';
+import { Loader2, Plus, Download } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
@@ -8,11 +8,12 @@ import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
-import { buildApiUrl, API_CONFIG } from '../config/constants';
-import { Link } from 'react-router-dom';
+import { buildApiUrl } from '../config/constants';
+import { useTableConfig } from '../contexts/TableConfigContext';
 
 const Customers = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { refreshTrigger } = useTableConfig();
   const {
     customers,
     isLoading,
@@ -239,6 +240,7 @@ const Customers = () => {
           onStatusChange={handleStatusChange}
           totalRecords={totalRecords}
           empresaId={1}
+          refreshTrigger={refreshTrigger}
         />
       </div>
 

@@ -117,7 +117,7 @@ const formatFieldName = (fieldName: string): string => {
 };
 
 /**
- * Obtiene la configuración de columnas desde la API o detecta automáticamente
+ * Obtiene la configuración de columnas desde la nueva API de configuración de tabla
  * @param empresaId ID de la empresa
  * @param apiData Datos de la API para detección automática (opcional)
  * @returns Configuración de columnas
@@ -138,10 +138,17 @@ export const fetchColumnConfig = async (empresaId: number, apiData?: any[]): Pro
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result: ColumnConfigResponse = await response.json();
+    const result = await response.json();
 
     if (result.ok && result.data?.columnas) {
-      return result.data.columnas;
+      // Filtrar solo las columnas activas y ordenarlas
+      const columnasActivas = result.data.columnas
+        .filter((col: any) => col.activo)
+        .sort((a: any, b: any) => a.orden - b.orden)
+        .map((col: any) => col.nombre);
+      
+      console.log('✅ Columnas cargadas desde configuración:', columnasActivas);
+      return columnasActivas;
     } else {
       console.warn('No se pudo obtener configuración de columnas desde la API');
       // Si tenemos datos de la API, detectar automáticamente
@@ -333,67 +340,55 @@ export const getColumnValue = (customer: any, columnName: string): any => {
   // Casos especiales para campos que pueden tener múltiples fuentes
   switch (n) {
     case normalize('Nombre'):
+    case normalize('Nombres'):
       return customer.nombre_completo ||
              `${customer.nombres || ''} ${customer.primer_apellido || ''}`.trim() ||
              customer.nombres;
 
-    case normalize('Ciudad'):
-      return customer.ciudad_gestion ||
-             customer.ciudad_residencia ||
-             customer.ciudad_solicitud ||
-             customer.ciudad;
+    case normalize('Numero Documento'):
+      return customer.numero_documento;
 
     case normalize('Ciudad Residencia'):
-      return customer.ciudad_gestion || customer.ciudad_residencia;
+      return customer.ciudad_residencia || customer.ciudad_gestion;
+
+    case normalize('Correo'):
+      return customer.correo || customer.correo_electronico;
+
+    case normalize('Celular'):
+      return customer.celular || customer.numero_celular || customer.telefono;
+
+    case normalize('Tipo Credito'):
+      return customer.tipo_credito || customer.tipo_de_credito;
+
+    case normalize('Tipo Actividad Economica'):
+      // Buscar en la estructura anidada de actividad_economica
+      if (customer.actividad_economica?.detalle_actividad?.tipo_actividad_economica) {
+        return customer.actividad_economica.detalle_actividad.tipo_actividad_economica;
+      }
+      return customer.tipo_actividad_economica || customer.actividad_economica;
+
+    case normalize('Banco'):
+      return customer.banco_nombre || customer.banco;
 
     case normalize('Ciudad Solicitud'):
       return customer.ciudad_solicitud;
 
-    case normalize('Dirección Residencia'):
-      return customer.direccion_residencia;
-
-    case normalize('Correo'):
-      return customer.correo_electronico ||
-             customer.correo;
-
-    case normalize('Teléfono'):
-      return customer.telefono ||
-             customer.info_extra?.telefono;
-
-    case normalize('Celular'):
-      return customer.numero_celular || customer.celular || customer.telefono;
-
-    case normalize('Tipo Crédito'):
-      return customer.tipo_credito || customer.tipo_de_credito;
-
-    case normalize('Banco'):
-      return customer.banco || customer.banco_nombre;
-
     case normalize('Estado'):
       return customer.estado || customer.estado_solicitud;
-
-    case normalize('Monto Solicitado'):
-      return customer.monto_solicitado;
-
-    case normalize('Valor Inmueble'):
-      return customer.valor_inmueble;
-
-    case normalize('Plazo'):
-      return customer.plazo_tiempo;
 
     case normalize('Fecha Nacimiento'):
       return customer.fecha_nacimiento;
 
-    case normalize('Género'):
+    case normalize('Genero'):
       return customer.genero;
 
-    case normalize('Tipo Documento'):
+    case normalize('Tipo Identificacion'):
       return customer.tipo_identificacion || customer.tipo_documento;
 
     case normalize('Nacionalidad'):
       return customer.nacionalidad;
 
-    case normalize('Personas a Cargo'):
+    case normalize('Personas A Cargo'):
       return customer.personas_a_cargo;
 
     case normalize('Estado Civil'):
@@ -402,65 +397,17 @@ export const getColumnValue = (customer: any, columnName: string): any => {
     case normalize('Nivel Estudio'):
       return customer.nivel_estudio;
 
-    case normalize('Profesión'):
+    case normalize('Profesion'):
       return customer.profesion;
 
-    case normalize('Tipo Contrato'):
-      return customer.tipo_contrato || customer.tipo_de_contrato;
+    case normalize('Telefono'):
+      return customer.telefono || customer.numero_celular;
 
-    case normalize('Actividad Económica'):
-    case normalize('Tipo Actividad Económica'):
-      // Usar búsqueda recursiva específica para actividad económica
-      const actividadValue = findFieldRecursively(customer, 'tipo_actividad_economica', getFieldEquivalences());
-      if (actividadValue && typeof actividadValue === 'string' && actividadValue.trim() !== '') {
-        return actividadValue;
-      }
+    case normalize('Monto Solicitado'):
+      return customer.monto_solicitado;
 
-      // Fallback a fuentes alternativas
-      const sources = [
-        customer.actividad_economica,
-        customer.sector_economico,
-        customer.empresa,
-        customer.empresa_labora,
-        customer.cargo,
-        customer.profesion
-      ];
-
-      for (const source of sources) {
-        if (source && typeof source === 'string' && source.trim() !== '') {
-          return source;
-        }
-        if (source && typeof source === 'object') {
-          const objValue = source.sector_economico || source.nombre || source.descripcion || source.tipo_actividad;
-          if (objValue && typeof objValue === 'string' && objValue.trim() !== '') {
-            return objValue;
-          }
-        }
-      }
-
-      console.log('❌ No se encontró actividad económica');
-      return '';
-
-    case normalize('Sector Económico'):
-      return customer.sector_economico;
-
-    case normalize('Empresa'):
-      return customer.empresa || customer.empresa_labora;
-
-    case normalize('Cargo'):
-      return customer.cargo || customer.cargo_actual;
-
-    case normalize('Ingresos Mensuales'):
-      return customer.total_ingresos_mensuales || customer.ingresos;
-
-    case normalize('Egresos Mensuales'):
-      return customer.total_egresos_mensuales || customer.egresos;
-
-    case normalize('Total Activos'):
-      return customer.total_activos;
-
-    case normalize('Total Pasivos'):
-      return customer.total_pasivos;
+    case normalize('Plazo Tiempo'):
+      return customer.plazo_tiempo;
 
     default:
       // Usar búsqueda recursiva con equivalencias

@@ -10,6 +10,7 @@ import TestPage from './pages/TestPage';
 import TermsAndConditions from './pages/TermsAndConditions';
 import AcuerdoFirma from './pages/AcuerdoFirma';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TableConfigProvider } from './contexts/TableConfigContext';
 import { Toaster } from 'react-hot-toast';
 import { CreditTracking } from './components/tracking/CreditTracking';
 import ConfiguracionAdmin from './pages/ConfiguracionAdmin';
@@ -62,7 +63,8 @@ function App() {
         }}
       />
       <AuthProvider>
-        <BrowserRouter>
+        <TableConfigProvider>
+          <BrowserRouter>
           <Routes>
             {/* Ruta pública de login */}
             <Route path="/login" element={<Login />} />
@@ -104,6 +106,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
+        </TableConfigProvider>
       </AuthProvider>
       {/* <div>
         <a href="/users" className="text-blue-500 underline">Ir a Usuarios</a>

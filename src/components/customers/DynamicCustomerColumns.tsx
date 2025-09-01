@@ -178,17 +178,27 @@ export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>
         });
 
       case 'Nombre':
+      case 'Nombres':
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'nombre',
-          header: 'Nombre',
+          header: columnName,
           cell: (info) => <span className="font-medium">{String(info.getValue() || '')}</span>,
           enableColumnFilter: true,
         });
 
+      case 'Numero Documento':
       case 'Número Documento':
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'numero_documento',
-          header: 'Número Documento',
+          header: columnName,
+          cell: (info) => String(info.getValue() || ''),
+          enableColumnFilter: true,
+        });
+
+      case 'Ciudad Residencia':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'ciudad_residencia',
+          header: columnName,
           cell: (info) => String(info.getValue() || ''),
           enableColumnFilter: true,
         });
@@ -196,7 +206,7 @@ export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>
       case 'Correo':
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'correo',
-          header: 'Correo',
+          header: columnName,
           cell: (info) => (
             <div className="flex items-center">
               <Mail className="w-4 h-4 mr-2 text-gray-500" />
@@ -205,10 +215,10 @@ export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>
           ),
         });
 
-      case 'Teléfono':
+      case 'Celular':
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
-          id: 'telefono',
-          header: 'Teléfono',
+          id: 'celular',
+          header: columnName,
           cell: (info) => (
             <div className="flex items-center">
               <Phone className="w-4 h-4 mr-2 text-gray-500" />
@@ -217,11 +227,59 @@ export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>
           ),
         });
 
+      case 'Tipo Credito':
+      case 'Tipo credito':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'tipo_credito',
+          header: columnName,
+          cell: (info) => String(info.getValue() || ''),
+          enableColumnFilter: true,
+        });
+
+      case 'Tipo Actividad Economica':
+      case 'Tipo actividad economica':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'tipo_actividad_economica',
+          header: columnName,
+          cell: (info) => String(info.getValue() || ''),
+          enableColumnFilter: true,
+        });
+
+      case 'Banco':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'banco',
+          header: columnName,
+          cell: (info) => String(info.getValue() || ''),
+          enableColumnFilter: true,
+        });
+
+      case 'Ciudad Solicitud':
+      case 'Ciudad solicitud':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'ciudad_solicitud',
+          header: columnName,
+          cell: (info) => String(info.getValue() || ''),
+          enableColumnFilter: true,
+        });
+
       case 'Estado':
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'estado',
-          header: 'Estado',
+          header: columnName,
           cell: (info) => <StatusCell info={info} />,
+        });
+
+      case 'Teléfono':
+      case 'Telefono':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'telefono',
+          header: columnName,
+          cell: (info) => (
+            <div className="flex items-center">
+              <Phone className="w-4 h-4 mr-2 text-gray-500" />
+              {String(info.getValue() || '')}
+            </div>
+          ),
         });
 
       default:

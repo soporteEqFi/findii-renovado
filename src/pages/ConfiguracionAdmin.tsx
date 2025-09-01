@@ -6,6 +6,8 @@ import { conditionalFieldService } from '../services/conditionalFieldService';
 import { toast } from 'react-hot-toast';
 import FieldForm from '../components/configuracion/FieldForm';
 import { ConditionalFieldConfig } from '../components/configuracion/ConditionalFieldConfig';
+import { TableColumnConfig } from '../components/configuracion/TableColumnConfig';
+import { useTableConfig } from '../contexts/TableConfigContext';
 
 interface EntityGroup {
   entity: string;
@@ -18,6 +20,7 @@ interface EntityGroup {
 }
 
 const ConfiguracionAdmin: React.FC = () => {
+  const { triggerRefresh } = useTableConfig();
   const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -25,6 +28,7 @@ const ConfiguracionAdmin: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<EntityGroup | null>(null);
   const [showConditionalConfig, setShowConditionalConfig] = useState<boolean>(false);
   const [configuringField, setConfiguringField] = useState<FieldDefinition | null>(null);
+  const [activeTab, setActiveTab] = useState<'campos' | 'tabla'>('campos');
 
   const entityConfig = useMemo(() => ([
     {
@@ -182,7 +186,7 @@ const ConfiguracionAdmin: React.FC = () => {
       });
 
       // Actualizar la condición en el backend
-      const updatedField = await conditionalFieldService.updateFieldCondition(
+      await conditionalFieldService.updateFieldCondition(
         configuringField.key,
         configuringField.entity,
         configuringField.json_column,
@@ -336,14 +340,42 @@ const ConfiguracionAdmin: React.FC = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Configuración de Campos</h1>
-        <button
-          onClick={handleCreate}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
-        >
-          <Plus size={16} />
-          Crear Nuevo
-        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
+        {activeTab === 'campos' && (
+          <button
+            onClick={handleCreate}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
+          >
+            <Plus size={16} />
+            Crear Nuevo
+          </button>
+        )}
+      </div>
+
+      {/* Navegación por pestañas */}
+      <div className="mb-6">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('campos')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'campos'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Configuración Campos
+          </button>
+          <button
+            onClick={() => setActiveTab('tabla')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'tabla'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Configuración Tabla
+          </button>
+        </nav>
       </div>
 
       {showForm && (
@@ -391,64 +423,71 @@ const ConfiguracionAdmin: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <table className="min-w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                NOMBRE
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                DESCRIPCIÓN
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                CAMPOS
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ESTADO
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ACCIONES
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {entityGroups.map((group, index) => (
-              <tr key={`${group.entity}-${group.jsonColumn}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">{group.displayName}</div>
-                  <div className="text-xs text-gray-500">{group.entity}_{group.jsonColumn}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-sm text-gray-900 max-w-md">{group.description}</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">{group.fieldCount} campos</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    Activo
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button
-                    onClick={() => handleEdit(group)}
-                    className="text-blue-600 hover:text-blue-800 mr-4 font-medium"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(group)}
-                    className="text-red-600 hover:text-red-800 font-medium"
-                  >
-                    Eliminar
-                  </button>
-                </td>
+      {/* Contenido de las pestañas */}
+      {activeTab === 'campos' && (
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <table className="min-w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  NOMBRE
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  DESCRIPCIÓN
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  CAMPOS
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ESTADO
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  ACCIONES
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {entityGroups.map((group, index) => (
+                <tr key={`${group.entity}-${group.jsonColumn}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{group.displayName}</div>
+                    <div className="text-xs text-gray-500">{group.entity}_{group.jsonColumn}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-md">{group.description}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{group.fieldCount} campos</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                      Activo
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm">
+                    <button
+                      onClick={() => handleEdit(group)}
+                      className="text-blue-600 hover:text-blue-800 mr-4 font-medium"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => handleDelete(group)}
+                      className="text-red-600 hover:text-red-800 font-medium"
+                    >
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {activeTab === 'tabla' && (
+        <TableColumnConfig empresaId={1} onConfigurationChange={triggerRefresh} />
+      )}
     </div>
   );
 };

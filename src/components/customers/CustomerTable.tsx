@@ -20,6 +20,7 @@ interface CustomerTableProps {
   onStatusChange: (customer: Customer, newStatus: string) => void;
   totalRecords: number;
   empresaId?: number;
+  refreshTrigger?: number;
 }
 
 // Función para convertir fecha dd/mm/yyyy a Date
@@ -50,7 +51,8 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   onRowClick,
   onStatusChange,
   totalRecords,
-  empresaId = 1
+  empresaId = 1,
+  refreshTrigger
 }) => {
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [globalFilter, setGlobalFilter] = useState('');
@@ -103,7 +105,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     };
 
     loadColumnConfig();
-  }, [empresaId, customers]);
+  }, [empresaId, customers, refreshTrigger]);
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
