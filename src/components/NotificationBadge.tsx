@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { Bell } from 'lucide-react';
+import { NotificationPanel } from './NotificationPanel';
+import { Notification } from '../types/notification';
 
 interface NotificationBadgeProps {
   empresaId: number;
+  onEditNotification?: (notification: Notification) => void;
 }
 
-export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ empresaId }) => {
+export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ 
+  empresaId, 
+  onEditNotification 
+}) => {
   const { notifications, loadPendingNotifications } = useNotifications(empresaId);
   const [pendingCount, setPendingCount] = useState(0);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   useEffect(() => {
     loadPendingNotifications();
@@ -19,16 +26,37 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ empresaId 
     setPendingCount(pending);
   }, [notifications]);
 
-  if (pendingCount === 0) {
-    return null;
-  }
+  const handleBellClick = () => {
+    setIsPanelOpen(!isPanelOpen);
+  };
+
+  const handleClosePanel = () => {
+    setIsPanelOpen(false);
+  };
 
   return (
-    <div className="relative inline-block">
-      <Bell className="w-5 h-5 text-gray-600" />
-      <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-        {pendingCount > 99 ? '99+' : pendingCount}
-      </span>
-    </div>
+    <>
+      <div className="relative inline-block">
+        <button
+          onClick={handleBellClick}
+          className="relative p-2 hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title="Ver notificaciones"
+        >
+          <Bell className={`w-5 h-5 ${pendingCount > 0 ? 'text-yellow-400' : 'text-gray-400'}`} />
+          {pendingCount > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+              {pendingCount > 99 ? '99+' : pendingCount}
+            </span>
+          )}
+        </button>
+      </div>
+
+      <NotificationPanel
+        empresaId={empresaId}
+        isOpen={isPanelOpen}
+        onClose={handleClosePanel}
+        onEditNotification={onEditNotification}
+      />
+    </>
   );
 };
