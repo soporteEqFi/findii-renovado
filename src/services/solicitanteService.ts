@@ -8,7 +8,7 @@ export interface SolicitanteCompleto {
   segundo_apellido?: string;
   tipo_identificacion: string;
   numero_documento: string;
-  fecha_nacimiento: string;
+  fecha_nacimiento: Date;
   genero: string;
   correo: string;
   info_extra?: Record<string, any>;

@@ -36,7 +36,7 @@ export interface SolicitanteBase {
   segundo_apellido: string;
   tipo_identificacion: string;
   numero_documento: string;
-  fecha_nacimiento: string;
+  fecha_nacimiento: Date;
   genero: string;
   correo: string;
   created_by_user_id?: number;

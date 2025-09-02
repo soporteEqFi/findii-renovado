@@ -23,7 +23,7 @@ export interface Customer {
   numero_documento: string;
 
   // Información Personal
-  fecha_nacimiento: string;
+  fecha_nacimiento: Date;
   estado_civil: string;
   personas_a_cargo: string;
   nivel_estudio: string;

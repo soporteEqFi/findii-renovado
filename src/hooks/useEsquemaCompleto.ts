@@ -97,6 +97,26 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
           // Validar y limpiar campos dinámicos
           const camposDinamicosLimpios = validarEsquema(esquemaCompleto.campos_dinamicos || []);
 
+          // Corregir tipos de campos específicos que deben ser date
+          const corregirTiposCampos = (campos: EsquemaCampo[]): EsquemaCampo[] => {
+            return campos.map(campo => {
+              // Asegurar que fecha_nacimiento siempre sea tipo date
+              if (campo.key === 'fecha_nacimiento' && campo.type !== 'date') {
+                console.log(`🔧 Corrigiendo tipo de ${campo.key} de '${campo.type}' a 'date'`);
+                return { ...campo, type: 'date' };
+              }
+              // Corregir otros campos de fecha si es necesario
+              if ((campo.key === 'fecha_expedicion' || campo.key === 'fecha_ingreso_empresa' || campo.key === 'fecha_vinculacion') && campo.type !== 'date') {
+                console.log(`🔧 Corrigiendo tipo de ${campo.key} de '${campo.type}' a 'date'`);
+                return { ...campo, type: 'date' };
+              }
+              return campo;
+            });
+          };
+
+          const camposFijosCorregidos = corregirTiposCampos(camposFijosLimpios);
+          const camposDinamicosCorregidos = corregirTiposCampos(camposDinamicosLimpios);
+
           // Ordenar campos por order_index si existe
           const ordenarCampos = (campos: EsquemaCampo[]) => {
             return campos.sort((a: EsquemaCampo, b: EsquemaCampo) => {
@@ -110,9 +130,9 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
             entidad: esquemaCompleto.entidad || entidad,
             tabla: esquemaCompleto.tabla || entidad,
             json_column: esquemaCompleto.json_column || getJsonColumnName(entidad),
-            total_campos: camposFijosLimpios.length + camposDinamicosLimpios.length,
-            campos_fijos: ordenarCampos(camposFijosLimpios),
-            campos_dinamicos: ordenarCampos(camposDinamicosLimpios)
+            total_campos: camposFijosCorregidos.length + camposDinamicosCorregidos.length,
+            campos_fijos: ordenarCampos(camposFijosCorregidos),
+            campos_dinamicos: ordenarCampos(camposDinamicosCorregidos)
           };
 
           console.log(`✅ Esquema completo cargado para ${entidad}:`, {
