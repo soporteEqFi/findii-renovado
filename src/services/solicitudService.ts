@@ -1,0 +1,202 @@
+import { buildApiUrl, API_CONFIG } from '../config/constants';
+
+// Tipos para observaciones según el formato del backend
+export interface ObservacionBackend {
+  id: string;
+  tipo: string;
+  fecha: string;
+  observacion: string;
+}
+
+export interface HistorialResponse {
+  historial: ObservacionBackend[];
+}
+
+// Tipos para observaciones del frontend (compatibilidad)
+export interface Observacion {
+  observacion: string;
+  fecha_creacion: string;
+  usuario_id?: number;
+  usuario_nombre?: string;
+}
+
+// Tipo para la respuesta de actualización
+export interface SolicitudUpdateResponse {
+  ok: boolean;
+  data?: any;
+  error?: string;
+}
+
+// Tipo para actualizar solicitud
+export interface SolicitudUpdateData {
+  observaciones?: Observacion[]; // Para campos JSONB
+  [key: string]: any; // Para otros campos que se puedan actualizar
+}
+
+export const solicitudService = {
+  // Obtener historial de observaciones de una solicitud
+  async obtenerObservaciones(
+    solicitudId: number,
+    empresaId: number = 1
+  ): Promise<ObservacionBackend[]> {
+    try {
+      // Endpoint para obtener historial de observaciones
+      const url = buildApiUrl(`/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`);
+
+      console.log('🔍 Obteniendo historial de observaciones:', {
+        solicitudId,
+        empresaId,
+        url,
+        fullUrl: url,
+        baseUrl: API_CONFIG.BASE_URL,
+        endpoint: `/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`
+      });
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Empresa-Id': empresaId.toString(),
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      console.log('📡 Respuesta del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        console.error('❌ Error del servidor:', errorData);
+        throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result: HistorialResponse = await response.json();
+      console.log('✅ Historial de observaciones obtenido:', result);
+
+      return result.historial || [];
+    } catch (error) {
+      console.error('❌ Error al obtener historial de observaciones:', error);
+      return [];
+    }
+  },
+
+  // Agregar observación a una solicitud
+  async agregarObservacion(
+    solicitudId: number,
+    observacion: string,
+    empresaId: number = 1
+  ): Promise<SolicitudUpdateResponse> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SOLICITUDES_PATCH.replace('{id}', solicitudId.toString());
+      const url = buildApiUrl(endpoint);
+
+      const fechaCreacion = new Date().toISOString();
+      const userId = parseInt(localStorage.getItem('user_id') || '1');
+      const userName = localStorage.getItem('user_name') || 'Usuario';
+
+      // Crear la nueva observación
+      const nuevaObservacion = {
+        observacion: observacion.trim(),
+        fecha_creacion: fechaCreacion,
+        usuario_id: userId,
+        usuario_nombre: userName
+      };
+
+      // Para campos JSONB, necesitamos enviar el array completo
+      // El backend debería manejar esto agregando la nueva observación al array existente
+      const requestData: SolicitudUpdateData = {
+        observaciones: [nuevaObservacion] // Enviar como array para que el backend lo agregue
+      };
+
+      console.log('🔍 Agregando observación a solicitud:', {
+        solicitudId,
+        nuevaObservacion,
+        empresaId
+      });
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Empresa-Id': empresaId.toString(),
+          'X-User-Id': userId.toString(),
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Observación agregada exitosamente:', result);
+
+      return {
+        ok: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('❌ Error al agregar observación:', error);
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  },
+
+  // Actualizar otros campos de la solicitud
+  async actualizarSolicitud(
+    solicitudId: number,
+    datos: SolicitudUpdateData,
+    empresaId: number = 1
+  ): Promise<SolicitudUpdateResponse> {
+    try {
+      const endpoint = API_CONFIG.ENDPOINTS.SOLICITUDES_PATCH.replace('{id}', solicitudId.toString());
+      const url = buildApiUrl(endpoint);
+
+      const userId = localStorage.getItem('user_id') || '1';
+
+      console.log('🔍 Actualizando solicitud:', {
+        solicitudId,
+        datos,
+        empresaId
+      });
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Empresa-Id': empresaId.toString(),
+          'X-User-Id': userId,
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify(datos)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Solicitud actualizada exitosamente:', result);
+
+      return {
+        ok: true,
+        data: result
+      };
+    } catch (error) {
+      console.error('❌ Error al actualizar solicitud:', error);
+      return {
+        ok: false,
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  }
+};

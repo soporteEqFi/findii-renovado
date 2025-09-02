@@ -1,12 +1,13 @@
 // Tipos para esquemas dinámicos
 export interface EsquemaCampo {
   key: string;
-  type: 'string' | 'integer' | 'number' | 'boolean' | 'date' | 'object' | 'array';
+  type: 'string' | 'integer' | 'number' | 'boolean' | 'date' | 'object' | 'array' | 'file';
   required: boolean;
   list_values?:
     | string[] // Compatibilidad: array directo para strings
     | { enum: string[] } // Principal: para arrays con opciones de selección
     | { object_structure: EsquemaCampo[] } // Principal: para objetos con estructura
+    | { file_config: FileFieldConfig } // Para campos de archivo
     | null;
   description?: string;
   default_value?: any;
@@ -15,6 +16,15 @@ export interface EsquemaCampo {
     field: string; // Nombre del campo que actúa como trigger
     value: string; // Valor que debe tener para mostrar este campo
   };
+}
+
+// Configuración específica para campos de archivo
+export interface FileFieldConfig {
+  allowed_types?: string[]; // ['pdf', 'jpg', 'png', 'doc', 'docx']
+  max_size_mb?: number; // Tamaño máximo en MB
+  multiple?: boolean; // Si permite múltiples archivos
+  required_fields?: string[]; // Campos requeridos del archivo (ej: 'nombre', 'descripcion')
+  storage_path?: string; // Ruta de almacenamiento personalizada
 }
 
 export interface EsquemaResponse {
@@ -77,7 +87,16 @@ export interface SolicitudBase {
   created_by_user_id: number;
   assigned_to_user_id: number;
   estado: string;
+  observaciones?: Observacion[]; // Campo para historial de observaciones
   empresa_id?: number;
+}
+
+// Interfaz para observaciones individuales
+export interface Observacion {
+  observacion: string;
+  fecha_creacion: string;
+  usuario_id?: number;
+  usuario_nombre?: string;
 }
 
 // Tipos para respuestas de creación

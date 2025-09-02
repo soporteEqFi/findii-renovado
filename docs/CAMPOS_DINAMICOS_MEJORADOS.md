@@ -241,3 +241,304 @@ Todas las requests incluyen automáticamente `empresa_id`:
 5. **Documentar casos de uso específicos** del proyecto
 
 El sistema está listo para usar y mejora significativamente la gestión de campos dinámicos siguiendo todas las mejores prácticas de la guía! 🚀
+
+# 🚀 Campos Dinámicos Mejorados - Sistema de Archivos
+
+## 📁 **Nuevo Tipo: Campo de Archivo**
+
+El sistema de campos dinámicos ahora soporta campos de tipo **"file"** que permiten adjuntar archivos a cualquier entidad del sistema.
+
+### **🎯 Características Principales:**
+
+- ✅ **Múltiples tipos de archivo** configurables
+- ✅ **Límites de tamaño** personalizables
+- ✅ **Archivos únicos o múltiples**
+- ✅ **Campos adicionales** configurables por archivo
+- ✅ **Rutas de almacenamiento** personalizadas
+- ✅ **Validación automática** de tipos y tamaños
+
+## 🏗️ **Estructura del Campo de Archivo**
+
+### **1. Configuración Básica**
+```typescript
+{
+  key: 'documentos_credito',
+  type: 'file',
+  required: false,
+  description: 'Documentos relacionados al crédito',
+  order_index: 6
+}
+```
+
+### **2. Configuración Avanzada**
+```typescript
+{
+  key: 'documentos_credito',
+  type: 'file',
+  required: false,
+  description: 'Documentos relacionados al crédito',
+  order_index: 6,
+  list_values: {
+    file_config: {
+      allowed_types: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+      max_size_mb: 5,
+      multiple: true,
+      required_fields: ['descripcion', 'categoria'],
+      storage_path: 'creditos/documentos'
+    }
+  }
+}
+```
+
+## ⚙️ **Opciones de Configuración**
+
+### **`allowed_types`**
+Array de extensiones permitidas (sin el punto):
+```typescript
+allowed_types: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xls', 'xlsx']
+```
+
+### **`max_size_mb`**
+Tamaño máximo en megabytes:
+```typescript
+max_size_mb: 10 // 10MB máximo
+```
+
+### **`multiple`**
+Si permite múltiples archivos:
+```typescript
+multiple: true  // Múltiples archivos
+multiple: false // Un solo archivo
+```
+
+### **`required_fields`**
+Campos adicionales requeridos para cada archivo:
+```typescript
+required_fields: ['descripcion', 'categoria', 'fecha_vencimiento']
+```
+
+### **`storage_path`**
+Ruta personalizada de almacenamiento:
+```typescript
+storage_path: 'solicitantes/identificacion'
+storage_path: 'creditos/documentos'
+storage_path: 'actividad_economica/certificados'
+```
+
+## 📋 **Ejemplos de Implementación**
+
+### **1. Cédula de Ciudadanía (Archivo Único)**
+```typescript
+{
+  key: 'cedula',
+  type: 'file',
+  required: true,
+  description: 'Cédula de ciudadanía',
+  order_index: 1,
+  list_values: {
+    file_config: {
+      allowed_types: ['pdf', 'jpg', 'png'],
+      max_size_mb: 2,
+      multiple: false,
+      required_fields: ['fecha_vencimiento'],
+      storage_path: 'solicitantes/identificacion'
+    }
+  }
+}
+```
+
+### **2. Documentos de Crédito (Múltiples Archivos)**
+```typescript
+{
+  key: 'documentos_credito',
+  type: 'file',
+  required: false,
+  description: 'Documentos relacionados al crédito',
+  order_index: 6,
+  list_values: {
+    file_config: {
+      allowed_types: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+      max_size_mb: 5,
+      multiple: true,
+      required_fields: ['descripcion', 'categoria'],
+      storage_path: 'creditos/documentos'
+    }
+  }
+}
+```
+
+### **3. Certificados Laborales (Múltiples con Campos Específicos)**
+```typescript
+{
+  key: 'certificados_laborales',
+  type: 'file',
+  required: false,
+  description: 'Certificados laborales',
+  order_index: 2,
+  list_values: {
+    file_config: {
+      allowed_types: ['pdf', 'doc', 'docx'],
+      max_size_mb: 3,
+      multiple: true,
+      required_fields: ['empresa', 'fecha_emision', 'cargo'],
+      storage_path: 'solicitantes/laboral'
+    }
+  }
+}
+```
+
+## 🔧 **Componente de Interfaz**
+
+### **Características del Componente:**
+- 📤 **Botón de subida** con validación visual
+- 📊 **Barra de progreso** durante la subida
+- 🗂️ **Lista de archivos** con iconos por tipo
+- ✏️ **Campos adicionales** configurables
+- 🗑️ **Eliminación** de archivos
+- 📥 **Descarga** de archivos existentes
+
+### **Estados Visuales:**
+- ✅ **Archivo válido** - Icono verde
+- ⚠️ **Archivo en proceso** - Icono girando
+- ❌ **Archivo inválido** - Icono rojo
+- 📁 **Archivo subido** - Icono del tipo de archivo
+
+## 🚀 **Cómo Usar**
+
+### **1. En la Configuración de Campos Dinámicos:**
+```typescript
+// Agregar campo de archivo al esquema
+const esquemaConArchivos = [
+  ...camposExistentes,
+  {
+    key: 'mi_campo_archivo',
+    type: 'file',
+    required: true,
+    description: 'Descripción del campo',
+    list_values: {
+      file_config: {
+        allowed_types: ['pdf', 'jpg'],
+        max_size_mb: 5,
+        multiple: false,
+        required_fields: ['descripcion']
+      }
+    }
+  }
+];
+```
+
+### **2. En el Frontend:**
+```typescript
+import { DynamicFileField } from '../components/ui/DynamicFileField';
+
+// Renderizar campo de archivo
+<DynamicFileField
+  value={data.mi_campo_archivo}
+  onChange={(value) => updateData('mi_campo_archivo', value)}
+  config={campo.list_values.file_config}
+  label="Mi Campo de Archivo"
+  required={campo.required}
+  entityId={123}
+  entityType="solicitante"
+  jsonColumn="info_extra"
+  fieldKey="mi_campo_archivo"
+/>
+```
+
+## 🔒 **Seguridad y Validación**
+
+### **Validaciones Automáticas:**
+- ✅ **Tipo de archivo** - Solo extensiones permitidas
+- ✅ **Tamaño máximo** - Límite configurable
+- ✅ **Archivos múltiples** - Control de cantidad
+- ✅ **Campos requeridos** - Validación de metadatos
+
+### **Sanitización:**
+- 🧹 **Nombres de archivo** - Eliminación de caracteres especiales
+- 📁 **Rutas de almacenamiento** - Prevención de path traversal
+- 🔍 **Tipos MIME** - Verificación de contenido real
+
+## 📊 **Almacenamiento y Persistencia**
+
+### **Estructura de Datos:**
+```typescript
+interface FileItem {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url?: string;
+  uploaded_at: string;
+  description?: string;
+  // Campos adicionales configurados
+  [key: string]: any;
+}
+```
+
+### **Formato JSONB:**
+```json
+{
+  "mi_campo_archivo": [
+    {
+      "id": "uuid-archivo-1",
+      "name": "documento.pdf",
+      "size": 2048576,
+      "type": "application/pdf",
+      "url": "/uploads/solicitantes/identificacion/documento.pdf",
+      "uploaded_at": "2025-01-15T10:30:00Z",
+      "descripcion": "Cédula de ciudadanía",
+      "categoria": "identificacion"
+    }
+  ]
+}
+```
+
+## 🔄 **Integración con Sistema Existente**
+
+### **Compatibilidad:**
+- ✅ **Campos existentes** - No se ven afectados
+- ✅ **Esquemas actuales** - Funcionan sin cambios
+- ✅ **Validaciones** - Se integran automáticamente
+- ✅ **Interfaz** - Consistente con otros campos
+
+### **Migración:**
+- 🔄 **Agregar tipo "file"** a esquemas existentes
+- 🔄 **Configurar campos** de archivo según necesidades
+- 🔄 **Actualizar formularios** para incluir archivos
+- 🔄 **Migrar datos** existentes si es necesario
+
+## 📈 **Casos de Uso Comunes**
+
+### **1. Documentos de Identificación:**
+- Cédulas, pasaportes, licencias
+- Fotos de perfil
+- Firmas digitalizadas
+
+### **2. Documentos Financieros:**
+- Estados de cuenta
+- Comprobantes de ingresos
+- Declaraciones de renta
+
+### **3. Documentos Laborales:**
+- Certificados de trabajo
+- Contratos laborales
+- Cartas de recomendación
+
+### **4. Documentos de Crédito:**
+- Solicitudes de crédito
+- Avales y garantías
+- Documentos de respaldo
+
+## 🎯 **Próximas Mejoras**
+
+### **Funcionalidades Adicionales:**
+- 🔄 **Compresión automática** de imágenes
+- 🔍 **OCR** para documentos PDF
+- 📱 **Subida desde móvil** con cámara
+- 🌐 **Integración con nube** (Google Drive, Dropbox)
+
+### **Seguridad Avanzada:**
+- 🔐 **Encriptación** de archivos sensibles
+- 🚫 **Detección de malware** en archivos
+- 📋 **Auditoría completa** de archivos
+- 🗂️ **Clasificación automática** por contenido

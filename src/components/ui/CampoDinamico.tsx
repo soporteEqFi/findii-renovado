@@ -454,6 +454,38 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           />
         );
 
+      case 'file':
+        // Verificar si tiene configuración de archivo
+        if (campo.list_values && typeof campo.list_values === 'object' && 'file_config' in campo.list_values) {
+          const fileConfig = (campo.list_values as { file_config: any }).file_config;
+
+          // Importar DynamicFileField dinámicamente para evitar problemas de dependencia circular
+          const DynamicFileField = React.lazy(() => import('../ui/DynamicFileField').then(module => ({ default: module.DynamicFileField })));
+
+          return (
+            <React.Suspense fallback={<div className="text-gray-500">Cargando campo de archivo...</div>}>
+              <DynamicFileField
+                value={efectiveValue}
+                onChange={(value) => handleChange(value)}
+                config={fileConfig}
+                label={campo.description || campo.key}
+                required={campo.required}
+                disabled={disabled}
+                entityId={1} // TODO: Obtener del contexto
+                entityType="solicitante" // TODO: Obtener del contexto
+                jsonColumn="info_extra" // TODO: Obtener del contexto
+                fieldKey={campo.key}
+              />
+            </React.Suspense>
+          );
+        }
+        // Si no tiene configuración de archivo, mostrar error
+        return (
+          <div className="text-red-500 text-sm p-2 border border-red-300 rounded">
+            Error: Campo tipo file debe tener list_values con file_config
+          </div>
+        );
+
       case 'array':
         // Verificar si tiene opciones enum en list_values (para selectores de una opción)
         if (campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values) {

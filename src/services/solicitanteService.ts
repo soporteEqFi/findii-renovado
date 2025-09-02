@@ -60,6 +60,15 @@ export interface SolicitudCompleta {
   created_by_user_id: number;
   assigned_to_user_id: number;
   detalle_credito?: Record<string, any>;
+  observaciones?: Observacion[]; // Campo para historial de observaciones
+}
+
+// Interfaz para observaciones individuales
+export interface Observacion {
+  observacion: string;
+  fecha_creacion: string;
+  usuario_id?: number;
+  usuario_nombre?: string;
 }
 
 export interface ResumenRegistros {

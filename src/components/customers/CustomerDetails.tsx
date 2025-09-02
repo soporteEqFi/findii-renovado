@@ -11,6 +11,7 @@ import { useConfiguraciones } from '../../hooks/useConfiguraciones';
 import { departments, getCitiesByDepartment } from '../../data/colombianCities';
 import { useEsquemaCompleto } from '../../hooks/useEsquemaCompleto';
 import { emailService } from '../../services/emailService';
+import { ObservacionesSolicitud } from './ObservacionesSolicitud';
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -60,7 +61,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const [customerDocuments, setCustomerDocuments] = useState<Document[]>([]);
   const [loadingDocuments, setLoadingDocuments] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // Estado para rastrear el valor original del banco
   const [originalBankValue, setOriginalBankValue] = useState<string>('');
 
@@ -69,9 +70,20 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
   const { bancos, ciudades, loading: loadingConfig } = useConfiguraciones(empresaId);
   // Esquema para actividad económica
   const { esquema: esquemaActividad } = useEsquemaCompleto('actividad_economica', empresaId);
-  
+
   // Esquema para solicitud (incluye tipo_credito)
   const { esquema: esquemaSolicitud } = useEsquemaCompleto('solicitud', empresaId);
+
+  // Debug: Log de solicitudes para observaciones
+  useEffect(() => {
+    if (datosCompletos && datosCompletos.solicitudes.length > 0) {
+      console.log('🔍 Solicitudes disponibles para observaciones:', {
+        solicitudes: datosCompletos.solicitudes,
+        primeraSolicitud: datosCompletos.solicitudes[0],
+        solicitudId: datosCompletos.solicitudes[0]?.id
+      });
+    }
+  }, [datosCompletos]);
 
   // Cargar documentos del cliente cuando se obtiene el solicitante_id
   useEffect(() => {
@@ -97,11 +109,6 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         setCustomerDocuments([]);
       }
     };
-  // Mapa del tipo seleccionado -> clave de detalle a usar (vehiculo reutiliza hipotecario)
-  const detailKeyForTipoCredito = (normalized: string): string => {
-    if (normalized === 'vehiculo') return 'hipotecario';
-    return normalized;
-  };
 
     loadCustomerDocuments();
   }, [solicitanteIdNumber, customer.id_solicitante, customer.solicitante_id, customer.id]);
@@ -178,7 +185,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         if (userObj.rol === 'banco') {
           const userBanco = userObj.info_extra?.banco_nombre || '';
           const customerBanco = customer.banco || editedCustomer.banco || '';
-          
+
           if (userBanco && customerBanco && userBanco !== customerBanco) {
             alert(`No tienes permisos para editar registros de ${customerBanco}. Solo puedes editar registros de ${userBanco}.`);
             return;
@@ -211,7 +218,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         if (userObj.rol === 'banco') {
           const userBanco = userObj.info_extra?.banco_nombre || '';
           const customerBanco = customer.banco || editedCustomer.banco || '';
-          
+
           if (userBanco && customerBanco && userBanco !== customerBanco) {
             alert(`No tienes permisos para eliminar registros de ${customerBanco}. Solo puedes eliminar registros de ${userBanco}.`);
             return;
@@ -497,7 +504,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
         if (userObj.rol === 'banco') {
           const userBanco = userObj.info_extra?.banco_nombre || '';
           const customerBanco = customer.banco || editedCustomer.banco || '';
-          
+
           if (userBanco && customerBanco && userBanco !== customerBanco) {
             alert(`No tienes permisos para guardar cambios en registros de ${customerBanco}. Solo puedes editar registros de ${userBanco}.`);
             return;
@@ -535,7 +542,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Detectar cambio de banco
       const currentBankValue = editedData?.solicitudes?.[0]?.banco_nombre || '';
       const bankHasChanged = originalBankValue && currentBankValue && originalBankValue !== currentBankValue;
-      
+
       console.log('🏦 Detección de cambio de banco:', {
         original: originalBankValue,
         current: currentBankValue,
@@ -685,7 +692,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       // Enviar notificación de cambio de banco si es necesario
       if (bankHasChanged) {
         console.log('📧 Enviando notificación de cambio de banco...');
-        
+
         try {
           // Obtener información del usuario actual
           const userData = localStorage.getItem('user');
@@ -708,10 +715,10 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
 
           // Enviar email de notificación
           await emailService.sendBankChangeNotification(emailData, parseInt(empresaId));
-          
+
           // Crear notificación interna
           await emailService.createBankChangeNotification(emailData, parseInt(empresaId));
-          
+
           console.log('✅ Notificaciones de cambio de banco enviadas exitosamente');
         } catch (emailError) {
           console.error('❌ Error al enviar notificaciones de cambio de banco:', emailError);
@@ -720,7 +727,7 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
       }
 
       // Mostrar mensaje de éxito
-      const successMessage = bankHasChanged 
+      const successMessage = bankHasChanged
         ? 'Registro actualizado exitosamente. Se ha notificado el cambio de banco.'
         : 'Registro actualizado exitosamente';
       alert(successMessage);
@@ -1250,6 +1257,37 @@ export const CustomerDetails: React.FC<CustomerDetailsProps> = ({
                 })()}
               </>
             )}
+
+            {/* Observaciones de la Solicitud */}
+            {(datosCompletos.solicitudes.length > 0 || editedData?.solicitudes?.length > 0) && (
+              <div className="md:col-span-2">
+                <ObservacionesSolicitud
+                  solicitudId={datosCompletos.solicitudes[0]?.id || editedData?.solicitudes?.[0]?.id}
+                  empresaId={empresaId}
+                  observaciones={datosCompletos.solicitudes[0]?.observaciones || editedData?.solicitudes?.[0]?.observaciones || []}
+                  onObservacionAgregada={(nuevaObservacion) => {
+                    // Actualizar los datos locales cuando se agrega una observación
+                    if (editedData?.solicitudes?.[0]) {
+                      const solicitudesActualizadas = [...(editedData.solicitudes || [])];
+                      if (solicitudesActualizadas[0]) {
+                        solicitudesActualizadas[0] = {
+                          ...solicitudesActualizadas[0],
+                          observaciones: [
+                            nuevaObservacion,
+                            ...(solicitudesActualizadas[0].observaciones || [])
+                          ]
+                        };
+                      }
+                      setEditedData({
+                        ...editedData,
+                        solicitudes: solicitudesActualizadas
+                      });
+                    }
+                  }}
+                  readonly={!canEditCustomer()}
+                />
+              </div>
+            )}
          </>
        ) : (
          <>
@@ -1715,20 +1753,20 @@ const EditableDynamicSection: React.FC<{
     // Handle tipo_actividad_economica conditional fields
     const tipoActividadIndex = allKeys.indexOf('tipo_actividad_economica');
     let insertIndex = tipoActividadIndex !== -1 ? tipoActividadIndex + 1 : allKeys.length;
-    
+
     conditionalFieldKeys.forEach(condKey => {
       if (!allKeys.includes(condKey)) {
         // Handle activity economic conditional fields
         if (!condKey.includes('.')) {
-          const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === condKey) || 
+          const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === condKey) ||
                             esquemaActividad?.campos_fijos?.find(c => c.key === condKey);
-          
+
           if (campoSchema?.type === 'object' && campoSchema?.list_values && 'object_structure' in campoSchema.list_values) {
             // Add individual subfields instead of the object field
             const structure = ((campoSchema.list_values as any).object_structure as any[])
               .slice()
               .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
-            
+
             structure.forEach(sub => {
               const subFieldKey = `${condKey}.${sub.key}`;
               allKeys.splice(insertIndex, 0, subFieldKey);
@@ -1746,13 +1784,13 @@ const EditableDynamicSection: React.FC<{
     // Handle tipo_credito conditional fields
     const tipoCreditoIndex = allKeys.indexOf('tipo_credito');
     let creditInsertIndex = tipoCreditoIndex !== -1 ? tipoCreditoIndex + 1 : allKeys.length;
-    
+
     conditionalFieldKeys.forEach(condKey => {
       if (!allKeys.includes(condKey) && !condKey.includes('.')) {
         // Check if this is a credit conditional field (not activity field)
         const isCreditField = esquemaSolicitudLocal?.campos_dinamicos?.find(c => c.key === condKey && c.conditional_on?.field === 'tipo_credito') ||
                              esquemaSolicitudLocal?.campos_fijos?.find(c => c.key === condKey && c.conditional_on?.field === 'tipo_credito');
-        
+
         if (isCreditField) {
           // Check if this is an object field with structure - if so, add its subfields individually
           if (isCreditField.type === 'object' && isCreditField.list_values && 'object_structure' in isCreditField.list_values) {
@@ -1760,7 +1798,7 @@ const EditableDynamicSection: React.FC<{
             const structure = ((isCreditField.list_values as any).object_structure as any[])
               .slice()
               .sort((a: any, b: any) => (a.order_index ?? 999) - (b.order_index ?? 999));
-            
+
             structure.forEach(sub => {
               const subFieldKey = `${condKey}.${sub.key}`;
               allKeys.splice(creditInsertIndex, 0, subFieldKey);
@@ -1952,7 +1990,7 @@ const EditableDynamicSection: React.FC<{
                   .map((sub: any) => {
                     const subPath = `${fieldPath}.${sub.key}`;
                     const subVal = value ? value[sub.key] : undefined;
-                    
+
                     if (sub.type === 'number' || sub.type === 'integer') {
                       return (
                         <div key={sub.key} className="mt-2">
@@ -2041,9 +2079,9 @@ const EditableDynamicSection: React.FC<{
               <>
                 {(() => {
                   let opciones: string[] = [];
-                  const campoSchema = esquemaSolicitudLocal?.campos_dinamicos?.find(c => c.key === key) || 
+                  const campoSchema = esquemaSolicitudLocal?.campos_dinamicos?.find(c => c.key === key) ||
                                     esquemaSolicitudLocal?.campos_fijos?.find(c => c.key === key);
-                  
+
                   if (campoSchema && campoSchema.list_values && typeof campoSchema.list_values === 'object' && 'enum' in campoSchema.list_values) {
                     opciones = (campoSchema.list_values as any).enum as string[];
                   } else {
@@ -2204,35 +2242,35 @@ const EditableDynamicSection: React.FC<{
           let isSubField = false;
           let parentKey = '';
           let subKey = '';
-          
+
           if (key.includes('.')) {
             isSubField = true;
             [parentKey, subKey] = key.split('.');
             value = data[parentKey] ? data[parentKey][subKey] : undefined;
           }
-          
-          // If this is a conditional field and includeConditionalFields is enabled, 
+
+          // If this is a conditional field and includeConditionalFields is enabled,
           // render it with schema information
           if (includeConditionalFields && (conditionalFieldKeys.includes(key) || conditionalFieldKeys.includes(parentKey))) {
             if (isSubField) {
               // Find the parent schema and then the subfield schema
-              const parentSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === parentKey) || 
+              const parentSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === parentKey) ||
                                  esquemaActividad?.campos_fijos?.find(c => c.key === parentKey);
-              
+
               if (parentSchema?.type === 'object' && parentSchema?.list_values && 'object_structure' in parentSchema.list_values) {
                 const subSchema = ((parentSchema.list_values as any).object_structure as any[])
                   .find(sub => sub.key === subKey);
-                
+
                 return renderSubField(key, parentKey, subKey, value, subSchema);
               }
             } else {
-              const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === key) || 
+              const campoSchema = esquemaActividad?.campos_dinamicos?.find(c => c.key === key) ||
                                 esquemaActividad?.campos_fijos?.find(c => c.key === key);
-              
+
               return renderConditionalField(key, value, campoSchema);
             }
           }
-          
+
           return renderField(key, value);
         })}
       </div>

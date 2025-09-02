@@ -342,6 +342,95 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       description: 'Valor del inmueble',
       default_value: 0,
       order_index: 5
+    },
+    // Nuevo campo de archivo para documentos del crédito
+    {
+      key: 'documentos_credito',
+      type: 'file',
+      required: false,
+      description: 'Documentos relacionados al crédito',
+      order_index: 6,
+      list_values: {
+        file_config: {
+          allowed_types: ['pdf', 'doc', 'docx', 'jpg', 'png'],
+          max_size_mb: 5,
+          multiple: true,
+          required_fields: ['descripcion', 'categoria'],
+          storage_path: 'creditos/documentos'
+        }
+      }
+    }
+  ],
+
+  // Esquema para documentos del solicitante
+  solicitante_documentos: [
+    {
+      key: 'cedula',
+      type: 'file',
+      required: true,
+      description: 'Cédula de ciudadanía',
+      order_index: 1,
+      list_values: {
+        file_config: {
+          allowed_types: ['pdf', 'jpg', 'png'],
+          max_size_mb: 2,
+          multiple: false,
+          required_fields: ['fecha_vencimiento'],
+          storage_path: 'solicitantes/identificacion'
+        }
+      }
+    },
+    {
+      key: 'certificados_laborales',
+      type: 'file',
+      required: false,
+      description: 'Certificados laborales',
+      order_index: 2,
+      list_values: {
+        file_config: {
+          allowed_types: ['pdf', 'doc', 'docx'],
+          max_size_mb: 3,
+          multiple: true,
+          required_fields: ['empresa', 'fecha_emision'],
+          storage_path: 'solicitantes/laboral'
+        }
+      }
+    },
+    {
+      key: 'estados_financieros',
+      type: 'file',
+      required: false,
+      description: 'Estados financieros personales',
+      order_index: 3,
+      list_values: {
+        file_config: {
+          allowed_types: ['pdf', 'xls', 'xlsx'],
+          max_size_mb: 4,
+          multiple: true,
+          required_fields: ['periodo', 'tipo_documento'],
+          storage_path: 'solicitantes/financiero'
+        }
+      }
+    }
+  ],
+
+  // Esquema de prueba para campos de archivo
+  prueba_archivo: [
+    {
+      key: 'documento_prueba',
+      type: 'file',
+      required: false,
+      description: 'Documento de prueba para testing',
+      order_index: 1,
+      list_values: {
+        file_config: {
+          allowed_types: ['pdf', 'jpg', 'png'],
+          max_size_mb: 2,
+          multiple: false,
+          required_fields: ['descripcion'],
+          storage_path: 'pruebas/documentos'
+        }
+      }
     }
   ]
 };

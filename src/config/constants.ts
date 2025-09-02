@@ -38,6 +38,7 @@ export const API_CONFIG = {
     INFORMACION_FINANCIERA: '/informacion_financiera',
     REFERENCIAS: '/referencias',
     SOLICITUDES: '/solicitudes',
+    SOLICITUDES_PATCH: '/solicitudes/{id}', // PATCH para actualizar solicitudes
     DOCUMENTOS: '/documentos',
 
     // Endpoint unificado para crear registro completo

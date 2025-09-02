@@ -349,6 +349,185 @@ const ObjectConfiguration: React.FC<{
   </div>
 );
 
+// Componente reutilizable para configuración de Archivo
+const FileConfiguration: React.FC<{
+  value: {
+    allowed_types: string[];
+    max_size_mb: number;
+    multiple: boolean;
+    required_fields: string[];
+    storage_path: string;
+  };
+  onChange: (config: {
+    allowed_types: string[];
+    max_size_mb: number;
+    multiple: boolean;
+    required_fields: string[];
+    storage_path: string;
+  }) => void;
+  isEditing?: boolean;
+}> = ({ value, onChange, isEditing = false }) => {
+  const [newField, setNewField] = useState('');
+
+  const addRequiredField = () => {
+    if (newField.trim() && !value.required_fields.includes(newField.trim())) {
+      onChange({
+        ...value,
+        required_fields: [...value.required_fields, newField.trim()]
+      });
+      setNewField('');
+    }
+  };
+
+  const removeRequiredField = (field: string) => {
+    onChange({
+      ...value,
+      required_fields: value.required_fields.filter(f => f !== field)
+    });
+  };
+
+  const addAllowedType = (type: string) => {
+    if (type && !value.allowed_types.includes(type)) {
+      onChange({
+        ...value,
+        allowed_types: [...value.allowed_types, type]
+      });
+    }
+  };
+
+  const removeAllowedType = (type: string) => {
+    onChange({
+      ...value,
+      allowed_types: value.allowed_types.filter(t => t !== type)
+    });
+  };
+
+  return (
+    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+      <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Archivo</h5>
+
+      {/* Tipos de archivo permitidos */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-600 mb-2">Tipos de archivo permitidos</label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {value.allowed_types.map((type) => (
+            <span
+              key={type}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+            >
+              {type}
+              <button
+                type="button"
+                onClick={() => removeAllowedType(type)}
+                className="ml-1 text-blue-600 hover:text-blue-800"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <select
+            onChange={(e) => addAllowedType(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            defaultValue=""
+          >
+            <option value="">Agregar tipo...</option>
+            <option value="pdf">PDF</option>
+            <option value="jpg">JPG</option>
+            <option value="jpeg">JPEG</option>
+            <option value="png">PNG</option>
+            <option value="doc">DOC</option>
+            <option value="docx">DOCX</option>
+            <option value="xls">XLS</option>
+            <option value="xlsx">XLSX</option>
+            <option value="txt">TXT</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tamaño máximo */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño máximo (MB)</label>
+        <input
+          type="number"
+          value={value.max_size_mb}
+          onChange={(e) => onChange({ ...value, max_size_mb: parseInt(e.target.value) || 1 })}
+          className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
+          min="1"
+          max="100"
+        />
+      </div>
+
+      {/* Múltiples archivos */}
+      <div className="mb-4">
+        <label className="flex items-center text-sm">
+          <input
+            type="checkbox"
+            checked={value.multiple}
+            onChange={(e) => onChange({ ...value, multiple: e.target.checked })}
+            className="mr-2"
+          />
+          Permitir múltiples archivos
+        </label>
+      </div>
+
+      {/* Ruta de almacenamiento */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-600 mb-1">Ruta de almacenamiento</label>
+        <input
+          type="text"
+          value={value.storage_path}
+          onChange={(e) => onChange({ ...value, storage_path: e.target.value })}
+          className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+          placeholder="ej: solicitantes/documentos"
+        />
+        <p className="text-xs text-gray-500 mt-1">Ruta donde se almacenarán los archivos</p>
+      </div>
+
+      {/* Campos requeridos adicionales */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-600 mb-2">Campos adicionales requeridos</label>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {value.required_fields.map((field) => (
+            <span
+              key={field}
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+            >
+              {field}
+              <button
+                type="button"
+                onClick={() => removeRequiredField(field)}
+                className="ml-1 text-green-600 hover:text-green-800"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newField}
+            onChange={(e) => setNewField(e.target.value)}
+            className="border border-gray-300 rounded px-2 py-1 text-sm flex-1"
+            placeholder="ej: descripcion, categoria"
+            onKeyPress={(e) => e.key === 'Enter' && addRequiredField()}
+          />
+          <button
+            type="button"
+            onClick={addRequiredField}
+            className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+          >
+            Agregar
+          </button>
+        </div>
+        <p className="text-xs text-gray-500 mt-1">Campos adicionales que se pedirán para cada archivo</p>
+      </div>
+    </div>
+  );
+};
+
 interface EntityGroup {
   entity: string;
   jsonColumn: string;
@@ -392,7 +571,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   const [newFieldForm, setNewFieldForm] = useState({
     key: '',
     displayName: '',
-    type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object',
+    type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object' | 'file',
     required: false,
     order_index: undefined as number | undefined,
     arrayOptions: [] as string[],
@@ -404,7 +583,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
       order_index?: number;
       arrayOptions?: string[];
       objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
-    }[]
+    }[],
+    fileConfig: {
+      allowed_types: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'] as string[],
+      max_size_mb: 5,
+      multiple: false,
+      required_fields: [] as string[],
+      storage_path: ''
+    }
   });
   const [showAddField, setShowAddField] = useState(false);
   const [showConditionalModal, setShowConditionalModal] = useState(false);
@@ -506,7 +692,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   const validateFieldTypes = (structure: any[]): boolean => {
     for (const field of structure) {
       // Validar tipo básico
-      const validTypes = ['string', 'number', 'integer', 'boolean', 'date', 'array', 'object'];
+      const validTypes = ['string', 'number', 'integer', 'boolean', 'date', 'array', 'object', 'file'];
       if (!validTypes.includes(field.type)) {
         alert(`Tipo inválido "${field.type}" en el campo "${field.description || field.key}". Tipos válidos: ${validTypes.join(', ')}`);
         return false;
@@ -532,6 +718,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           return false;
         }
       }
+
+      // Validar configuración de archivo
+      if (field.type === 'file') {
+        if (!field.fileConfig || !field.fileConfig.allowed_types || field.fileConfig.allowed_types.length === 0) {
+          alert(`El campo "${field.description || field.key}" es de tipo archivo pero no tiene tipos permitidos configurados.`);
+          return false;
+        }
+      }
     }
     return true;
   };
@@ -551,6 +745,11 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        }
      }
 
+     if (newFieldForm.type === 'file' && newFieldForm.fileConfig.allowed_types.length === 0) {
+       alert('El campo es de tipo archivo pero no tiene tipos permitidos configurados.');
+       return;
+     }
+
      const newField: FieldDefinition = {
        empresa_id: 1,
        entity: selectedGroup?.entity || 'solicitante',
@@ -563,7 +762,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        order_index: newFieldForm.order_index,
      };
 
-                      // Add list_values for array and object types
+      // Add list_values for array and object types
       if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
         // Filtrar líneas vacías y crear list_values.enum
         const filteredOptions = newFieldForm.arrayOptions.filter(opt => opt.trim() !== '');
@@ -577,6 +776,17 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           array_type: 'object',
           object_structure: cleanedStructure
         };
+      } else if (newFieldForm.type === 'file') {
+        // Configuración para campos de archivo
+        newField.list_values = {
+          file_config: {
+            allowed_types: newFieldForm.fileConfig.allowed_types,
+            max_size_mb: newFieldForm.fileConfig.max_size_mb,
+            multiple: newFieldForm.fileConfig.multiple,
+            required_fields: newFieldForm.fileConfig.required_fields,
+            storage_path: newFieldForm.fileConfig.storage_path
+          }
+        };
       }
 
       onSubmit(newField);
@@ -587,7 +797,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        required: false,
        order_index: undefined,
        arrayOptions: [],
-       objectStructure: []
+       objectStructure: [],
+       fileConfig: {
+         allowed_types: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'] as string[],
+         max_size_mb: 5,
+         multiple: false,
+         required_fields: [] as string[],
+         storage_path: ''
+       }
      });
      setShowAddField(false);
    };
@@ -733,6 +950,18 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
              isEditing={true}
            />
          )}
+
+        {/* Configuración de archivo */}
+        {form.type === 'file' && form.list_values?.file_config && (
+          <FileConfiguration
+            value={form.list_values.file_config}
+            onChange={(config) => setForm(prev => ({
+              ...prev,
+              list_values: { ...prev.list_values, file_config: config }
+            }))}
+            isEditing={true}
+          />
+        )}
 
         <div className="flex justify-end gap-3 pt-4 border-t">
           <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
@@ -914,6 +1143,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   <option value="date">Fecha</option>
                   <option value="array">Lista/Array</option>
                   <option value="object">Objeto</option>
+                  <option value="file">Archivo</option>
                 </select>
               </div>
               <div>
@@ -954,6 +1184,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               <ObjectConfiguration
                 structure={newFieldForm.objectStructure}
                 onChange={(structure) => setNewFieldForm(prev => ({ ...prev, objectStructure: structure }))}
+              />
+            )}
+
+            {/* File Configuration */}
+            {newFieldForm.type === 'file' && (
+              <FileConfiguration
+                value={newFieldForm.fileConfig}
+                onChange={(config) => setNewFieldForm(prev => ({ ...prev, fileConfig: config }))}
               />
             )}
             <div className="mt-4 flex gap-2">
