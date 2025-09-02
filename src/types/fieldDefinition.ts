@@ -21,6 +21,7 @@ export interface FieldDefinition {
   key: string; // field key inside json_column
   type: FieldPrimitiveType;
   required: boolean;
+  isActive?: boolean; // Si el campo está activo o no
   description?: string;
   default_value?: any;
   order_index?: number; // Orden de aparición del campo (1, 2, 3, etc.)

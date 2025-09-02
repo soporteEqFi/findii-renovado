@@ -557,6 +557,7 @@ const defaultItem: FieldDefinition = {
   key: '',
   type: 'string',
   required: false,
+  isActive: true, // Por defecto los campos están activos
   description: '',
   default_value: '',
 };
@@ -573,6 +574,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     displayName: '',
     type: 'string' as 'string' | 'number' | 'integer' | 'boolean' | 'date' | 'array' | 'object' | 'file',
     required: false,
+    isActive: true, // Por defecto los campos están activos
     order_index: undefined as number | undefined,
     arrayOptions: [] as string[],
     objectStructure: [] as {
@@ -641,6 +643,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         key: field.key,
         type: field.type,
         required: field.required,
+        isActive: field.isActive ?? true,
         description: field.description,
         order_index: field.order_index
       };
@@ -661,6 +664,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             key: subField.key,
             type: subField.type,
             required: subField.required,
+            isActive: subField.isActive ?? true,
             description: subField.description,
             order_index: subField.order_index
           };
@@ -795,6 +799,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        displayName: '',
        type: 'string',
        required: false,
+       isActive: true,
        order_index: undefined,
        arrayOptions: [],
        objectStructure: [],
@@ -908,15 +913,28 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           />
         </div>
 
-        <div className="flex items-center">
-          <input
-            id="active"
-            type="checkbox"
-            checked={form.required}
-            onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">Activo</label>
+        <div className="flex items-center gap-6">
+          <div className="flex items-center">
+            <input
+              id="required"
+              type="checkbox"
+              checked={form.required}
+              onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="required" className="ml-2 block text-sm text-gray-700">Obligatorio (REQ)</label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              id="isActive"
+              type="checkbox"
+              checked={form.isActive ?? true}
+              onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Activo</label>
+          </div>
         </div>
 
         {/* Configuración específica según el tipo de campo */}
@@ -1158,16 +1176,30 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   min="1"
                 />
               </div>
-              <div className="flex items-center mt-6">
-                <input
-                  id="fieldRequired"
-                  name="required"
-                  type="checkbox"
-                  checked={newFieldForm.required}
-                  onChange={handleNewFieldChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="fieldRequired" className="ml-2 block text-sm text-gray-700">Campo obligatorio</label>
+              <div className="flex items-center gap-6 mt-6">
+                <div className="flex items-center">
+                  <input
+                    id="fieldRequired"
+                    name="required"
+                    type="checkbox"
+                    checked={newFieldForm.required}
+                    onChange={handleNewFieldChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="fieldRequired" className="ml-2 block text-sm text-gray-700">Obligatorio (REQ)</label>
+                </div>
+
+                <div className="flex items-center">
+                  <input
+                    id="fieldActive"
+                    name="isActive"
+                    type="checkbox"
+                    checked={newFieldForm.isActive ?? true}
+                    onChange={(e) => setNewFieldForm(prev => ({ ...prev, isActive: e.target.checked }))}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="fieldActive" className="ml-2 block text-sm text-gray-700">Activo</label>
+                </div>
               </div>
             </div>
 
