@@ -3,11 +3,10 @@ import { Plus } from 'lucide-react';
 import { FieldDefinition } from '../types/fieldDefinition';
 import { fieldConfigService } from '../services/fieldConfigService';
 import { conditionalFieldService } from '../services/conditionalFieldService';
-import { toast } from 'react-hot-toast';
 import FieldForm from '../components/configuracion/FieldForm';
 import { ConditionalFieldConfig } from '../components/configuracion/ConditionalFieldConfig';
-import { TableColumnConfig } from '../components/configuracion/TableColumnConfig';
-import { useTableConfig } from '../contexts/TableConfigContext';
+import { toast } from 'react-hot-toast';
+import TableColumnConfig from '../components/configuracion/TableColumnConfig';
 
 interface EntityGroup {
   entity: string;
@@ -20,7 +19,6 @@ interface EntityGroup {
 }
 
 const ConfiguracionAdmin: React.FC = () => {
-  const { triggerRefresh } = useTableConfig();
   const [entityGroups, setEntityGroups] = useState<EntityGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showForm, setShowForm] = useState<boolean>(false);
@@ -266,27 +264,47 @@ const ConfiguracionAdmin: React.FC = () => {
         toast.success('Campo creado');
       }
 
-      // Update the selected group's fields without closing modal
-      if (selectedGroup) {
-        let updatedFields;
-        if (editing) {
-          // Update existing field
-          updatedFields = selectedGroup.fields.map(f => f.key === data.key ? payload : f);
-        } else {
-          // Add new field
-          updatedFields = [...selectedGroup.fields, payload];
-        }
-
-        const updatedGroup = { ...selectedGroup, fields: updatedFields, fieldCount: updatedFields.length };
-        setSelectedGroup(updatedGroup);
-
-        // Update the entityGroups state
-        setEntityGroups(prev => prev.map(group =>
-          group.entity === selectedGroup.entity && group.jsonColumn === selectedGroup.jsonColumn
-            ? updatedGroup
-            : group
-        ));
+      // Recargar todos los grupos para obtener los campos con IDs correctos
+      await loadAllGroups();
+      
+      // Buscar el grupo actualizado y establecerlo como seleccionado
+      const updatedGroups = await Promise.all(
+        entityConfig.map(async (config) => {
+          try {
+            const fields = await fieldConfigService.listBy(config.entity, config.jsonColumn);
+            return {
+              ...config,
+              fields: fields.map(field => ({ ...field, entity: config.entity, json_column: config.jsonColumn })),
+              fieldCount: fields.length,
+              isActive: true
+            };
+          } catch (e) {
+            return {
+              ...config,
+              fields: [],
+              fieldCount: 0,
+              isActive: true
+            };
+          }
+        })
+      );
+      
+      const refreshedGroup = updatedGroups.find(g => 
+        g.entity === targetGroup.entity && g.jsonColumn === targetGroup.jsonColumn
+      );
+      
+      if (refreshedGroup) {
+        setSelectedGroup(refreshedGroup);
       }
+
+      // Trigger a refresh of useEsquemaCompleto hooks by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('fieldConfigChanged', {
+        detail: {
+          entity: targetGroup.entity,
+          jsonColumn: targetGroup.jsonColumn,
+          action: editing ? 'update' : 'create'
+        }
+      }));
 
       // Only reset editing state, keep modal open
       setEditing(null);
@@ -403,6 +421,15 @@ const ConfiguracionAdmin: React.FC = () => {
                 onDeleteField={handleDeleteField}
                 onConfigureCondition={handleConfigureCondition}
                 onSaveGroupConfiguration={handleSaveGroupConfiguration}
+                onGroupUpdate={(updatedGroup: EntityGroup) => {
+                  // Actualizar el grupo en el estado local
+                  setEntityGroups(prev => prev.map(group => 
+                    group.entity === updatedGroup.entity && group.jsonColumn === updatedGroup.jsonColumn
+                      ? updatedGroup
+                      : group
+                  ));
+                  setSelectedGroup(updatedGroup);
+                }}
               />
             </div>
           </div>
@@ -486,7 +513,9 @@ const ConfiguracionAdmin: React.FC = () => {
       )}
 
       {activeTab === 'tabla' && (
-        <TableColumnConfig empresaId={1} onConfigurationChange={triggerRefresh} />
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <TableColumnConfig empresaId={1} />
+        </div>
       )}
     </div>
   );

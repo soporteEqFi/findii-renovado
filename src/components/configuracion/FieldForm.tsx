@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { FieldDefinition } from '../../types/fieldDefinition';
-import { Trash2, Plus, Settings } from 'lucide-react';
+import { Trash2, Plus, Settings, GripVertical, Save } from 'lucide-react';
 import { ConditionalFieldConfig } from './ConditionalFieldConfig';
+import { buildApiUrl, API_CONFIG } from '../../config/constants';
+import { toast } from 'react-hot-toast';
 
 // Componente reutilizable para configuración de Array
 const ArrayConfiguration: React.FC<{
@@ -548,6 +550,7 @@ interface Props {
   onDeleteField?: (field: FieldDefinition) => void;
   onConfigureCondition?: (field: FieldDefinition) => void;
   onSaveGroupConfiguration?: (groupData: { displayName: string; description: string; isActive: boolean }) => void;
+  onGroupUpdate?: (group: EntityGroup) => void;
 }
 
 const defaultItem: FieldDefinition = {
@@ -562,7 +565,7 @@ const defaultItem: FieldDefinition = {
   default_value: '',
 };
 
-const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel, onEditField, onDeleteField, onConfigureCondition, onSaveGroupConfiguration }) => {
+const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel, onEditField, onDeleteField, onConfigureCondition, onSaveGroupConfiguration, onGroupUpdate }) => {
   const [form, setForm] = useState<FieldDefinition>(initial || defaultItem);
   const [groupForm, setGroupForm] = useState({
     displayName: selectedGroup?.displayName || '',
@@ -597,6 +600,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   const [showAddField, setShowAddField] = useState(false);
   const [showConditionalModal, setShowConditionalModal] = useState(false);
   const [fieldToConfigure, setFieldToConfigure] = useState<FieldDefinition | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [reorderMode, setReorderMode] = useState(false);
+  const [savingOrder, setSavingOrder] = useState(false);
 
   useEffect(() => {
     if (initial) {
@@ -817,6 +823,103 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   const handleRemoveField = (field: FieldDefinition) => {
     if (onDeleteField) {
       onDeleteField(field);
+    }
+  };
+
+  // Funciones para drag-and-drop
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    if (draggedIndex === null || draggedIndex === dropIndex || !selectedGroup) {
+      setDraggedIndex(null);
+      return;
+    }
+
+    const sortedFields = [...selectedGroup.fields].sort((a, b) => {
+      const orderA = a.order_index || 999;
+      const orderB = b.order_index || 999;
+      return orderA - orderB;
+    });
+
+    const newFields = [...sortedFields];
+    const draggedField = newFields[draggedIndex];
+    
+    // Remover el campo arrastrado de su posición original
+    newFields.splice(draggedIndex, 1);
+    
+    // Insertar en la nueva posición
+    newFields.splice(dropIndex, 0, draggedField);
+    
+    // Actualizar order_index para todos los campos
+    const updatedFields = newFields.map((field, index) => ({
+      ...field,
+      order_index: index + 1
+    }));
+
+    // Actualizar el selectedGroup con los nuevos órdenes
+    if (onGroupUpdate) {
+      onGroupUpdate({
+        ...selectedGroup,
+        fields: updatedFields
+      });
+    }
+    
+    setDraggedIndex(null);
+  };
+
+  const handleSaveFieldOrder = async () => {
+    if (!selectedGroup || !reorderMode) return;
+
+    setSavingOrder(true);
+    try {
+      const sortedFields = [...selectedGroup.fields].sort((a, b) => {
+        const orderA = a.order_index || 999;
+        const orderB = b.order_index || 999;
+        return orderA - orderB;
+      });
+
+      const fieldOrders = sortedFields.map((field, index) => ({
+        key: field.key,
+        order_index: index + 1
+      }));
+
+      const endpoint = API_CONFIG.ENDPOINTS.REORDENAR_CAMPOS
+        .replace('{entity}', selectedGroup.entity)
+        .replace('{json_field}', selectedGroup.jsonColumn);
+
+      const url = buildApiUrl(endpoint) + `?empresa_id=1`;
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ field_orders: fieldOrders })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      toast.success(`Orden actualizado para ${fieldOrders.length} campos`);
+      setReorderMode(false);
+      
+    } catch (error: any) {
+      console.error('Error saving field order:', error);
+      toast.error(error.message || 'Error al guardar el orden de los campos');
+    } finally {
+      setSavingOrder(false);
     }
   };
 
@@ -1051,7 +1154,48 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Campos Personalizados</h3>
         <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-medium text-gray-700 mb-3">Campos Configurados</h4>
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-sm font-medium text-gray-700">Campos Configurados</h4>
+            {selectedGroup && selectedGroup.fields.length > 1 && (
+              <div className="flex gap-2">
+                {reorderMode ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setReorderMode(false)}
+                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveFieldOrder}
+                      disabled={savingOrder}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1"
+                    >
+                      {savingOrder ? <Save size={14} className="animate-pulse" /> : <Save size={14} />}
+                      {savingOrder ? 'Guardando...' : 'Guardar Orden'}
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setReorderMode(true)}
+                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center gap-1"
+                  >
+                    <GripVertical size={14} />
+                    Reordenar
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {reorderMode && (
+            <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+              💡 <strong>Modo Reordenamiento:</strong> Arrastra los campos para cambiar su orden en los formularios.
+            </div>
+          )}
 
           {selectedGroup && selectedGroup.fields.length > 0 ? (
             <div className="space-y-2">
@@ -1062,9 +1206,23 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   const orderB = b.order_index || 999;
                   return orderA - orderB;
                 })
-                .map((field) => (
-                <div key={field.key} className="flex items-center justify-between bg-white p-3 rounded border">
+                .map((field, index) => (
+                <div 
+                  key={field.key} 
+                  className={`
+                    flex items-center justify-between bg-white p-3 rounded border
+                    ${reorderMode ? 'cursor-move hover:shadow-md transition-shadow' : ''}
+                    ${draggedIndex === index ? 'opacity-50 transform rotate-1' : ''}
+                  `}
+                  draggable={reorderMode}
+                  onDragStart={(e) => reorderMode && handleDragStart(e, index)}
+                  onDragOver={(e) => reorderMode && handleDragOver(e)}
+                  onDrop={(e) => reorderMode && handleDrop(e, index)}
+                >
                   <div className="flex items-center gap-3">
+                    {reorderMode && (
+                      <GripVertical className="w-4 h-4 text-gray-400 cursor-grab" />
+                    )}
                     {field.order_index ? (
                       <div className="flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-600 text-xs font-medium rounded-full">
                         {field.order_index}
@@ -1081,37 +1239,39 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                      onClick={() => {
-                        if (onEditField) {
-                          onEditField(field);
-                        }
-                      }}
-                    >
-                      ✏️
-                    </button>
-                                         <button
-                       type="button"
-                       className="text-green-600 hover:text-green-800 text-sm"
-                       onClick={() => {
-                         setFieldToConfigure(field);
-                         setShowConditionalModal(true);
-                       }}
-                       title="Configurar condición"
-                     >
-                       <Settings size={16} />
-                     </button>
-                    <button
-                      type="button"
-                      className="text-red-600 hover:text-red-800 text-sm"
-                      onClick={() => handleRemoveField(field)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                  {!reorderMode && (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        onClick={() => {
+                          if (onEditField) {
+                            onEditField(field);
+                          }
+                        }}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                         type="button"
+                         className="text-green-600 hover:text-green-800 text-sm"
+                         onClick={() => {
+                           setFieldToConfigure(field);
+                           setShowConditionalModal(true);
+                         }}
+                         title="Configurar condición"
+                       >
+                         <Settings size={16} />
+                       </button>
+                      <button
+                        type="button"
+                        className="text-red-600 hover:text-red-800 text-sm"
+                        onClick={() => handleRemoveField(field)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

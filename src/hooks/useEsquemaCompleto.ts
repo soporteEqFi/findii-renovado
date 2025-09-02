@@ -265,5 +265,24 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
     cargarEsquemaCompleto();
   }, [entidad, empresaId]);
 
+  // Listen for field configuration changes and refresh schema
+  useEffect(() => {
+    const handleFieldConfigChange = (event: CustomEvent) => {
+      const { entity: changedEntity, action } = event.detail;
+      
+      // Only refresh if the changed entity matches this hook's entity
+      if (changedEntity === entidad) {
+        console.log(`🔄 Refreshing schema for ${entidad} due to field ${action}`);
+        cargarEsquemaCompleto();
+      }
+    };
+
+    window.addEventListener('fieldConfigChanged', handleFieldConfigChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('fieldConfigChanged', handleFieldConfigChange as EventListener);
+    };
+  }, [entidad]);
+
   return { esquema, loading, error, refetch };
 };

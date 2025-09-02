@@ -1,6 +1,8 @@
 import React from 'react';
 import { EsquemaCampo } from '../../types/esquemas';
 import { useConfiguraciones } from '../../hooks/useConfiguraciones';
+import { departments, getCitiesByDepartment } from '../../data/colombianCities';
+import { CREDIT_STATUSES } from '../../config/constants';
 
 interface CampoDinamicoProps {
   campo: EsquemaCampo;
@@ -8,6 +10,8 @@ interface CampoDinamicoProps {
   onChange: (key: string, value: any) => void;
   error?: string;
   disabled?: boolean;
+  // Permite consultar otros valores del formulario (p.ej. departamento para filtrar ciudades)
+  getValue?: (key: string) => any;
 }
 
 export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
@@ -15,7 +19,8 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   value,
   onChange,
   error,
-  disabled = false
+  disabled = false,
+  getValue
 }) => {
   // Usar default_value si value es null/undefined/empty
   const efectiveValue = value ?? campo.default_value ?? '';
@@ -165,7 +170,118 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
       );
     }
 
+    // Manejo genérico para campos de Departamento
+    if (/departamento/i.test(campo.key)) {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => {
+            const nuevoDepartamento = e.target.value;
+            handleChange(nuevoDepartamento);
+            // Limpiar ciudad relacionada si existe
+            const candidatosCiudad = new Set<string>();
+            candidatosCiudad.add(campo.key.replace(/departamento/gi, 'ciudad'));
+            candidatosCiudad.add(campo.key.replace(/_departamento/gi, '_ciudad'));
+            candidatosCiudad.add(campo.key.replace(/Departamento/gi, 'Ciudad'));
+            candidatosCiudad.add('ciudad');
+            for (const c of candidatosCiudad) {
+              // Si el valor actual de esa ciudad no está vacío, limpiarlo
+              const actual = typeof getValue === 'function' ? getValue(c) : undefined;
+              if (actual) {
+                onChange(c, '');
+                break;
+              }
+            }
+          }}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar departamento...</option>
+          {departments.map((dep) => (
+            <option key={dep} value={dep}>
+              {dep}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    // Ciudad en referencias: mostrar solo texto pre-cargado (read-only)
+    if (/ciudad/i.test(campo.key) && /referencia/i.test(campo.key)) {
+      return (
+        <input
+          type="text"
+          value={efectiveValue || ''}
+          onChange={() => { /* read-only */ }}
+          className={baseClasses}
+          required={false}
+          disabled={true}
+          placeholder={campo.description}
+        />
+      );
+    }
+
+    // Manejo genérico para campos de Ciudad
+    if (/ciudad/i.test(campo.key)) {
+      // Inferir el campo de departamento relacionado
+      let departamentoRelacionado: string | undefined = undefined;
+      if (typeof getValue === 'function') {
+        const candidatos = new Set<string>();
+        candidatos.add(campo.key.replace(/ciudad/gi, 'departamento'));
+        candidatos.add(campo.key.replace(/_ciudad/gi, '_departamento'));
+        candidatos.add(campo.key.replace(/Ciudad/gi, 'Departamento'));
+        candidatos.add('departamento');
+        // Probar candidatos en orden de inserción
+        for (const c of candidatos) {
+          const val = getValue(c);
+          if (val) {
+            departamentoRelacionado = val as string;
+            break;
+          }
+        }
+      }
+
+      const opcionesCiudades = departamentoRelacionado
+        ? getCitiesByDepartment(departamentoRelacionado)
+        : ciudades;
+
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled || loadingConfiguraciones}
+        >
+          <option value="">{loadingConfiguraciones ? 'Cargando ciudades...' : 'Seleccionar ciudad...'}</option>
+          {opcionesCiudades.map((ciudad) => (
+            <option key={ciudad} value={ciudad}>
+              {ciudad}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
     // Campos con opciones predefinidas
+    if (campo.key === 'estado') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar estado...</option>
+          {CREDIT_STATUSES.map((st) => (
+            <option key={st} value={st}>{st}</option>
+          ))}
+        </select>
+      );
+    }
+
     if (campo.key === 'tipo_identificacion') {
       return (
         <select

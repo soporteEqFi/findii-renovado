@@ -116,34 +116,56 @@ export const getDocuments = async (solicitanteId: number): Promise<Document[]> =
     console.log('✅ Tipo de resultado:', typeof result);
     console.log('✅ Es array:', Array.isArray(result));
 
-    // Procesar la respuesta según la estructura esperada
-    let documents: Document[] = [];
+    // Procesar la respuesta y normalizar posibles nombres de campos
+    let rawDocuments: any[] = [];
 
     if (Array.isArray(result)) {
-      // Si la respuesta es directamente un array
-      documents = result;
+      rawDocuments = result;
     } else if (result && Array.isArray(result.data)) {
-      // Si la respuesta tiene estructura { ok: true, data: [...] }
-      documents = result.data;
+      rawDocuments = result.data;
     } else if (result && Array.isArray(result.documents)) {
-      // Si la respuesta tiene estructura { documents: [...] }
-      documents = result.documents;
+      rawDocuments = result.documents;
+    } else if (result && result.ok && Array.isArray(result.result)) {
+      rawDocuments = result.result;
     } else {
-      console.warn('⚠️ Resultado no es un array, devolviendo array vacío:', result);
+      console.warn('⚠️ Resultado no contiene lista de documentos:', result);
       return [];
     }
 
-    // Validar que cada documento tenga los campos requeridos
-    const validDocuments = documents.filter(doc => {
-      const isValid = doc.id && doc.nombre && doc.documento_url;
-      if (!isValid) {
-        console.warn('⚠️ Documento inválido encontrado:', doc);
-      }
-      return isValid;
-    });
+    // Normalizar documentos a la interfaz Document esperada por el front
+    const normalized: Document[] = rawDocuments
+      .map((doc: any, idx: number) => {
+        const id = doc.id || doc.documento_id || doc.document_id || doc.file_id || doc.uuid || idx + 1;
+        const nombre =
+          doc.nombre ||
+          doc.filename ||
+          doc.original_filename ||
+          doc.file_name ||
+          doc.name ||
+          `Documento ${idx + 1}`;
+        const possibleUrl =
+          doc.documento_url ||
+          doc.url ||
+          doc.link ||
+          doc.file_url ||
+          (doc.path ? `${API_CONFIG.BASE_URL}${doc.path}` : null);
+        const documento_url = possibleUrl || '';
 
-    console.log('✅ Documentos válidos encontrados:', validDocuments.length);
-    return validDocuments;
+        const file_size = doc.file_size || doc.size || undefined;
+
+        return {
+          id,
+          nombre,
+          documento_url,
+          solicitante_id: doc.solicitante_id || solicitanteId,
+          file_size,
+        } as Document;
+      })
+      // Filtrar solo los que tengan URL resoluble
+      .filter((d: Document) => !!d.documento_url);
+
+    console.log('✅ Documentos normalizados:', normalized.length);
+    return normalized;
   } catch (error) {
     console.error('❌ Error en fetch getDocuments:', error);
     console.error('❌ URL que causó el error:', url);

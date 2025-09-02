@@ -34,34 +34,14 @@ export const useCustomers = () => {
         }
       }
 
-      // Para el rol banco, filtrar por banco_nombre en lugar de user_id
-      let bancoNombre = '';
-      if (userRole === 'banco' && userStr) {
-        try {
-          const userObj = JSON.parse(userStr);
-          bancoNombre = userObj.info_extra?.banco_nombre || '';
-        } catch (error) {
-          console.error('Error getting banco_nombre:', error);
-        }
-      }
-      
       console.log('🔍 Filtrado de datos:', {
         userRole,
         userId,
-        bancoNombre,
         empresaId
       });
 
-      // Construir URL según el rol
-      let url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}`;
-      
-      if (userRole === 'banco' && bancoNombre) {
-        // Para banco, filtrar por banco_nombre
-        url += `&banco_nombre=${encodeURIComponent(bancoNombre)}`;
-      } else if (userRole !== 'banco' && userId) {
-        // Para otros roles, filtrar por user_id
-        url += `&user_id=${userId}`;
-      }
+      // Todos los roles (incluyendo banco) usan user_id para ver sus registros asignados
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}${userId ? `&user_id=${userId}` : ''}`;
       
       console.log('📡 URL de la API:', url);
       
@@ -83,23 +63,8 @@ export const useCustomers = () => {
         throw new Error('Invalid response format: missing data array');
       }
 
-      // Filtrar datos del lado del cliente para el rol banco
-      let filteredData = responseData.data;
-      if (userRole === 'banco' && bancoNombre) {
-        filteredData = responseData.data.filter((item) => {
-          const solicitudBanco = item.solicitud?.banco_nombre || item.banco_nombre || '';
-          return solicitudBanco === bancoNombre;
-        });
-        
-        console.log('🏦 Filtrado por banco:', {
-          totalRecords: responseData.data.length,
-          filteredRecords: filteredData.length,
-          bancoNombre
-        });
-      }
-
       // Map the API response to the Customer type
-      const mappedCustomers = filteredData.map((item) => {
+      const mappedCustomers = responseData.data.map((item) => {
         const s = item.solicitante || {};
         const ue = item.ubicacion || {};
         const act = item.actividad_economica || {};

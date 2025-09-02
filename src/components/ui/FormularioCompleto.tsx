@@ -9,6 +9,8 @@ interface FormularioCompletoProps {
   errores?: Record<string, string>;
   titulo?: string;
   disabled?: boolean;
+  // Lista de keys que NO deben renderizarse (p.ej. 'estado' en creación)
+  excludeKeys?: string[];
 }
 
 export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
@@ -17,30 +19,93 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   onChange,
   errores = {},
   titulo,
-  disabled = false
+  disabled = false,
+  excludeKeys = []
 }) => {
   const handleFieldChange = (key: string, value: any) => {
     onChange(key, value);
   };
 
-  // Función para determinar si un campo debe mostrarse basado en condiciones
-  const shouldShowField = (campo: any): boolean => {
-    // Ocultar el campo de estado en el formulario de solicitud
-    if (campo.key === 'estado') {
-      return false;
+  // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas
+  const getNestedValue = (key: string): any => {
+    // 1) Directo
+    if (valores && Object.prototype.hasOwnProperty.call(valores, key)) {
+      return valores[key];
     }
 
+    const tryObj = (obj: any) => (obj && Object.prototype.hasOwnProperty.call(obj, key) ? obj[key] : undefined);
+
+    // 2) Solicitante
+    const vSolic = tryObj(valores?.solicitante);
+    if (vSolic !== undefined) return vSolic;
+    const vSolicExtra = tryObj(valores?.solicitante?.info_extra);
+    if (vSolicExtra !== undefined) return vSolicExtra;
+
+    // 3) Ubicaciones (primera)
+    const ubic0 = valores?.ubicaciones?.[0];
+    const vUbic = tryObj(ubic0);
+    if (vUbic !== undefined) return vUbic;
+    const vUbicDetalle = tryObj(ubic0?.detalle_direccion);
+    if (vUbicDetalle !== undefined) return vUbicDetalle;
+
+    // 4) Actividad económica
+    const vAct = tryObj(valores?.actividad_economica);
+    if (vAct !== undefined) return vAct;
+    const vActDet = tryObj(valores?.actividad_economica?.detalle_actividad);
+    if (vActDet !== undefined) return vActDet;
+
+    // 5) Información financiera
+    const vFin = tryObj(valores?.informacion_financiera);
+    if (vFin !== undefined) return vFin;
+    const vFinDet = tryObj(valores?.informacion_financiera?.detalle_financiera);
+    if (vFinDet !== undefined) return vFinDet;
+
+    // 6) Referencias (primera)
+    const ref0 = valores?.referencias?.[0];
+    const vRef = tryObj(ref0);
+    if (vRef !== undefined) return vRef;
+    const vRefDet = tryObj(ref0?.detalle_referencia);
+    if (vRefDet !== undefined) return vRefDet;
+
+    // 7) Solicitudes (primera) y detalle_credito
+    const sol0 = valores?.solicitudes?.[0];
+    const vSol = tryObj(sol0);
+    if (vSol !== undefined) return vSol;
+    const detCred = sol0?.detalle_credito;
+    const vDetCred = tryObj(detCred);
+    if (vDetCred !== undefined) return vDetCred;
+    // Buscar dentro de sub-objetos del detalle de crédito
+    if (detCred && typeof detCred === 'object') {
+      for (const subKey of Object.keys(detCred)) {
+        const sub = detCred[subKey];
+        if (sub && typeof sub === 'object') {
+          const v = tryObj(sub);
+          if (v !== undefined) return v;
+        }
+      }
+    }
+
+    return undefined;
+  };
+
+  // Función para determinar si un campo debe mostrarse basado en condiciones
+  const shouldShowField = (campo: any): boolean => {
     if (!campo.conditional_on) return true;
 
     const { field: triggerField, value: expectedValue } = campo.conditional_on;
-    const actualValue = valores[triggerField];
+    const actualValue = getNestedValue(triggerField);
 
     return actualValue === expectedValue;
   };
 
   // Filtrar campos fijos y dinámicos según condiciones
-  const camposFijosVisibles = esquemaCompleto.campos_fijos.filter(shouldShowField);
-  const camposDinamicosVisibles = esquemaCompleto.campos_dinamicos.filter(shouldShowField);
+  const exclude = new Set(excludeKeys);
+  const camposFijosVisibles = (esquemaCompleto.campos_fijos || [])
+    .filter(shouldShowField)
+    .filter(c => !exclude.has(c.key));
+  const camposDinamicosVisibles = esquemaCompleto.campos_dinamicos
+    .filter(shouldShowField)
+    .filter(c => !exclude.has(c.key));
 
   // Ordenar campos por order_index si existe
   const ordenarCampos = (campos: any[]) => {
@@ -85,15 +150,16 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
       {/* TODOS LOS CAMPOS JUNTOS (FIJOS Y DINÁMICOS) */}
       {todosLosCampos.length > 0 && (
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {todosLosCampos.map(campo => (
             <CampoDinamico
               key={campo.key}
               campo={campo}
-              value={valores[campo.key]}
+              value={getNestedValue(campo.key)}
               onChange={handleFieldChange}
               error={errores[campo.key]}
               disabled={disabled}
+              getValue={getNestedValue}
             />
           ))}
         </div>

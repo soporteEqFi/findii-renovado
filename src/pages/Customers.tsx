@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Loader2, Plus, Download } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerFormDinamico } from '../components/customers/CustomerFormDinamico';
-import { CustomerDetails } from '../components/customers/CustomerDetails';
 import { CustomerTable } from '../components/customers/CustomerTable';
+import { DynamicEditModal } from '../components/customers/DynamicEditModal';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
 import { buildApiUrl } from '../config/constants';
 import { useTableConfig } from '../contexts/TableConfigContext';
 
 const Customers = () => {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshTrigger } = useTableConfig();
   const {
     customers,
     isLoading,
-    error,
+    // error,
     totalRecords,
     loadCustomers,
-    deleteCustomer,
+    // deleteCustomer,
     updateStatus
   } = useCustomers();
   const {
@@ -31,12 +31,11 @@ const Customers = () => {
   } = usePermissions();
 
   // Estados locales
-  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [editedCustomer, setEditedCustomer] = useState<Customer | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
+  // Eliminados estados del modal legacy CustomerDetails
   const [isNewCustomerModalOpen, setIsNewCustomerModalOpen] = useState(false);
-  const [tableKey, setTableKey] = useState(0);
+  const tableKey = 0;
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [selectedSolicitanteId, setSelectedSolicitanteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -45,48 +44,16 @@ const Customers = () => {
   }, [isAuthenticated]);
 
   // Usar el sistema de permisos centralizado
-  const canEdit = canEditCustomer;
-  const canDelete = canDeleteCustomer;
+  // Permisos disponibles: canEditCustomer, canDeleteCustomer (no usados directamente aquí)
 
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setEditedCustomer(customer);
-    setIsEditing(false);
-    setIsModalOpen(true);
+    const idNum = customer.id != null ? Number(customer.id) : null;
+    setSelectedSolicitanteId(Number.isFinite(idNum as number) ? (idNum as number) : null);
+    setIsEditOpen(true);
   };
 
-  const handleEdit = () => {
-    if (canEdit()) {
-      setIsEditing(true);
-    }
-  };
-
-  const handleSave = async () => {
-    // CustomerDetails realiza la actualización directamente.
-    // Aquí solo recargamos los datos y salimos del modo edición.
-    try {
-      await loadCustomers();
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error post-save:', error);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedCustomer || !canDelete() || !selectedCustomer.id) return;
-    try {
-      await deleteCustomer(selectedCustomer.id);
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error('Error deleting customer:', error);
-    }
-  };
-
-  const handleInputChange = (field: keyof Customer, value: string) => {
-    if (!editedCustomer) return;
-    setEditedCustomer({ ...editedCustomer, [field]: value });
-  };
+  // Eliminados handlers específicos del modal legacy
 
     const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
@@ -150,7 +117,7 @@ const Customers = () => {
   };
 
   // Renderizado condicional para estados de carga y autenticación
-  if (authLoading || (isLoading && !isModalOpen)) {
+  if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
@@ -244,35 +211,18 @@ const Customers = () => {
         />
       </div>
 
-      {/* Modal de Detalles */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setIsEditing(false);
+      {/* Modal legacy CustomerDetails eliminado */}
+
+      {/* Modal de Edición Dinámica */}
+      <DynamicEditModal
+        open={isEditOpen}
+        solicitanteId={selectedSolicitanteId}
+        onClose={() => setIsEditOpen(false)}
+        onSaved={async () => {
+          await loadCustomers();
+          setIsEditOpen(false);
         }}
-        title="Customer Details"
-        size="xl"
-      >
-        <CustomerDetails
-          customer={selectedCustomer!}
-          editedCustomer={editedCustomer!}
-          isEditing={isEditing}
-          isLoading={isLoading}
-          error={error}
-          canEdit={canEdit}
-          canDelete={canDelete}
-          onEdit={handleEdit}
-          onSave={handleSave}
-          // onDelete={handleDelete}
-          onCustomerDelete={(solicitanteId) => {
-            // La eliminación ya fue manejada en CustomerDetails
-            loadCustomers(); // Recargar la lista de clientes
-            setIsModalOpen(false); // Cerrar el modal
-          }}
-          onInputChange={handleInputChange}
-        />
-      </Modal>
+      />
 
       {/* Modal de Nuevo Cliente */}
       <Modal

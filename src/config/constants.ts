@@ -64,6 +64,10 @@ export const API_CONFIG = {
     ESTADISTICAS_FINANCIERAS: '/estadisticas/financieras',
     ESTADISTICAS_COMPLETAS: '/estadisticas/completas',
     ESTADISTICAS_USUARIOS: '/estadisticas/usuarios',
+
+    // Endpoint para reordenar campos dinámicos
+    REORDENAR_CAMPOS: '/json/definitions/{entity}/{json_field}/reorder',
+    ORDEN_CAMPOS_FORMULARIO: '/json/definitions/{entity}/{json_field}/reorder',
   }
 };
 

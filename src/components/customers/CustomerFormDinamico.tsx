@@ -757,6 +757,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             onChange={handleFieldChange}
             errores={errores}
             titulo="Información del Crédito"
+            excludeKeys={["estado"]}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
