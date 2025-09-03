@@ -207,18 +207,23 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
       );
     }
 
-    // Ciudad en referencias: mostrar solo texto pre-cargado (read-only)
+    // Ciudad en referencias: campo editable
     if (/ciudad/i.test(campo.key) && /referencia/i.test(campo.key)) {
       return (
-        <input
-          type="text"
+        <select
           value={efectiveValue || ''}
-          onChange={() => { /* read-only */ }}
+          onChange={(e) => handleChange(e.target.value)}
           className={baseClasses}
-          required={false}
-          disabled={true}
-          placeholder={campo.description}
-        />
+          required={campo.required}
+          disabled={disabled || loadingConfiguraciones}
+        >
+          <option value="">Seleccionar ciudad...</option>
+          {ciudades.map((ciudad) => (
+            <option key={ciudad} value={ciudad}>
+              {ciudad}
+            </option>
+          ))}
+        </select>
       );
     }
 

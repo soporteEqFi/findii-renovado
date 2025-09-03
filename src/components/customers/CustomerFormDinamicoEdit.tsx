@@ -10,6 +10,7 @@ import { API_CONFIG, buildApiUrl } from '../../config/constants';
 import { emailService } from '../../services/emailService';
 import { documentService } from '../../services/documentService';
 import { NotificationHistory } from '../NotificationHistory';
+import { ObservacionesSolicitud } from './ObservacionesSolicitud';
 
 interface CustomerFormDinamicoEditProps {
   solicitanteId: number;
@@ -276,10 +277,41 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
     if (data?.referencias && data.referencias.length > 0) {
       requestData.referencias = data.referencias.map((referencia: any) => {
-        const referenciaData: any = { tipo_referencia: referencia.tipo_referencia };
-        if (referencia.detalle_referencia) {
-          referenciaData.detalle_referencia = referencia.detalle_referencia;
+        console.log('Processing referencia:', referencia); // Debug log
+        
+        // Extract all fields that should be in detalle_referencia
+        const detalleReferenciaFields = [
+          'ciudad_referencia', 'celular_referencia', 'nombre_referencia1',
+          'relacion_referencia1', 'direccion_referencia1', 'si_o_no',
+          'snack_favorito'
+        ];
+        
+        // Create detalle_referencia object
+        const detalle_referencia: Record<string, any> = {};
+        
+        // Check both in root and in detalle_referencia object
+        detalleReferenciaFields.forEach(field => {
+          if (referencia[field] !== undefined) {
+            detalle_referencia[field] = referencia[field];
+          } else if (referencia.detalle_referencia?.[field] !== undefined) {
+            detalle_referencia[field] = referencia.detalle_referencia[field];
+          } else if (referencia[`detalle_referencia.${field}`] !== undefined) {
+            detalle_referencia[field] = referencia[`detalle_referencia.${field}`];
+          }
+        });
+        
+        // Create the final reference object
+        const referenciaData: any = {
+          id: referencia.id,
+          tipo_referencia: referencia.tipo_referencia || 'personal'
+        };
+        
+        // Only include detalle_referencia if it has properties
+        if (Object.keys(detalle_referencia).length > 0) {
+          referenciaData.detalle_referencia = detalle_referencia;
         }
+        
+        console.log('Processed referencia:', referenciaData); // Debug log
         return referenciaData;
       });
     }
@@ -290,6 +322,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           estado: solicitud.estado,
           banco_nombre: solicitud.banco_nombre,
           ciudad_solicitud: solicitud.ciudad_solicitud,
+          observaciones_historial: solicitud.observaciones_historial || [],
         };
         if (solicitud.detalle_credito) {
           if (solicitud.detalle_credito.tipo_credito) {
@@ -327,8 +360,11 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const userId = localStorage.getItem('user_id') || localStorage.getItem('cedula') || '123';
 
       const requestData = buildRequestData(editedData);
+      console.log('Request Data:', JSON.stringify(requestData, null, 2)); // Debug log
+      
       const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());
       const url = buildApiUrl(endpoint);
+      console.log('Sending request to:', url); // Debug log
 
       const response = await fetch(url, {
         method: 'PATCH',
@@ -524,13 +560,111 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       )}
 
       {esquemas.referencia?.esquema && (
-        <FormularioCompleto
-          esquemaCompleto={esquemas.referencia.esquema}
-          valores={valores}
-          onChange={handleFieldChange}
-          errores={validationErrors}
-          titulo="Información de Referencias"
-        />
+        <div className="space-y-3 p-4 bg-white rounded-xl border">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-medium text-gray-900">Información de Referencias</h3>
+            <button
+              type="button"
+              onClick={() => {
+                if (!editedData) return;
+                setEditedData(prev => ({
+                  ...prev,
+                  referencias: [
+                    ...(prev.referencias || []),
+                    { 
+                      tipo_referencia: 'personal', // Default value
+                      detalle_referencia: {}
+                    }
+                  ]
+                }));
+              }}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              + Añadir Referencia
+            </button>
+          </div>
+          
+          {(!editedData?.referencias || editedData.referencias.length === 0) ? (
+            <div className="text-sm text-gray-500 italic">No hay referencias registradas</div>
+          ) : (
+            <div className="space-y-4">
+              {editedData.referencias.map((referencia: any, index: number) => (
+                <div key={index} className="border rounded-lg p-4 relative group">
+                  <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!editedData) return;
+                        setEditedData(prev => ({
+                          ...prev,
+                          referencias: (prev.referencias || []).filter((_, i) => i !== index)
+                        }));
+                      }}
+                      className="p-1 text-red-500 hover:text-red-700"
+                      title="Eliminar referencia"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                  
+                  <FormularioCompleto
+                    key={index}
+                    esquemaCompleto={{
+                      ...(esquemas.referencia?.esquema || {}),
+                      entidad: 'referencia',
+                      campos_fijos: (esquemas.referencia?.esquema?.campos_fijos || []).map((field: any) => ({
+                        ...field,
+                        name: `referencias.${index}.${field.name}`
+                      })),
+                      campos_dinamicos: (esquemas.referencia?.esquema?.campos_dinamicos || []).map((field: any) => ({
+                        ...field,
+                        name: `referencias.${index}.detalle_referencia.${field.name}`
+                      }))
+                    }}
+                    valores={{
+                      ...referencia,
+                      ...(referencia.detalle_referencia || {})
+                    }}
+                    onChange={(fieldPath: string, value: any) => {
+                      // Handle field changes for both fixed and dynamic fields
+                      const isDetalleField = fieldPath.startsWith('detalle_referencia.');
+                      const fieldName = isDetalleField 
+                        ? fieldPath.replace('detalle_referencia.', '')
+                        : fieldPath;
+
+                      setEditedData(prev => {
+                        const newReferencias = [...(prev.referencias || [])];
+                        const updatedRef = { ...newReferencias[index] };
+                        
+                        if (isDetalleField) {
+                          updatedRef.detalle_referencia = {
+                            ...(updatedRef.detalle_referencia || {}),
+                            [fieldName]: value
+                          };
+                        } else {
+                          updatedRef[fieldName] = value;
+                        }
+                        
+                        newReferencias[index] = updatedRef;
+                        return {
+                          ...prev,
+                          referencias: newReferencias
+                        };
+                      });
+                      
+                      // Also update the form state for validation
+                      const fullPath = `referencias.${index}.${fieldPath}`;
+                      // Remove this line as we're handling the state update above
+                    }}
+                    errores={validationErrors}
+                    titulo={`Referencia ${index + 1}`}
+                    hideTitle={editedData.referencias.length === 1}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
       {esquemas.solicitud?.esquema && (
@@ -551,7 +685,46 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
       {/* Observaciones */}
       <div className="p-4 bg-white rounded-xl border">
-        <ObservacionesSection data={editedData} onChange={(path, v) => updateNestedData(path, v)} onSync={typeof refetch === 'function' ? (refetch as any) : undefined} />
+        {(() => {
+          const empresaIdNumber = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+          const solicitudIdNumber = Number(editedData?.solicitudes?.[0]?.id || datosCompletos?.solicitudes?.[0]?.id || 0);
+          
+          console.log('🔍 Debug CustomerFormDinamicoEdit - Observaciones:', {
+            empresaIdNumber,
+            solicitudIdNumber,
+            editedDataSolicitudes: editedData?.solicitudes,
+            datosCompletosSolicitudes: datosCompletos?.solicitudes,
+            editedDataSolicitudId: editedData?.solicitudes?.[0]?.id,
+            datosCompletosSolicitudId: datosCompletos?.solicitudes?.[0]?.id
+          });
+          
+          if (solicitudIdNumber > 0 && empresaIdNumber > 0) {
+            return (
+              <ObservacionesSolicitud 
+                solicitudId={solicitudIdNumber} 
+                empresaId={empresaIdNumber}
+                onObservacionAgregada={(observacion) => {
+                  // Actualizar el estado local con la nueva observación
+                  if (editedData?.solicitudes?.[0]) {
+                    const newData = JSON.parse(JSON.stringify(editedData));
+                    if (!newData.solicitudes[0].observaciones) {
+                      newData.solicitudes[0].observaciones = [];
+                    }
+                    newData.solicitudes[0].observaciones.push(observacion);
+                    setEditedData(newData);
+                  }
+                }}
+              />
+            );
+          }
+          return (
+            <div className="text-sm text-gray-500">
+              No hay solicitud asociada aún para mostrar observaciones. 
+              <br />
+              Debug: solicitudId={solicitudIdNumber}, empresaId={empresaIdNumber}
+            </div>
+          );
+        })()}
       </div>
 
       {/* Notificaciones */}
@@ -562,7 +735,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
       {/* Historial de Notificaciones */}
       <div className="p-4 bg-white rounded-xl border">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Historial de Notificaciones</h3>
         {(() => {
           const empresaIdNumber = parseInt(localStorage.getItem('empresa_id') || '1', 10);
           const solicitudIdNumber = Number(editedData?.solicitudes?.[0]?.id || datosCompletos?.solicitudes?.[0]?.id || 0);
@@ -822,78 +994,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
   );
 };
 
-const ObservacionesSection: React.FC<{ data: any; onChange: (path: string, v: any) => void; onSync?: () => any }> = ({ data, onChange, onSync }) => {
-  const historial: Array<{ texto: string; fecha: string }> = Array.isArray(data?.solicitudes?.[0]?.observaciones_historial)
-    ? data.solicitudes[0].observaciones_historial
-    : [];
-  const [nuevaObs, setNuevaObs] = React.useState('');
 
-  const agregarObservacion = () => {
-    const t = nuevaObs.trim();
-    if (!t) return;
-    const nuevaEntrada = { texto: t, fecha: new Date().toISOString() };
-    const nuevoHistorial = [...historial, nuevaEntrada];
-    onChange('solicitudes.0.observaciones_historial', nuevoHistorial);
-    setNuevaObs('');
-    toast.success('Observación agregada');
-  };
-
-  return (
-    <div className="rounded-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <FileEdit className="w-5 h-5 text-gray-700" />
-          <h3 className="text-lg font-semibold text-gray-900">Historial de Observaciones</h3>
-        </div>
-        <div className="flex items-center gap-3 text-sm">
-          <span className="text-gray-500">{historial.length} observación{historial.length === 1 ? '' : 'es'}</span>
-          {onSync && (
-            <button type="button" onClick={onSync} className="inline-flex items-center text-blue-600 hover:text-blue-700">
-              <RefreshCw className="w-4 h-4 mr-1" /> Sincronizar
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nueva Observación</label>
-        <textarea
-          className="w-full min-h-[104px] rounded-md border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
-          placeholder="Escribe una nueva observación..."
-          value={nuevaObs}
-          onChange={(e) => setNuevaObs(e.target.value)}
-        />
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            onClick={agregarObservacion}
-            className="inline-flex items-center px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-60"
-            disabled={!nuevaObs.trim()}
-          >
-            Agregar Observación
-          </button>
-        </div>
-      </div>
-
-      {historial.length === 0 ? (
-        <div className="mt-6 flex flex-col items-center justify-center text-center text-gray-500 border rounded-md py-10">
-          <FileIcon className="w-10 h-10 text-gray-300 mb-3" />
-          <div className="text-sm font-medium">No hay observaciones registradas</div>
-          <div className="text-xs text-gray-400">Agrega la primera observación para comenzar el historial</div>
-        </div>
-      ) : (
-        <div className="mt-4 divide-y rounded-md border bg-white">
-          {historial.map((item, idx) => (
-            <div key={idx} className="px-3 py-2 text-sm">
-              <div className="text-gray-900">{item.texto}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{new Date(item.fecha).toLocaleString()}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-};
 
 const NotificacionesSection: React.FC<{ data: any; onChange: (path: string, v: any) => void }> = ({ data, onChange }) => {
   const email = data?.solicitante?.correo || '';

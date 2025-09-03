@@ -74,10 +74,25 @@ export const solicitudService = {
         throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
       }
 
-      const result: HistorialResponse = await response.json();
+      const result = await response.json();
       console.log('✅ Historial de observaciones obtenido:', result);
 
-      return result.historial || [];
+      // Manejar diferentes estructuras de respuesta
+      if (result.historial) {
+        return result.historial;
+      } else if (result.data && result.data.historial) {
+        return result.data.historial;
+      } else if (result.data && result.data.observaciones && Array.isArray(result.data.observaciones)) {
+        console.log('✅ Encontradas observaciones en result.data.observaciones:', result.data.observaciones);
+        return result.data.observaciones;
+      } else if (result.data && Array.isArray(result.data)) {
+        return result.data;
+      } else if (Array.isArray(result)) {
+        return result;
+      } else {
+        console.warn('⚠️ Estructura de respuesta inesperada:', result);
+        return [];
+      }
     } catch (error) {
       console.error('❌ Error al obtener historial de observaciones:', error);
       return [];
@@ -88,38 +103,32 @@ export const solicitudService = {
   async agregarObservacion(
     solicitudId: number,
     observacion: string,
-    empresaId: number = 1
+    empresaId: number = 1,
+    tipo: string = 'comentario'
   ): Promise<SolicitudUpdateResponse> {
     try {
-      const endpoint = API_CONFIG.ENDPOINTS.SOLICITUDES_PATCH.replace('{id}', solicitudId.toString());
-      const url = buildApiUrl(endpoint);
+      // Usar el endpoint correcto POST /solicitudes/<id>/observaciones
+      const url = buildApiUrl(`/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`);
 
-      const fechaCreacion = new Date().toISOString();
       const userId = parseInt(localStorage.getItem('user_id') || '1');
       const userName = localStorage.getItem('user_name') || 'Usuario';
 
-      // Crear la nueva observación
-      const nuevaObservacion = {
+      // Crear el payload según la documentación de la API
+      const requestData = {
         observacion: observacion.trim(),
-        fecha_creacion: fechaCreacion,
-        usuario_id: userId,
-        usuario_nombre: userName
-      };
-
-      // Para campos JSONB, necesitamos enviar el array completo
-      // El backend debería manejar esto agregando la nueva observación al array existente
-      const requestData: SolicitudUpdateData = {
-        observaciones: [nuevaObservacion] // Enviar como array para que el backend lo agregue
+        tipo: tipo,
+        fecha_creacion: new Date().toISOString()
       };
 
       console.log('🔍 Agregando observación a solicitud:', {
         solicitudId,
-        nuevaObservacion,
-        empresaId
+        requestData,
+        empresaId,
+        url
       });
 
       const response = await fetch(url, {
-        method: 'PATCH',
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Empresa-Id': empresaId.toString(),
@@ -129,8 +138,15 @@ export const solicitudService = {
         body: JSON.stringify(requestData)
       });
 
+      console.log('📡 Respuesta del servidor:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        console.error('❌ Error del servidor:', errorData);
         throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
       }
 

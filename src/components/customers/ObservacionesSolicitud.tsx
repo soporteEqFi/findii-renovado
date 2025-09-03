@@ -46,8 +46,16 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
   } = useObservaciones({
     solicitudId,
     empresaId,
-    observacionesIniciales: historialObservaciones
+    observacionesIniciales: [] // Forzar carga desde el backend
   });
+
+  // Cargar observaciones automáticamente cuando el componente se monte
+  React.useEffect(() => {
+    if (solicitudId && !isNaN(Number(solicitudId))) {
+      console.log('🚀 Cargando observaciones automáticamente para solicitud:', solicitudId);
+      cargarObservaciones();
+    }
+  }, [solicitudId, empresaId]);
 
   const handleSync = async () => {
     setIsSyncing(true);

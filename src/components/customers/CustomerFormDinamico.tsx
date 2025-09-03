@@ -27,6 +27,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
+  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Log cuando cambian los archivos seleccionados
@@ -424,12 +425,12 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           total_activos: datosFormulario.total_activos,
           total_pasivos: datosFormulario.total_pasivos
         },
-        'REFERENCIAS': {
-          nombre_completo: datosFormulario.nombre_completo,
-          telefono_referencia: datosFormulario.telefono_referencia,
-          tipo_referencia: datosFormulario.tipo_referencia,
-          parentesco: datosFormulario.parentesco
-        },
+        'REFERENCIAS': referencias.map(ref => ({
+          nombre_completo: ref.nombre_completo || '',
+          telefono_referencia: ref.telefono_referencia || '',
+          tipo_referencia: ref.tipo_referencia || 'personal',
+          parentesco: ref.parentesco || ''
+        })),
         'SOLICITUD': {
           monto_solicitado: datosFormulario.monto_solicitado,
           plazo_meses: datosFormulario.plazo_meses,
@@ -734,20 +735,71 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           </div>
         )}
 
-        {/* Formulario Completo - Referencia */}
-        {esquemas.referencia?.esquema && esquemas.referencia.esquema.campos_fijos && esquemas.referencia.esquema.campos_dinamicos ? (
-          <FormularioCompleto
-            esquemaCompleto={esquemas.referencia.esquema}
-            valores={datosFormulario}
-            onChange={handleFieldChange}
-            errores={errores}
-            titulo="Información de Referencias"
-          />
-        ) : (
-          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-700">⏳ Cargando campos de referencias...</p>
+        {/* Sección de Referencias Múltiples */}
+        <div className="space-y-6">
+          <h3 className="text-lg font-medium text-gray-900">Información de Referencias</h3>
+          
+          {referencias.map((referencia, index) => (
+            <div key={index} className="p-4 border border-gray-200 rounded-lg relative">
+              {referencias.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nuevasReferencias = [...referencias];
+                    nuevasReferencias.splice(index, 1);
+                    setReferencias(nuevasReferencias);
+                  }}
+                  className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                  title="Eliminar referencia"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              )}
+              
+              <h4 className="text-md font-medium text-gray-800 mb-4">Referencia {index + 1}</h4>
+              
+              {esquemas.referencia?.esquema?.campos_fijos && esquemas.referencia.esquema.campos_dinamicos ? (
+                <FormularioCompleto
+                  key={index}
+                  esquemaCompleto={{
+                    ...esquemas.referencia.esquema,
+                    campos_fijos: esquemas.referencia.esquema.campos_fijos.map(field => ({
+                      ...field,
+                      key: `referencias[${index}].${field.key}`
+                    })),
+                    campos_dinamicos: esquemas.referencia.esquema.campos_dinamicos.map(field => ({
+                      ...field,
+                      key: `referencias[${index}].${field.key}`
+                    }))
+                  }}
+                  valores={referencia}
+                  onChange={(key, value) => {
+                    const nuevasReferencias = [...referencias];
+                    const cleanKey = key.replace(`referencias[${index}].`, '');
+                    nuevasReferencias[index] = { ...nuevasReferencias[index], [cleanKey]: value };
+                    setReferencias(nuevasReferencias);
+                  }}
+                  errores={errores}
+                />
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-700">⏳ Cargando campos de referencia...</p>
+                </div>
+              )}
+            </div>
+          ))}
+          
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => setReferencias([...referencias, {}])}
+              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              disabled={referencias.length >= 3}
+            >
+              + Agregar Referencia
+            </button>
           </div>
-        )}
+        </div>
 
         {/* Formulario Completo - Solicitud */}
         {esquemas.solicitud?.esquema && esquemas.solicitud.esquema.campos_fijos && esquemas.solicitud.esquema.campos_dinamicos ? (

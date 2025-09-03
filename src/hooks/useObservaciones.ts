@@ -66,7 +66,7 @@ export const useObservaciones = ({
     }
   };
 
-  const agregarObservacion = async (observacion: string): Promise<boolean> => {
+  const agregarObservacion = async (observacion: string, tipo: string = 'comentario'): Promise<boolean> => {
     setLoading(true);
     setError(null);
 
@@ -74,7 +74,8 @@ export const useObservaciones = ({
       const response = await solicitudService.agregarObservacion(
         solicitudId,
         observacion,
-        empresaId
+        empresaId,
+        tipo
       );
 
       if (response.ok) {
