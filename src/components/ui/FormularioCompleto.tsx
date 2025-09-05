@@ -28,6 +28,13 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas
   const getNestedValue = (key: string): any => {
+    // Aliases comunes entre esquemas/valores
+    if (key === 'tipo_referencia' && valores && valores['tipo'] !== undefined) {
+      return valores['tipo'];
+    }
+    if (key === 'tipo' && valores && valores['tipo_referencia'] !== undefined) {
+      return valores['tipo_referencia'];
+    }
     // 1) Directo
     if (valores && Object.prototype.hasOwnProperty.call(valores, key)) {
       return valores[key];

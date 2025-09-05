@@ -37,6 +37,11 @@ export const API_CONFIG = {
     ACTIVIDAD_ECONOMICA: '/actividad_economica',
     INFORMACION_FINANCIERA: '/informacion_financiera',
     REFERENCIAS: '/referencias',
+    REFERENCIAS_POR_SOLICITANTE: '/referencias/por-solicitante',
+    // Nuevos endpoints JSON para gestionar referencias dentro de una sola fila por solicitante
+    REFERENCIAS_ADD: '/referencias/agregar',
+    REFERENCIAS_UPDATE: '/referencias/actualizar',
+    REFERENCIAS_DELETE: '/referencias/eliminar',
     SOLICITUDES: '/solicitudes',
     SOLICITUDES_PATCH: '/solicitudes/{id}', // PATCH para actualizar solicitudes
     DOCUMENTOS: '/documentos',

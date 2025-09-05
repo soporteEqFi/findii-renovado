@@ -526,13 +526,11 @@ export const esquemaService = {
       console.log('📋 Campos dinámicos definidos:', esquema.campos_dinamicos?.map((c: any) => c.key));
     }
 
-    // Para referencias, asegurar que tipo_referencia esté presente
+    // Para referencias, NO crear por defecto una referencia vacía.
+    // Solo establecer tipo_referencia si viene explícitamente en formData.
     if (entidad === 'referencia') {
-      if (!datos.tipo_referencia && formData.tipo_referencia) {
+      if (!datos.tipo_referencia && formData?.tipo_referencia) {
         datos.tipo_referencia = formData.tipo_referencia;
-      }
-      if (!datos.tipo_referencia) {
-        datos.tipo_referencia = 'personal';
       }
     }
 
@@ -565,8 +563,14 @@ export const esquemaService = {
 
     // Caso especial para arrays (como referencias múltiples)
     if (entidad === 'referencias') {
-      // Procesar como array de referencias
-      return [this.extraerDatosEntidad(formData, esquema, 'referencia')];
+      // Procesar como array de referencias si viene en formData
+      if (Array.isArray((formData as any)?.referencias)) {
+        return (formData as any).referencias
+          .map((ref: any) => this.extraerDatosEntidad(ref, esquema, 'referencia'))
+          .filter((item: any) => item && Object.keys(item).length > 0);
+      }
+      // Si no hay arreglo de referencias, no crear ninguna por defecto.
+      return [];
     }
 
     if (entidad === 'solicitudes') {
@@ -639,6 +643,13 @@ export const esquemaService = {
         datosTransformados[entidad] = this.extraerDatosEntidad(formData, esquemaData.esquema, entidad);
       }
     });
+
+    // Manejo explícito de referencias múltiples usando el esquema singular 'referencia'
+    if (Array.isArray((formData as any)?.referencias) && esquemasCompletos?.referencia?.esquema) {
+      datosTransformados.referencias = (formData as any).referencias
+        .map((ref: any) => this.extraerDatosEntidad(ref, esquemasCompletos.referencia.esquema, 'referencia'))
+        .filter((item: any) => item && Object.keys(item).length > 0);
+    }
 
     // Limpiar campos vacíos, null o undefined
     const limpiarObjeto = (obj: any): any => {

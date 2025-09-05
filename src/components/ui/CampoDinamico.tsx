@@ -23,7 +23,12 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   getValue
 }) => {
   // Usar default_value si value es null/undefined/empty
-  const efectiveValue = value ?? campo.default_value ?? '';
+  // EXCEPCIÓN: para 'tipo_referencia' no aplicamos default del esquema para evitar seleccionar 'personal' implícitamente
+  const efectiveValue = (() => {
+    if (value !== undefined && value !== null && value !== '') return value;
+    if (campo.key === 'tipo_referencia') return '';
+    return campo.default_value ?? '';
+  })();
 
   // Cargar configuraciones para campos específicos
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
@@ -52,71 +57,107 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
               <label className="block text-sm font-medium text-gray-700">
                 {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
               </label>
-              {(subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) ? (
-                // Si el subcampo es de tipo array con enum, renderizar select
-                <select
-                  value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
-                  onChange={(e) => {
-                    const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
-                    // Limpiar campos vacíos
-                    Object.keys(nuevoObjeto).forEach(k => {
-                      if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
-                        delete nuevoObjeto[k];
-                      }
-                    });
-                    handleChange(nuevoObjeto);
-                  }}
-                  required={subcampo.required}
-                  disabled={disabled}
-                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                >
-                  <option value="">Seleccionar...</option>
-                  {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              ) : subcampo.type === 'date' ? (
-                // Input de fecha
-                <input
-                  type="date"
-                  placeholder={subcampo.description || subcampo.key}
-                  value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
-                  onChange={(e) => {
-                    const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
-                    // Limpiar campos vacíos
-                    Object.keys(nuevoObjeto).forEach(k => {
-                      if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
-                        delete nuevoObjeto[k];
-                      }
-                    });
-                    handleChange(nuevoObjeto);
-                  }}
-                  required={subcampo.required}
-                  disabled={disabled}
-                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                />
-              ) : (
+              {(() => {
+                // 1) Dinámico: relación dependiente de tipo_referencia/tipo
+                const keyNorm = (subcampo.key || '').toLowerCase();
+                const isRelacion = keyNorm.includes('relacion');
+                const tipoActualRaw = typeof getValue === 'function' ? (getValue('tipo_referencia') ?? getValue('tipo')) : undefined;
+                const tipoActual = String(tipoActualRaw || '').toLowerCase();
+                if (isRelacion && tipoActualRaw !== undefined) {
+                  let opciones: string[] = [];
+                  switch (tipoActual) {
+                    case 'familiar':
+                      opciones = ['Padre','Madre','Hermano','Hermana','Hijo','Hija','Tío','Tía','Primo','Prima','Esposo','Esposa','Pareja','Otro'];
+                      break;
+                    case 'laboral':
+                      opciones = ['Jefe','Compañero de trabajo','Subalterno','Cliente','Proveedor','Otro'];
+                      break;
+                    case 'comercial':
+                      opciones = ['Cliente','Proveedor','Socio','Asesor comercial','Otro'];
+                      break;
+                    case 'personal':
+                    default:
+                      opciones = ['Amigo','Amiga','Conocido','Conocida','Compañero','Compañera','Vecino','Vecina','Otro'];
+                      break;
+                  }
+                  return (
+                    <select
+                      value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                      onChange={(e) => {
+                        const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                        Object.keys(nuevoObjeto).forEach(k => { if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) { delete nuevoObjeto[k]; } });
+                        handleChange(nuevoObjeto);
+                      }}
+                      required={subcampo.required}
+                      disabled={disabled}
+                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    >
+                      <option value="">{tipoActual ? 'Seleccionar relación...' : 'Seleccione primero el tipo de referencia...'}</option>
+                      {opciones.map(op => (
+                        <option key={op} value={op}>{op}</option>
+                      ))}
+                    </select>
+                  );
+                }
+
+                // 2) Resto de tipos
+                if (subcampo.type === 'array' && subcampo.list_values && typeof subcampo.list_values === 'object' && 'enum' in subcampo.list_values) {
+                  // Select con enum
+                  return (
+                    <select
+                      value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                      onChange={(e) => {
+                        const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                        Object.keys(nuevoObjeto).forEach(k => { if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) { delete nuevoObjeto[k]; } });
+                        handleChange(nuevoObjeto);
+                      }}
+                      required={subcampo.required}
+                      disabled={disabled}
+                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    >
+                      <option value="">Seleccionar...</option>
+                      {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  );
+                }
+                if (subcampo.type === 'date') {
+                  // Input de fecha
+                  return (
+                    <input
+                      type="date"
+                      placeholder={subcampo.description || subcampo.key}
+                      value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                      onChange={(e) => {
+                        const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                        Object.keys(nuevoObjeto).forEach(k => { if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) { delete nuevoObjeto[k]; } });
+                        handleChange(nuevoObjeto);
+                      }}
+                      required={subcampo.required}
+                      disabled={disabled}
+                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    />
+                  );
+                }
                 // Input normal
-                <input
-                  type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
-                  placeholder={subcampo.description || subcampo.key}
-                  value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
-                  onChange={(e) => {
-                    const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
-                    // Limpiar campos vacíos
-                    Object.keys(nuevoObjeto).forEach(k => {
-                      if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) {
-                        delete nuevoObjeto[k];
-                      }
-                    });
-                    handleChange(nuevoObjeto);
-                  }}
-                  required={subcampo.required}
-                  disabled={disabled}
-                  className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
-                  step={subcampo.type === 'integer' ? '1' : '0.01'}
-                />
-              )}
+                return (
+                  <input
+                    type={subcampo.type === 'number' || subcampo.type === 'integer' ? 'number' : 'text'}
+                    placeholder={subcampo.description || subcampo.key}
+                    value={efectiveValue[subcampo.key] ?? subcampo.default_value ?? ''}
+                    onChange={(e) => {
+                      const nuevoObjeto = { ...efectiveValue, [subcampo.key]: e.target.value };
+                      Object.keys(nuevoObjeto).forEach(k => { if (nuevoObjeto[k] === '' || nuevoObjeto[k] === null || nuevoObjeto[k] === undefined) { delete nuevoObjeto[k]; } });
+                      handleChange(nuevoObjeto);
+                    }}
+                    required={subcampo.required}
+                    disabled={disabled}
+                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    step={subcampo.type === 'integer' ? '1' : '0.01'}
+                  />
+                );
+              })()}
             </div>
           ))}
         </div>
@@ -380,6 +421,76 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           <option value="Rentista">Rentista</option>
         </select>
       );
+    }
+
+    if (campo.key === 'tipo_referencia') {
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo de referencia...</option>
+          <option value="personal">Personal</option>
+          <option value="familiar">Familiar</option>
+          <option value="laboral">Laboral</option>
+          <option value="comercial">Comercial</option>
+        </select>
+      );
+    }
+
+    // Campo relación dependiente del tipo de referencia
+    // Detecta cualquier clave que contenga 'relacion' (p. ej., 'relacion', 'relacion_referencia', 'relacion_referencia1', etc.)
+    {
+      const keyNorm = (campo.key || '').toLowerCase();
+      const tipoActualRaw = typeof getValue === 'function' ? (getValue('tipo_referencia') ?? getValue('tipo')) : undefined;
+      const tipoActual = String(tipoActualRaw || '').toLowerCase();
+      const esCampoRelacion = keyNorm.includes('relacion');
+      // Si es un campo de relación, siempre renderizar como select. Si no hay tipo, mostrar opciones genéricas.
+      if (esCampoRelacion) {
+
+        let opciones: string[] = [];
+        switch (tipoActual) {
+          case 'familiar':
+            opciones = [
+              'Padre', 'Madre', 'Hermano', 'Hermana', 'Hijo', 'Hija', 'Tío', 'Tía', 'Primo', 'Prima', 'Esposo', 'Esposa', 'Pareja', 'Otro'
+            ];
+            break;
+          case 'laboral':
+            opciones = [
+              'Jefe', 'Compañero de trabajo', 'Subalterno', 'Cliente', 'Proveedor', 'Otro'
+            ];
+            break;
+          case 'comercial':
+            opciones = [
+              'Cliente', 'Proveedor', 'Socio', 'Asesor comercial', 'Otro'
+            ];
+            break;
+          case 'personal':
+          default:
+            opciones = [
+              'Amigo', 'Amiga', 'Conocido', 'Conocida', 'Compañero', 'Compañera', 'Vecino', 'Vecina', 'Otro'
+            ];
+            break;
+        }
+
+        return (
+          <select
+            value={efectiveValue || ''}
+            onChange={(e) => handleChange(e.target.value)}
+            className={baseClasses}
+            required={campo.required}
+            disabled={disabled}
+          >
+            <option value="">{tipoActual ? 'Seleccionar relación...' : 'Seleccionar relación...'}</option>
+            {opciones.map((op) => (
+              <option key={op} value={op}>{op}</option>
+            ))}
+          </select>
+        );
+      }
     }
 
     if (campo.key === 'sector_economico') {

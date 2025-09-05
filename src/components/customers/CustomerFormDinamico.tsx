@@ -4,9 +4,9 @@ import toast from 'react-hot-toast';
 import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
 import { FormularioCompleto } from '../ui/FormularioCompleto';
 import { esquemaService } from '../../services/esquemaService';
-import { useConfiguraciones } from '../../hooks/useConfiguraciones';
-import { CampoDinamico } from '../ui/CampoDinamico';
+// Removed unused imports: useConfiguraciones, CampoDinamico
 import { documentService } from '../../services/documentService';
+import { referenciaService } from '../../services/referenciaService';
 
 interface CustomerFormDinamicoProps {
   onSubmit: (e: React.FormEvent) => Promise<void>;
@@ -27,7 +27,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
-  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}]);
+  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Log cuando cambian los archivos seleccionados
@@ -55,9 +55,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
 
-  // Cargar configuraciones (ciudades y bancos)
-  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
-  const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
+  // Configuraciones de ciudades/bancos (no utilizadas actualmente) removidas para evitar lints
 
     // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DATOS DE PRUEBA COMPLETOS
   const autoLlenarTodosLosCampos = () => {
@@ -192,7 +190,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     });
 
     // También llenar campos del esquema que tengan default_value
-    Object.entries(esquemas).forEach(([entidad, esquemaData]) => {
+    Object.entries(esquemas).forEach(([_, esquemaData]) => {
       if (esquemaData?.esquema) {
         // Campos fijos con default_value
         esquemaData.esquema.campos_fijos?.forEach(campo => {
@@ -314,6 +312,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     setSelectedFiles([]);
     setAceptaTerminos(false);
     setAceptaAcuerdoFirma(false);
+    setReferencias([]);
   };
 
   // Limpiar formulario cuando se monta el componente
@@ -464,8 +463,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       // Crear registro completo usando endpoint unificado
       console.log('🚀 CREANDO REGISTRO COMPLETO UNIFICADO');
 
+      // No incluir referencias en el payload unificado. Se gestionan con endpoints dedicados.
+      const datosParaEnviar = { ...datosFormulario };
+
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
-        datosFormulario,
+        datosParaEnviar,
         esquemas,
         1
       );
@@ -496,6 +498,60 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       }
 
       console.log('🆔 Solicitante ID final:', solicitanteId);
+
+      // Agregar referencias usando el endpoint POST /referencias/agregar
+      try {
+        const referenciasCandidatas = (Array.isArray(referencias) ? referencias : [])
+          .map((r) => {
+            const { detalle_referencia, referencia_id, id, ...rest } = (r || {}) as any;
+            const flatDetalle = detalle_referencia && typeof detalle_referencia === 'object' ? detalle_referencia : {};
+            const tipo = (r as any)?.tipo_referencia || (r as any)?.tipo || undefined;
+            const plano: Record<string, any> = { ...rest, ...flatDetalle };
+            if (tipo) plano.tipo_referencia = tipo;
+            delete (plano as any).id;
+            delete (plano as any).referencia_id; // dejar que el backend asigne
+            return plano;
+          })
+          .filter((plano) => {
+            // Permitir envío solo si el usuario llenó al menos un CAMPO CLAVE
+            // Excluimos campos que suelen tener defaults o poco significativos.
+            const camposClave = [
+              'nombre_referencia',
+              'nombre_referencia1',
+              'celular_referencia',
+              'direccion_referencia',
+              'direccion_referencia1',
+              'relacion_referencia',
+              'relacion_referencia1',
+            ];
+            return camposClave.some((k) => {
+              const v = (plano as any)[k];
+              return v !== undefined && v !== null && String(v).trim() !== '';
+            });
+          });
+
+        if (solicitanteId && referenciasCandidatas.length > 0) {
+          console.log('🔄 Agregando referencias individuales vía API...', referenciasCandidatas);
+          const results = await Promise.all(
+            referenciasCandidatas.map(async (ref) => {
+              try {
+                const res = await referenciaService.addReferencia(Number(solicitanteId), ref as any);
+                console.log('✅ Referencia agregada:', res);
+                return res;
+              } catch (err) {
+                console.error('❌ Error agregando referencia:', ref, err);
+                throw err;
+              }
+            })
+          );
+          console.log('✅ Todas las referencias agregadas:', results);
+        } else {
+          console.log('ℹ️ No hay referencias para agregar o no hay solicitanteId');
+        }
+      } catch (refsError) {
+        console.error('❌ Error al agregar referencias:', refsError);
+        toast.error('Se creó la solicitud pero hubo errores agregando las referencias');
+      }
 
       // Subir archivos si hay archivos seleccionados y se obtuvo el solicitante_id
       if (selectedFiles.length > 0 && solicitanteId) {
@@ -599,14 +655,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
 
 
-  // Debug: Ver qué esquemas están cargados
-  React.useEffect(() => {
-    if (!esquemasLoading) {
-      entidadesRequeridas.forEach(entidad => {
-        const esquema = esquemas[entidad];
-      });
-    }
-  }, [esquemasLoading, esquemas, esquemasCompletos]);
+  // Debug useEffect removido (no aportaba y causaba lints)
 
   if (esquemasLoading) {
     return (
@@ -763,20 +812,36 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                   key={index}
                   esquemaCompleto={{
                     ...esquemas.referencia.esquema,
-                    campos_fijos: esquemas.referencia.esquema.campos_fijos.map(field => ({
-                      ...field,
-                      key: `referencias[${index}].${field.key}`
-                    })),
-                    campos_dinamicos: esquemas.referencia.esquema.campos_dinamicos.map(field => ({
-                      ...field,
-                      key: `referencias[${index}].${field.key}`
-                    }))
+                    // Inyectar opciones para tipo_referencia si faltan
+                    campos_fijos: esquemas.referencia.esquema.campos_fijos.map(field => (
+                      field.key === 'tipo_referencia' && !field.list_values
+                        ? {
+                            ...field,
+                            list_values: { enum: ['personal', 'familiar', 'laboral', 'comercial'] }
+                          }
+                        : field
+                    )),
+                    campos_dinamicos: esquemas.referencia.esquema.campos_dinamicos
                   }}
-                  valores={referencia}
+                  valores={{
+                    ...referencia,
+                    ...(referencia?.detalle_referencia || {})
+                  }}
                   onChange={(key, value) => {
+                    const dynamicKeys = new Set(
+                      (esquemas.referencia?.esquema?.campos_dinamicos || []).map((f: any) => f.key)
+                    );
                     const nuevasReferencias = [...referencias];
-                    const cleanKey = key.replace(`referencias[${index}].`, '');
-                    nuevasReferencias[index] = { ...nuevasReferencias[index], [cleanKey]: value };
+                    const actual = { ...nuevasReferencias[index] };
+                    if (dynamicKeys.has(key)) {
+                      actual.detalle_referencia = {
+                        ...(actual.detalle_referencia || {}),
+                        [key]: value
+                      };
+                    } else {
+                      (actual as any)[key] = value;
+                    }
+                    nuevasReferencias[index] = actual;
                     setReferencias(nuevasReferencias);
                   }}
                   errores={errores}
