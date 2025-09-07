@@ -42,9 +42,9 @@ export const useCustomers = () => {
 
       // Todos los roles (incluyendo banco) usan user_id para ver sus registros asignados
       const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DASHBOARD_TABLA}?empresa_id=${empresaId}${userId ? `&user_id=${userId}` : ''}`;
-      
+
       console.log('📡 URL de la API:', url);
-      
+
       const response = await fetch(url, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
@@ -180,7 +180,8 @@ export const useCustomers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.EDIT_RECORD), {
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.EDIT_RECORD}?empresa_id=${empresaId}`), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +215,8 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DELETE_CUSTOMER}/${id}`, {
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DELETE_CUSTOMER}/${id}?empresa_id=${empresaId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`

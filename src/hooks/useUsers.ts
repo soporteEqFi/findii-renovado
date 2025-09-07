@@ -7,11 +7,12 @@ export const useUsers = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadUsers = useCallback(async (empresaId: number = 1) => {
+  const loadUsers = useCallback(async (empresaId?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await userService.getUsers(empresaId);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const data = await userService.getUsers(empresaIdToUse);
       setUsers(data);
     } catch (error) {
       setError('Error cargando usuarios');
@@ -21,11 +22,12 @@ export const useUsers = () => {
     }
   }, []);
 
-  const createNewUser = useCallback(async (userData: CreateUserData, empresaId: number = 1) => {
+  const createNewUser = useCallback(async (userData: CreateUserData, empresaId?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      const newUser = await userService.createUser(userData, empresaId);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const newUser = await userService.createUser(userData, empresaIdToUse);
       setUsers(prev => [...prev, newUser]);
       return newUser;
     } catch (error) {
@@ -37,11 +39,12 @@ export const useUsers = () => {
     }
   }, []);
 
-  const updateUserData = useCallback(async (userId: number, updateData: UpdateUserData, empresaId: number = 1) => {
+  const updateUserData = useCallback(async (userId: number, updateData: UpdateUserData, empresaId?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      const updatedUser = await userService.updateUser(userId, updateData, empresaId);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const updatedUser = await userService.updateUser(userId, updateData, empresaIdToUse);
       setUsers(prev => prev.map(u => u.id === updatedUser.id ? updatedUser : u));
       return updatedUser;
     } catch (error) {
@@ -53,11 +56,12 @@ export const useUsers = () => {
     }
   }, []);
 
-  const deleteUserData = useCallback(async (userId: number, empresaId: number = 1) => {
+  const deleteUserData = useCallback(async (userId: number, empresaId?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      await userService.deleteUser(userId, empresaId);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      await userService.deleteUser(userId, empresaIdToUse);
       setUsers(prev => prev.filter(u => u.id !== userId));
     } catch (error) {
       setError('Error eliminando usuario');
@@ -68,11 +72,12 @@ export const useUsers = () => {
     }
   }, []);
 
-  const getUserById = useCallback(async (userId: number, empresaId: number = 1) => {
+  const getUserById = useCallback(async (userId: number, empresaId?: number) => {
     try {
       setIsLoading(true);
       setError(null);
-      const user = await userService.getUserById(userId, empresaId);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const user = await userService.getUserById(userId, empresaIdToUse);
       return user;
     } catch (error) {
       setError('Error obteniendo usuario');

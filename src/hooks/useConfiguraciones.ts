@@ -12,7 +12,7 @@ interface UseConfiguracionesReturn {
   refetch: () => void;
 }
 
-export const useConfiguraciones = (empresaId: number = 1): UseConfiguracionesReturn => {
+export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn => {
   // Inicializar con valores por defecto básicos (solo para mostrar algo mientras carga)
   const [ciudades, setCiudades] = useState<string[]>(['Bogotá', 'Medellín', 'Cali', 'Barranquilla']);
   const [bancos, setBancos] = useState<string[]>(['Bancolombia', 'Banco de Bogotá', 'BBVA']);
@@ -24,13 +24,14 @@ export const useConfiguraciones = (empresaId: number = 1): UseConfiguracionesRet
     setError(null);
 
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       console.log('🔧 === CARGANDO CONFIGURACIONES DESDE BACKEND ===');
-      console.log('🏢 Empresa ID:', empresaId);
+      console.log('🏢 Empresa ID:', empresaIdToUse);
 
       // Cargar ciudades y bancos en paralelo
       const [ciudadesData, bancosData] = await Promise.all([
-        configuracionesService.obtenerCiudades(empresaId),
-        configuracionesService.obtenerBancos(empresaId)
+        configuracionesService.obtenerCiudades(empresaIdToUse),
+        configuracionesService.obtenerBancos(empresaIdToUse)
       ]);
 
       // Actualizar con los datos del backend y guardar en localStorage

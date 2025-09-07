@@ -7,6 +7,7 @@ export interface User {
   rol: string;
   created_at?: string;
   empresa?: string;
+  empresa_id?: number;
   imagen_aliado?: string | null;
   apellido?: string;
   usuario?: string;

@@ -471,10 +471,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       // No incluir referencias en el payload unificado. Se gestionan con endpoints dedicados.
       const datosParaEnviar = { ...datosFormulario };
 
+      const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
         datosParaEnviar,
         esquemas,
-        1
+        empresaId
       );
 
       console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');

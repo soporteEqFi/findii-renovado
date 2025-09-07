@@ -55,7 +55,7 @@ interface UseEsquemaReturn {
 const esquemaCache = new Map<string, { data: EsquemaCampo[]; timestamp: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
-export const useEsquema = (entidad: string, campoJson: string, empresaId: number = 1): UseEsquemaReturn => {
+export const useEsquema = (entidad: string, campoJson: string, empresaId?: number): UseEsquemaReturn => {
   const [esquema, setEsquema] = useState<EsquemaCampo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

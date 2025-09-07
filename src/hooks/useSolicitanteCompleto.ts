@@ -11,7 +11,7 @@ interface UseSolicitanteCompletoReturn {
 
 export const useSolicitanteCompleto = (
   solicitanteId: number | null,
-  empresaId: number = 1
+  empresaId?: number
 ): UseSolicitanteCompletoReturn => {
   const [datos, setDatos] = useState<TodosLosRegistrosResponse | null>(null);
   const [datosMapeados, setDatosMapeados] = useState<any | null>(null);

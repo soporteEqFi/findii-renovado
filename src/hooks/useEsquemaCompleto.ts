@@ -63,7 +63,7 @@ const validarEsquema = (esquema: EsquemaCampo[]): EsquemaCampo[] => {
   });
 };
 
-export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseEsquemaCompletoReturn => {
+export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsquemaCompletoReturn => {
   const [esquema, setEsquema] = useState<EsquemaCompleto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,8 +74,9 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
       setError(null);
 
       // ✅ USAR EL ENDPOINT CORRECTO: /schema/{entidad} que devuelve campos fijos + dinámicos
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const response = await fetch(
-        buildApiUrl(`/schema/${entidad}?empresa_id=${empresaId}`),
+        buildApiUrl(`/schema/${entidad}?empresa_id=${empresaIdToUse}`),
         {
           headers: {
             'X-User-Id': localStorage.getItem('user_id') || '1',
@@ -135,11 +136,14 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
             campos_dinamicos: ordenarCampos(camposDinamicosCorregidos)
           };
 
-          // console.log(`✅ Esquema completo cargado para ${entidad}:`, {
-          //   campos_fijos: esquemaFinal.campos_fijos.length,
-          //   campos_dinamicos: esquemaFinal.campos_dinamicos.length,
-          //   total: esquemaFinal.total_campos
-          // });
+          console.log(`✅ Esquema completo cargado para ${entidad}:`, {
+            empresa_id: empresaIdToUse,
+            campos_fijos: esquemaFinal.campos_fijos.length,
+            campos_dinamicos: esquemaFinal.campos_dinamicos.length,
+            total: esquemaFinal.total_campos,
+            campos_fijos_keys: esquemaFinal.campos_fijos.map(c => c.key),
+            campos_dinamicos_keys: esquemaFinal.campos_dinamicos.map(c => c.key)
+          });
 
           setEsquema(esquemaFinal);
         } else {
@@ -150,7 +154,10 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
       }
 
     } catch (error) {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       console.error(`❌ Error cargando esquema para ${entidad}:`, error);
+      console.error(`🏢 Empresa ID usado: ${empresaIdToUse}`);
+      console.error(`📡 URL intentada: /schema/${entidad}?empresa_id=${empresaIdToUse}`);
       setError(error instanceof Error ? error.message : 'Error desconocido');
 
       // En caso de error, crear un esquema básico con campos fijos por defecto
@@ -163,6 +170,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
         campos_dinamicos: []
       };
 
+      console.warn(`⚠️ Usando esquema básico por defecto para ${entidad} debido a error`);
       setEsquema(esquemaBasico);
     } finally {
       setLoading(false);

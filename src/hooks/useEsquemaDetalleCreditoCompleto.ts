@@ -18,7 +18,7 @@ interface UseEsquemaDetalleCreditoReturn {
   refetch: () => void;
 }
 
-export const useEsquemaDetalleCreditoCompleto = (empresaId: number = 1): UseEsquemaDetalleCreditoReturn => {
+export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquemaDetalleCreditoReturn => {
   const [esquema, setEsquema] = useState<EsquemaDetalleCreditoCompleto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId: number = 1): UseEsqu
 
         if (result.ok) {
           const schemaData = result.data;
-          
+
           // Organizar campos por tipo de crédito
           const camposCondicionales: Record<string, EsquemaCampo[]> = {};
           const camposDinamicos: EsquemaCampo[] = [];
@@ -86,7 +86,7 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId: number = 1): UseEsqu
           console.log('✅ Esquema detalle crédito cargado:', {
             campos_dinamicos: esquemaFinal.campos_dinamicos.length,
             tipos_credito: Object.keys(esquemaFinal.campos_condicionales),
-            campos_por_tipo: Object.entries(esquemaFinal.campos_condicionales).map(([tipo, campos]) => 
+            campos_por_tipo: Object.entries(esquemaFinal.campos_condicionales).map(([tipo, campos]) =>
               ({ tipo, cantidad: campos.length })
             )
           });
@@ -102,7 +102,7 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId: number = 1): UseEsqu
     } catch (error) {
       console.error('❌ Error cargando esquema detalle crédito:', error);
       setError(error instanceof Error ? error.message : 'Error desconocido');
-      
+
       // Esquema básico en caso de error
       setEsquema({
         entidad: 'solicitudes',

@@ -71,7 +71,8 @@ export const CreditTracking: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(buildApiUrl(`/api/seguimiento/radicado/${trackingId}`));
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(buildApiUrl(`/api/seguimiento/radicado/${trackingId}?empresa_id=${empresaId}`));
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Error al buscar el radicado');
@@ -100,7 +101,8 @@ export const CreditTracking: React.FC = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(buildApiUrl('/api/seguimiento/actualizar-documentos'), {
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(buildApiUrl(`/api/seguimiento/actualizar-documentos?empresa_id=${empresaId}`), {
         method: 'POST',
         body: formData,
       });
@@ -134,7 +136,8 @@ export const CreditTracking: React.FC = () => {
     };
 
     try {
-      const response = await fetch(buildApiUrl('/api/seguimiento/actualizar-estado'), {
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(buildApiUrl(`/api/seguimiento/actualizar-estado?empresa_id=${empresaId}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

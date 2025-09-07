@@ -9,17 +9,19 @@ import {
 
 export const esquemaService = {
   // Obtener esquema de campos dinámicos (optimizado con nuevo servicio)
-  async obtenerEsquema(entidad: string, campoJson: string, empresaId: number = 1): Promise<EsquemaCampo[]> {
+  async obtenerEsquema(entidad: string, campoJson: string, empresaId?: number): Promise<EsquemaCampo[]> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Usar el nuevo servicio optimizado
-      camposDinamicosAPI.setEmpresaId(empresaId.toString());
+      camposDinamicosAPI.setEmpresaId(empresaIdToUse.toString());
       return await camposDinamicosAPI.obtenerEsquemaJSON(entidad, campoJson);
     } catch (error) {
       console.error('Error con nuevo servicio, fallback al método anterior:', error);
 
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Fallback al método anterior para compatibilidad
       const response = await fetch(
-        buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaId}`),
+        buildApiUrl(`/json/schema/${entidad}/${campoJson}?empresa_id=${empresaIdToUse}`),
         {
           headers: {
             'X-User-Id': localStorage.getItem('user_id') || '1',
@@ -43,8 +45,9 @@ export const esquemaService = {
   },
 
   // Obtener esquema completo (NUEVO - según guía)
-  async obtenerEsquemaCompleto(entidad: string, empresaId: number = 1): Promise<any> {
-    camposDinamicosAPI.setEmpresaId(empresaId.toString());
+  async obtenerEsquemaCompleto(entidad: string, empresaId?: number): Promise<any> {
+    const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+    camposDinamicosAPI.setEmpresaId(empresaIdToUse.toString());
     return await camposDinamicosAPI.obtenerEsquemaCompleto(entidad);
   },
 
@@ -54,20 +57,22 @@ export const esquemaService = {
     id: number,
     campoJson: string,
     datos: Record<string, any>,
-    empresaId: number = 1,
+    empresaId?: number,
     validar: boolean = true
   ): Promise<any> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Usar el nuevo servicio optimizado
-      camposDinamicosAPI.setEmpresaId(empresaId.toString());
+      camposDinamicosAPI.setEmpresaId(empresaIdToUse.toString());
       return await camposDinamicosAPI.actualizarVariasClavesJSON(entidad, id, campoJson, datos, validar);
     } catch (error) {
       console.error(`Error con nuevo servicio, fallback al método anterior:`, error);
 
       // Fallback al método anterior para compatibilidad
       try {
+        const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
         const url = buildApiUrl(
-          `/json/${entidad}/${id}/${campoJson}?empresa_id=${empresaId}${validar ? '&validate=true' : ''}`
+          `/json/${entidad}/${id}/${campoJson}?empresa_id=${empresaIdToUse}${validar ? '&validate=true' : ''}`
         );
 
         const response = await fetch(url, {
@@ -108,11 +113,12 @@ export const esquemaService = {
   async crearRegistro(
     entidad: string,
     datos: Record<string, any>,
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<RegistroCreado> {
     try {
-              const response = await fetch(
-          buildApiUrl(`/${entidad}/?empresa_id=${empresaId}`),
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const response = await fetch(
+          buildApiUrl(`/${entidad}/?empresa_id=${empresaIdToUse}`),
           {
             method: 'POST',
             headers: {
@@ -303,7 +309,7 @@ export const esquemaService = {
     campoJson: string,
     formData: Record<string, any>,
     esquema: EsquemaCampo[],
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<any> {
     // Filtrar solo campos que tienen valor
     const datosLimpios = this.filtrarCamposConValor(formData, esquema);
@@ -320,7 +326,7 @@ export const esquemaService = {
     entidad: string,
     formData: Record<string, any>,
     esquemaCompleto: any,
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<any> {
     // Método legacy - mantener para compatibilidad
     return this.crearRegistroCompletoLegacy(entidad, formData, esquemaCompleto, empresaId);
@@ -330,7 +336,7 @@ export const esquemaService = {
     entidad: string,
     formData: Record<string, any>,
     esquemaCompleto: any,
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<any> {
     try {
       // Separar campos fijos y dinámicos
@@ -345,14 +351,15 @@ export const esquemaService = {
         }
       });
 
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Agregar campos obligatorios
-      datosFijos.empresa_id = empresaId;
+      datosFijos.empresa_id = empresaIdToUse;
       if (formData.created_by_user_id) {
         datosFijos.created_by_user_id = formData.created_by_user_id;
       }
 
       // Crear registro base
-      const url = buildApiUrl(`/${esquemaCompleto.tabla}/?empresa_id=${empresaId}`);
+      const url = buildApiUrl(`/${esquemaCompleto.tabla}/?empresa_id=${empresaIdToUse}`);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -428,7 +435,7 @@ export const esquemaService = {
   async crearRegistroCompletoUnificado(
     formData: Record<string, any>,
     esquemasCompletos: any,
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<any> {
     try {
       // Transformar datos del formulario plano a la estructura esperada por el backend
@@ -462,7 +469,8 @@ export const esquemaService = {
         datosCompletos.solicitudes[0].created_by_user_email = userEmail; // Agregar correo del usuario
       }
 
-      const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.CREAR_REGISTRO_COMPLETO}?empresa_id=${empresaId}`);
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.CREAR_REGISTRO_COMPLETO}?empresa_id=${empresaIdToUse}`);
 
       const response = await fetch(url, {
         method: 'POST',

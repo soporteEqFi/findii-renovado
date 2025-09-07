@@ -3,10 +3,11 @@ import { buildApiUrl } from '../config/constants';
 
 export const userService = {
   // Listar todos los usuarios de una empresa
-  async getUsers(empresaId: number = 1): Promise<User[]> {
+  async getUsers(empresaId?: number): Promise<User[]> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const response = await fetch(
-        buildApiUrl(`/usuarios/?empresa_id=${empresaId}`),
+        buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
         {
           method: 'GET',
           headers: {
@@ -35,10 +36,11 @@ export const userService = {
   },
 
   // Obtener un usuario específico por ID
-  async getUserById(userId: number, empresaId: number = 1): Promise<User> {
+  async getUserById(userId: number, empresaId?: number): Promise<User> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const response = await fetch(
-        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaIdToUse}`),
         {
           method: 'GET',
           headers: {
@@ -73,8 +75,9 @@ export const userService = {
     contraseña: string;
     rol: string;
     info_extra?: UserInfoExtra;
-  }, empresaId: number = 1): Promise<User> {
+  }, empresaId?: number): Promise<User> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Limpiar info_extra si está vacío
       const cleanUserData = {
         ...userData,
@@ -82,7 +85,7 @@ export const userService = {
       };
 
       const response = await fetch(
-        buildApiUrl(`/usuarios/?empresa_id=${empresaId}`),
+        buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
         {
           method: 'POST',
           headers: {
@@ -122,9 +125,10 @@ export const userService = {
       rol?: string;
       info_extra?: UserInfoExtra;
     },
-    empresaId: number = 1
+    empresaId?: number
   ): Promise<User> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Limpiar info_extra si está presente
       const cleanUpdateData = {
         ...updateData,
@@ -132,7 +136,7 @@ export const userService = {
       };
 
       const response = await fetch(
-        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaIdToUse}`),
         {
           method: 'PUT',
           headers: {
@@ -162,10 +166,11 @@ export const userService = {
   },
 
   // Eliminar usuario
-  async deleteUser(userId: number, empresaId: number = 1): Promise<void> {
+  async deleteUser(userId: number, empresaId?: number): Promise<void> {
     try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const response = await fetch(
-        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaId}`),
+        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaIdToUse}`),
         {
           method: 'DELETE',
           headers: {

@@ -27,8 +27,8 @@ const Users = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
 
-  // Obtener empresa_id del usuario autenticado o usar valor por defecto
-  const empresaId = 1; // Valor por defecto para empresa_id
+  // Obtener empresa_id del localStorage o usar valor por defecto
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
 
   useEffect(() => {
     if (isAuthenticated) {

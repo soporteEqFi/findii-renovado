@@ -27,7 +27,7 @@ export const useEsquemasCompletos = (configs: EsquemaCompletoConfig[]): UseEsque
   // Crear hooks para cada esquema
   const hooks = configs.map(config => ({
     entidad: config.entidad,
-    hook: useEsquemaCompleto(config.entidad, config.empresaId || 1)
+    hook: useEsquemaCompleto(config.entidad, config.empresaId)
   }));
 
   // Agregar esquemas al estado

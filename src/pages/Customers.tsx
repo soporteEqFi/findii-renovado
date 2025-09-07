@@ -77,7 +77,8 @@ const Customers = () => {
         throw new Error('No se encontró la información del asesor');
       }
 
-      const response = await fetch(buildApiUrl('/descargar-ventas/'), {
+      const empresaId = localStorage.getItem('empresa_id') || '1';
+      const response = await fetch(buildApiUrl(`/descargar-ventas/?empresa_id=${empresaId}`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

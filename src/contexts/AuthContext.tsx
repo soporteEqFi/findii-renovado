@@ -104,6 +104,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         cedula: (userData.cedula || userData.numero_documento || '1'),
         correo: correo,
         empresa: empresaData.nombre || userData.empresa || '',
+        empresa_id: Number(userData.empresa_id || empresaData.id || 1),
         imagen_aliado: empresaData.imagen || userData.imagen_aliado || null,
         apellido: userData.apellido || '',
         usuario: userData.usuario || '',
@@ -119,6 +120,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.setItem('user', JSON.stringify(userObj));
       localStorage.setItem('cedula', userObj.cedula);
       localStorage.setItem('user_id', userObj.id.toString());
+      localStorage.setItem('empresa_id', userObj.empresa_id?.toString() || '1');
 
       // Objeto guardado en localStorage
 
@@ -132,6 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('user');
       localStorage.removeItem('cedula');
       localStorage.removeItem('user_id');
+      localStorage.removeItem('empresa_id');
 
       // Re-throw the error with more specific message
       if (error instanceof Error) {
@@ -151,6 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('user');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('empresa_id');
   };
 
   // Valor del contexto
