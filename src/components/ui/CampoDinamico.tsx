@@ -274,20 +274,20 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           onChange={(e) => {
             const nuevoDepartamento = e.target.value;
             handleChange(nuevoDepartamento);
-            // Limpiar ciudad relacionada si existe
-            const candidatosCiudad = new Set<string>();
-            candidatosCiudad.add(campo.key.replace(/departamento/gi, 'ciudad'));
-            candidatosCiudad.add(campo.key.replace(/_departamento/gi, '_ciudad'));
-            candidatosCiudad.add(campo.key.replace(/Departamento/gi, 'Ciudad'));
-            candidatosCiudad.add('ciudad');
-            for (const c of candidatosCiudad) {
-              // Si el valor actual de esa ciudad no está vacío, limpiarlo
-              const actual = typeof getValue === 'function' ? getValue(c) : undefined;
-              if (actual) {
-                onChange(c, '');
-                break;
-              }
-            }
+            // TEMPORALMENTE COMENTADO: Limpiar ciudad relacionada si existe
+            // const candidatosCiudad = new Set<string>();
+            // candidatosCiudad.add(campo.key.replace(/departamento/gi, 'ciudad'));
+            // candidatosCiudad.add(campo.key.replace(/_departamento/gi, '_ciudad'));
+            // candidatosCiudad.add(campo.key.replace(/Departamento/gi, 'Ciudad'));
+            // candidatosCiudad.add('ciudad');
+            // for (const c of candidatosCiudad) {
+            //   // Si el valor actual de esa ciudad no está vacío, limpiarlo
+            //   const actual = typeof getValue === 'function' ? getValue(c) : undefined;
+            //   if (actual) {
+            //     onChange(c, '');
+            //     break;
+            //   }
+            // }
           }}
           className={baseClasses}
           required={campo.required}
