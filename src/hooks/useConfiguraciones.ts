@@ -39,7 +39,7 @@ export const useConfiguraciones = (empresaId: number = 1): UseConfiguracionesRet
         configuracionesCache[`ciudades_${empresaId}`] = ciudadesData;
         // Guardar en localStorage para uso futuro
         localStorage.setItem(`configuraciones_ciudades_${empresaId}`, JSON.stringify(ciudadesData));
-        console.log('🏙️ Ciudades cargadas desde backend y guardadas:', ciudadesData);
+        // console.log('🏙️ Ciudades cargadas desde backend y guardadas:', ciudadesData);
       }
 
       if (bancosData.length > 0) {
@@ -87,8 +87,8 @@ export const useConfiguraciones = (empresaId: number = 1): UseConfiguracionesRet
         configuracionesCache[`ciudades_${empresaId}`] = ciudadesData;
         configuracionesCache[`bancos_${empresaId}`] = bancosData;
 
-        console.log('🏙️ Ciudades desde localStorage:', ciudadesData);
-        console.log('🏦 Bancos desde localStorage:', bancosData);
+        // console.log('🏙️ Ciudades desde localStorage:', ciudadesData);
+        // console.log('🏦 Bancos desde localStorage:', bancosData);
       } catch (error) {
         console.error('Error al parsear configuraciones de localStorage:', error);
         // Si falla el parseo, cargar desde backend

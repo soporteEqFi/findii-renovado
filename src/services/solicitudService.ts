@@ -43,14 +43,14 @@ export const solicitudService = {
       // Endpoint para obtener historial de observaciones
       const url = buildApiUrl(`/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`);
 
-      console.log('🔍 Obteniendo historial de observaciones:', {
-        solicitudId,
-        empresaId,
-        url,
-        fullUrl: url,
-        baseUrl: API_CONFIG.BASE_URL,
-        endpoint: `/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`
-      });
+      // console.log('🔍 Obteniendo historial de observaciones:', {
+      //   solicitudId,
+      //   empresaId,
+      //   url,
+      //   fullUrl: url,
+      //   baseUrl: API_CONFIG.BASE_URL,
+      //   endpoint: `/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`
+      // });
 
       const response = await fetch(url, {
         method: 'GET',
@@ -61,12 +61,12 @@ export const solicitudService = {
         }
       });
 
-      console.log('📡 Respuesta del servidor:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
+      // console.log('📡 Respuesta del servidor:', {
+      //   status: response.status,
+      //   statusText: response.statusText,
+      //   ok: response.ok,
+      //   headers: Object.fromEntries(response.headers.entries())
+      // });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
@@ -75,7 +75,7 @@ export const solicitudService = {
       }
 
       const result = await response.json();
-      console.log('✅ Historial de observaciones obtenido:', result);
+      // console.log('✅ Historial de observaciones obtenido:', result);
 
       // Manejar diferentes estructuras de respuesta
       if (result.historial) {
@@ -83,7 +83,7 @@ export const solicitudService = {
       } else if (result.data && result.data.historial) {
         return result.data.historial;
       } else if (result.data && result.data.observaciones && Array.isArray(result.data.observaciones)) {
-        console.log('✅ Encontradas observaciones en result.data.observaciones:', result.data.observaciones);
+        // console.log('✅ Encontradas observaciones en result.data.observaciones:', result.data.observaciones);
         return result.data.observaciones;
       } else if (result.data && Array.isArray(result.data)) {
         return result.data;
@@ -138,11 +138,11 @@ export const solicitudService = {
         body: JSON.stringify(requestData)
       });
 
-      console.log('📡 Respuesta del servidor:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
+      // console.log('📡 Respuesta del servidor:', {
+      //   status: response.status,
+      //   statusText: response.statusText,
+      //   ok: response.ok
+      // });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));

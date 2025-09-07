@@ -22,19 +22,19 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
   // Estado local para el botón de sincronizar
   const [isSyncing, setIsSyncing] = useState(false);
 
-  console.log('🔍 ObservacionesSolicitud renderizado:', {
-    solicitudId,
-    empresaId,
-    observaciones,
-    readonly,
-    solicitudIdType: typeof solicitudId,
-    solicitudIdValid: solicitudId && !isNaN(Number(solicitudId))
-  });
+  // console.log('🔍 ObservacionesSolicitud renderizado:', {
+  //   solicitudId,
+  //   empresaId,
+  //   observaciones,
+  //   readonly,
+  //   solicitudIdType: typeof solicitudId,
+  //   solicitudIdValid: solicitudId && !isNaN(Number(solicitudId))
+  // });
 
   // Extraer el historial de observaciones del formato del backend
   const historialObservaciones = observaciones?.historial || [];
 
-  console.log('🔍 Historial extraído:', historialObservaciones);
+  // console.log('🔍 Historial extraído:', historialObservaciones);
 
   const {
     observaciones: observacionesLocales,
@@ -52,7 +52,7 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
   // Cargar observaciones automáticamente cuando el componente se monte
   React.useEffect(() => {
     if (solicitudId && !isNaN(Number(solicitudId))) {
-      console.log('🚀 Cargando observaciones automáticamente para solicitud:', solicitudId);
+      // console.log('🚀 Cargando observaciones automáticamente para solicitud:', solicitudId);
       cargarObservaciones();
     }
   }, [solicitudId, empresaId]);
@@ -66,11 +66,11 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
     }
   };
 
-  console.log('🔍 Estado del hook:', {
-    observacionesLocales,
-    isSubmitting,
-    error
-  });
+  // console.log('🔍 Estado del hook:', {
+  //   observacionesLocales,
+  //   isSubmitting,
+  //   error
+  // });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -135,11 +135,11 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
             campos_dinamicos: ordenarCampos(camposDinamicosCorregidos)
           };
 
-          console.log(`✅ Esquema completo cargado para ${entidad}:`, {
-            campos_fijos: esquemaFinal.campos_fijos.length,
-            campos_dinamicos: esquemaFinal.campos_dinamicos.length,
-            total: esquemaFinal.total_campos
-          });
+          // console.log(`✅ Esquema completo cargado para ${entidad}:`, {
+          //   campos_fijos: esquemaFinal.campos_fijos.length,
+          //   campos_dinamicos: esquemaFinal.campos_dinamicos.length,
+          //   total: esquemaFinal.total_campos
+          // });
 
           setEsquema(esquemaFinal);
         } else {
@@ -269,7 +269,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
   useEffect(() => {
     const handleFieldConfigChange = (event: CustomEvent) => {
       const { entity: changedEntity, action } = event.detail;
-      
+
       // Only refresh if the changed entity matches this hook's entity
       if (changedEntity === entidad) {
         console.log(`🔄 Refreshing schema for ${entidad} due to field ${action}`);
@@ -278,7 +278,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId: number = 1): UseE
     };
 
     window.addEventListener('fieldConfigChanged', handleFieldConfigChange as EventListener);
-    
+
     return () => {
       window.removeEventListener('fieldConfigChanged', handleFieldConfigChange as EventListener);
     };

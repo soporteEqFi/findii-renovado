@@ -80,15 +80,15 @@ export const uploadDocument = async (file: File, solicitanteId: number): Promise
 export const getDocuments = async (solicitanteId: number): Promise<Document[]> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`;
 
-  console.log('📥 === OBTENIENDO DOCUMENTOS DEL SOLICITANTE ===');
-  console.log('📍 URL de consulta:', url);
-  console.log('🆔 Solicitante ID:', solicitanteId);
-  console.log('🔗 Endpoint completo construido:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`);
-  console.log('🔗 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
-  console.log('🔗 API_CONFIG.ENDPOINTS.DOCUMENTOS:', API_CONFIG.ENDPOINTS.DOCUMENTOS);
+  // console.log('📥 === OBTENIENDO DOCUMENTOS DEL SOLICITANTE ===');
+  // console.log('📍 URL de consulta:', url);
+  // console.log('🆔 Solicitante ID:', solicitanteId);
+  // console.log('🔗 Endpoint completo construido:', `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/?solicitante_id=${solicitanteId}`);
+  // console.log('🔗 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
+  // console.log('🔗 API_CONFIG.ENDPOINTS.DOCUMENTOS:', API_CONFIG.ENDPOINTS.DOCUMENTOS);
 
   const headers = getFormDataHeaders();
-  console.log('📋 Headers de la petición:', headers);
+  // console.log('📋 Headers de la petición:', headers);
 
   try {
     const response = await fetch(url, {
@@ -96,12 +96,12 @@ export const getDocuments = async (solicitanteId: number): Promise<Document[]> =
       headers: headers,
     });
 
-    console.log('📡 Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
-    });
+    // console.log('📡 Respuesta recibida:', {
+    //   status: response.status,
+    //   statusText: response.statusText,
+    //   ok: response.ok,
+    //   headers: Object.fromEntries(response.headers.entries())
+    // });
 
     if (!response.ok) {
       const errorText = await response.text();

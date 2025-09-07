@@ -18,10 +18,10 @@ class NotificationService {
       }
 
       const endpoint = `/notificaciones?${params.toString()}`;
-      console.log('🔍 URL de notificaciones:', endpoint);
+      // console.log('🔍 URL de notificaciones:', endpoint);
       const response = await apiGet<NotificationResponse>(endpoint);
 
-      console.log('📋 Notificaciones recibidas:', response.data);
+      // console.log('📋 Notificaciones recibidas:', response.data);
       return response.data || [];
     } catch (error) {
       console.error('Error al obtener notificaciones:', error);
