@@ -2,7 +2,6 @@ import { createColumnHelper, ColumnDef } from '@tanstack/react-table';
 import { Mail, Phone, ChevronDown } from 'lucide-react';
 import { Customer } from '../../types/customer';
 import { usePermissions } from '../../utils/permissions';
-import { CREDIT_STATUSES } from '../../config/constants';
 import { useState } from 'react';
 import { getColumnValue } from '../../services/columnConfigService';
 
@@ -31,10 +30,9 @@ const formatDate = (dateString: string) => {
 };
 
 // Componente para el estado con dropdown
-const StatusCell = ({ info }: { info: any }) => {
+const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { canChangeStatus } = usePermissions();
-  const estados = CREDIT_STATUSES;
   const colorClasses = {
     'Pendiente': 'bg-yellow-100 text-yellow-800',
     'En estudio': 'bg-blue-100 text-blue-800',
@@ -138,7 +136,7 @@ const StatusCell = ({ info }: { info: any }) => {
 /**
  * Genera columnas dinámicamente basado en la configuración
  */
-export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>[] => {
+export const createDynamicColumns = (columnNames: string[], estados: string[] = []): ColumnDef<Customer>[] => {
   return columnNames.map((columnName) => {
     // Configuración especial para cada tipo de columna
     switch (columnName) {
@@ -266,7 +264,7 @@ export const createDynamicColumns = (columnNames: string[]): ColumnDef<Customer>
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'estado',
           header: columnName,
-          cell: (info) => <StatusCell info={info} />,
+          cell: (info) => <StatusCell info={info} estados={estados} />,
         });
 
       case 'Teléfono':

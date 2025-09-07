@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { CREDIT_STATUSES, buildApiUrl, API_CONFIG } from '../../config/constants';
+import { buildApiUrl } from '../../config/constants';
+import { useEstados } from '../../hooks/useEstados';
 
 interface Archivo {
   archivo_id: string;
@@ -55,7 +56,11 @@ export const CreditTracking: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false); // Estado para controlar el rol
+  const [isAdmin] = useState(false); // Estado para controlar el rol
+
+  // Hook para obtener estados dinámicos
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { estados, loading: loadingEstados } = useEstados(empresaId);
 
   const handleSearch = async () => {
     if (!trackingId.trim()) {
@@ -254,10 +259,10 @@ export const CreditTracking: React.FC = () => {
         </div>
         <button
           onClick={handleSearch}
-          disabled={loading}
+          disabled={loading || loadingEstados}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? 'Buscando...' : 'Buscar'}
+          {loading ? 'Buscando...' : loadingEstados ? 'Cargando estados...' : 'Buscar'}
         </button>
       </div>
 
@@ -313,7 +318,16 @@ export const CreditTracking: React.FC = () => {
                             onChange={(e) => handleEstadoChange(index, e.target.value)}
                             className={`px-2 py-1 rounded text-sm font-medium ${getStatusClass(etapa.estado)}`}
                           >
-                            {CREDIT_STATUSES.map((estado) => (
+                            {(estados.length > 0 ? estados : [
+                              'Pendiente',
+                              'En estudio',
+                              'Pendiente información adicional',
+                              'Aprobado',
+                              'Desembolsado',
+                              'Pagado',
+                              'Negado',
+                              'Desistido'
+                            ]).map((estado) => (
                               <option key={estado} value={estado.toLowerCase()}>
                                 {estado}
                               </option>

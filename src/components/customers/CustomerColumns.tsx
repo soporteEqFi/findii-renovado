@@ -1,8 +1,7 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { Mail, Phone, ChevronDown } from 'lucide-react';
+import { Mail, ChevronDown } from 'lucide-react';
 import { Customer } from '../../types/customer';
 import { usePermissions } from '../../utils/permissions';
-import { CREDIT_STATUSES } from '../../config/constants';
 import { useState } from 'react';
 
 // Definimos el tipo para meta
@@ -29,7 +28,7 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-export const columns = [
+export const createColumns = (estados: string[] = []) => [
   columnHelper.accessor('created_at', {
     header: ({ column }) => {
       return (
@@ -89,7 +88,17 @@ export const columns = [
     cell: (info) => {
       const [isOpen, setIsOpen] = useState(false);
       const { canChangeStatus } = usePermissions();
-      const estados = CREDIT_STATUSES;
+      // Usar estados dinámicos si están disponibles, sino usar estados por defecto
+      const estadosDisponibles = estados.length > 0 ? estados : [
+        'Pendiente',
+        'En estudio',
+        'Pendiente información adicional',
+        'Aprobado',
+        'Desembolsado',
+        'Pagado',
+        'Negado',
+        'Desistido'
+      ];
       const colorClasses = {
         'Pendiente': 'bg-yellow-100 text-yellow-800',
         'En estudio': 'bg-blue-100 text-blue-800',
@@ -171,7 +180,7 @@ export const columns = [
           {isOpen && (
             <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-200">
               <div className="py-1">
-                {estados.map((estado) => (
+                {estadosDisponibles.map((estado) => (
                   <button
                     key={estado}
                     className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 cursor-pointer transition-colors ${
@@ -193,3 +202,6 @@ export const columns = [
     },
   }),
 ];
+
+// Exportar también las columnas por defecto para compatibilidad
+export const columns = createColumns();

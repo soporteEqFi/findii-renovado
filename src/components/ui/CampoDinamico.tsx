@@ -2,7 +2,6 @@ import React from 'react';
 import { EsquemaCampo } from '../../types/esquemas';
 import { useConfiguraciones } from '../../hooks/useConfiguraciones';
 import { departments, getCitiesByDepartment } from '../../data/colombianCities';
-import { CREDIT_STATUSES } from '../../config/constants';
 
 interface CampoDinamicoProps {
   campo: EsquemaCampo;
@@ -12,6 +11,8 @@ interface CampoDinamicoProps {
   disabled?: boolean;
   // Permite consultar otros valores del formulario (p.ej. departamento para filtrar ciudades)
   getValue?: (key: string) => any;
+  // Estados disponibles para el campo estado
+  estadosDisponibles?: string[];
 }
 
 export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
@@ -20,7 +21,8 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   onChange,
   error,
   disabled = false,
-  getValue
+  getValue,
+  estadosDisponibles = []
 }) => {
   // Usar default_value si value es null/undefined/empty
   // EXCEPCIÓN: para 'tipo_referencia' no aplicamos default del esquema para evitar seleccionar 'personal' implícitamente
@@ -46,14 +48,14 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
     // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
     if (campo.key === 'tipo_actividad') {
-      limpiarCamposCondicionales(newValue);
+      limpiarCamposCondicionales();
     }
 
     onChange(campo.key, newValue);
   };
 
   // Función para limpiar campos condicionales cuando cambia tipo_actividad
-  const limpiarCamposCondicionales = (nuevoTipoActividad: string) => {
+  const limpiarCamposCondicionales = () => {
     // Esta función ahora es más genérica y se enfoca en limpiar campos individuales
     // La lógica de objetos anidados se maneja en el formulario principal
 
@@ -367,6 +369,18 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
     // Campos con opciones predefinidas
     if (campo.key === 'estado') {
+      // Usar estados dinámicos si están disponibles, sino usar estados por defecto
+      const estados = estadosDisponibles.length > 0 ? estadosDisponibles : [
+        'Pendiente',
+        'En estudio',
+        'Pendiente información adicional',
+        'Aprobado',
+        'Desembolsado',
+        'Pagado',
+        'Negado',
+        'Desistido'
+      ];
+
       return (
         <select
           value={efectiveValue || ''}
@@ -376,7 +390,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           disabled={disabled}
         >
           <option value="">Seleccionar estado...</option>
-          {CREDIT_STATUSES.map((st) => (
+          {estados.map((st) => (
             <option key={st} value={st}>{st}</option>
           ))}
         </select>

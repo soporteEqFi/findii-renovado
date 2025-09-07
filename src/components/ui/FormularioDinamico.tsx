@@ -10,6 +10,8 @@ interface FormularioDinamicoProps {
   disabled?: boolean;
   titulo?: string;
   className?: string;
+  // Estados disponibles para el campo estado
+  estadosDisponibles?: string[];
 }
 
 export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
@@ -19,7 +21,8 @@ export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
   errores = {},
   disabled = false,
   titulo,
-  className = ''
+  className = '',
+  estadosDisponibles = []
 }) => {
   if (!esquema || esquema.length === 0) {
     return (
@@ -59,6 +62,7 @@ export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
             onChange={onChange}
             error={errores[campo.key]}
             disabled={disabled}
+            estadosDisponibles={estadosDisponibles}
           />
         ))}
       </div>

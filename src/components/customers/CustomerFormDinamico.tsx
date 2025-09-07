@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Upload, File, X as XIcon, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
+import { useEstados } from '../../hooks/useEstados';
 import { FormularioCompleto } from '../ui/FormularioCompleto';
 import { esquemaService } from '../../services/esquemaService';
 // Removed unused imports: useConfiguraciones, CampoDinamico
@@ -54,6 +55,10 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   ];
 
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
+
+  // Hook para obtener estados dinámicos
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { estados, loading: loadingEstados } = useEstados(empresaId);
 
   // Configuraciones de ciudades/bancos (no utilizadas actualmente) removidas para evitar lints
 
@@ -657,11 +662,13 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Debug useEffect removido (no aportaba y causaba lints)
 
-  if (esquemasLoading) {
+  if (esquemasLoading || loadingEstados) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <span className="ml-2">Cargando formulario dinámico...</span>
+        <span className="ml-2">
+          {loadingEstados ? 'Cargando estados disponibles...' : 'Cargando formulario dinámico...'}
+        </span>
       </div>
     );
   }
@@ -732,6 +739,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             onChange={handleFieldChange}
             errores={errores}
             titulo="Información del Solicitante"
+            estadosDisponibles={estados}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -747,6 +755,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             onChange={handleFieldChange}
             errores={errores}
             titulo="Información de Ubicación"
+            estadosDisponibles={estados}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -762,6 +771,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             onChange={handleFieldChange}
             errores={errores}
             titulo="Información Laboral"
+            estadosDisponibles={estados}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -777,6 +787,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             onChange={handleFieldChange}
             errores={errores}
             titulo="Información Financiera"
+            estadosDisponibles={estados}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -787,7 +798,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         {/* Sección de Referencias Múltiples */}
         <div className="space-y-6">
           <h3 className="text-lg font-medium text-gray-900">Información de Referencias</h3>
-          
+
           {referencias.map((referencia, index) => (
             <div key={index} className="p-4 border border-gray-200 rounded-lg relative">
               {referencias.length > 1 && (
@@ -804,9 +815,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                   <XIcon className="w-5 h-5" />
                 </button>
               )}
-              
+
               <h4 className="text-md font-medium text-gray-800 mb-4">Referencia {index + 1}</h4>
-              
+
               {esquemas.referencia?.esquema?.campos_fijos && esquemas.referencia.esquema.campos_dinamicos ? (
                 <FormularioCompleto
                   key={index}
@@ -845,6 +856,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                     setReferencias(nuevasReferencias);
                   }}
                   errores={errores}
+                  estadosDisponibles={estados}
                 />
               ) : (
                 <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -853,7 +865,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
               )}
             </div>
           ))}
-          
+
           <div className="flex justify-end">
             <button
               type="button"
@@ -875,6 +887,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             errores={errores}
             titulo="Información del Crédito"
             excludeKeys={["estado"]}
+            estadosDisponibles={estados}
           />
         ) : (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

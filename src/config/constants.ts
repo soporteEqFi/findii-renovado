@@ -44,6 +44,7 @@ export const API_CONFIG = {
     REFERENCIAS_DELETE: '/referencias/eliminar',
     SOLICITUDES: '/solicitudes',
     SOLICITUDES_PATCH: '/solicitudes/{id}', // PATCH para actualizar solicitudes
+    ESTADOS_DISPONIBLES: '/solicitudes/estados-disponibles', // GET para obtener estados disponibles
     DOCUMENTOS: '/documentos',
 
     // Endpoint unificado para crear registro completo

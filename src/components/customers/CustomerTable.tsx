@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   useReactTable,
   getCoreRowModel,
-  getPaginationRowModel,
   getFilteredRowModel,
   getSortedRowModel,
   flexRender,
@@ -12,13 +11,13 @@ import {
 import { Customer } from '../../types/customer';
 import { createDynamicColumns } from './DynamicCustomerColumns';
 import { fetchColumnConfig, getDefaultColumns, detectAvailableColumns } from '../../services/columnConfigService';
-import { Search, Calendar } from 'lucide-react';
+import { useEstados } from '../../hooks/useEstados';
+import { Search } from 'lucide-react';
 
 interface CustomerTableProps {
   customers: Customer[];
   onRowClick: (customer: Customer) => void;
   onStatusChange: (customer: Customer, newStatus: string) => void;
-  totalRecords: number;
   empresaId?: number;
   refreshTrigger?: number;
 }
@@ -50,7 +49,6 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   customers,
   onRowClick,
   onStatusChange,
-  totalRecords,
   empresaId = 1,
   refreshTrigger
 }) => {
@@ -65,6 +63,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
   const [columns, setColumns] = useState<ColumnDef<Customer>[]>([]);
   const [isLoadingColumns, setIsLoadingColumns] = useState(true);
 
+  // Hook para obtener estados dinámicos
+  const { estados, loading: loadingEstados } = useEstados(empresaId);
+
   // Cargar configuración de columnas al montar el componente
   useEffect(() => {
     const loadColumnConfig = async () => {
@@ -75,7 +76,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
         if (!customers || customers.length === 0) {
           console.log('No hay datos de clientes, usando columnas por defecto');
           const defaultColumnNames = getDefaultColumns();
-          const dynamicColumns = createDynamicColumns(defaultColumnNames);
+          const dynamicColumns = createDynamicColumns(defaultColumnNames, estados);
           setColumns(dynamicColumns);
           return;
         }
@@ -91,13 +92,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           columnNames = detectAvailableColumns(customers);
         }
 
-        const dynamicColumns = createDynamicColumns(columnNames);
+        const dynamicColumns = createDynamicColumns(columnNames, estados);
         setColumns(dynamicColumns);
       } catch (error) {
         console.error('Error cargando columnas:', error);
         // Usar columnas por defecto en caso de error
         const defaultColumnNames = getDefaultColumns();
-        const dynamicColumns = createDynamicColumns(defaultColumnNames);
+        const dynamicColumns = createDynamicColumns(defaultColumnNames, estados);
         setColumns(dynamicColumns);
       } finally {
         setIsLoadingColumns(false);
@@ -105,7 +106,7 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     };
 
     loadColumnConfig();
-  }, [empresaId, customers, refreshTrigger]);
+  }, [empresaId, customers, refreshTrigger, estados]);
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {
@@ -164,7 +165,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     pageCount: Math.ceil(filteredData.length / pageSize),
     manualPagination: true,
     meta: {
-      updateStatus: onStatusChange,
+      updateStatus: async (customer: Customer, newStatus: string) => {
+        onStatusChange(customer, newStatus);
+      },
     },
   });
 
@@ -181,11 +184,13 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     setPageIndex(0);
   };
 
-  // Mostrar loading mientras se cargan las columnas
-  if (isLoadingColumns) {
+  // Mostrar loading mientras se cargan las columnas o los estados
+  if (isLoadingColumns || loadingEstados) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-500">Cargando configuración de columnas...</div>
+        <div className="text-gray-500">
+          {loadingEstados ? 'Cargando estados disponibles...' : 'Cargando configuración de columnas...'}
+        </div>
       </div>
     );
   }

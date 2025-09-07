@@ -7,6 +7,7 @@ import { useEsquemaCompleto } from '../../hooks/useEsquemaCompleto';
 import { useEsquemaDetalleCreditoCompleto } from '../../hooks/useEsquemaDetalleCreditoCompleto';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
 import { useLimpiezaCondicional } from '../../hooks/useLimpiezaCondicional';
+import { useEstados } from '../../hooks/useEstados';
 import { API_CONFIG, buildApiUrl } from '../../config/constants';
 import { emailService } from '../../services/emailService';
 import { referenciaService } from '../../services/referenciaService';
@@ -48,6 +49,10 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     { entidad: 'solicitud' },
   ];
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
+
+  // Hook para obtener estados dinámicos
+  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+  const { estados, loading: loadingEstados } = useEstados(empresaId);
 
   // Además, algunos componentes consumen estos hooks puntuales
   useEsquemaCompleto('solicitud', parseInt(localStorage.getItem('empresa_id') || '1', 10));
@@ -641,11 +646,13 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   const esquemasCompletos = ['solicitante', 'ubicacion', 'actividad_economica', 'informacion_financiera', 'referencia', 'solicitud']
     .every(entidad => esquemas[entidad]?.esquema && (esquemas[entidad]?.esquema?.campos_fijos || esquemas[entidad]?.esquema?.campos_dinamicos));
 
-  if (loadingCompletos || esquemasLoading) {
+  if (loadingCompletos || esquemasLoading || loadingEstados) {
     return (
       <div className="flex items-center justify-center p-8">
         <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-        <span className="ml-2">Cargando formulario de edición...</span>
+        <span className="ml-2">
+          {loadingEstados ? 'Cargando estados disponibles...' : 'Cargando formulario de edición...'}
+        </span>
       </div>
     );
   }
@@ -708,6 +715,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           onChange={handleFieldChange}
           errores={validationErrors}
           titulo="Información del Solicitante"
+          estadosDisponibles={estados}
         />
       )}
 
@@ -718,6 +726,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           onChange={handleFieldChange}
           errores={validationErrors}
           titulo="Información de Ubicación"
+          estadosDisponibles={estados}
         />
       )}
 
@@ -728,6 +737,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           onChange={handleFieldChange}
           errores={validationErrors}
           titulo="Información Laboral"
+          estadosDisponibles={estados}
         />
       )}
 
@@ -738,6 +748,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           onChange={handleFieldChange}
           errores={validationErrors}
           titulo="Información Financiera"
+          estadosDisponibles={estados}
         />
       )}
 
@@ -890,6 +901,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                     }}
                     errores={validationErrors}
                     titulo={`Referencia ${index + 1}`}
+                    estadosDisponibles={estados}
                   />
                 </div>
               ))}
@@ -905,6 +917,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           onChange={handleFieldChange}
           errores={validationErrors}
           titulo="Información del Crédito"
+          estadosDisponibles={estados}
         />
       )}
 

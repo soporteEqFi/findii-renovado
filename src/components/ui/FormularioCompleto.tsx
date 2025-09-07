@@ -11,6 +11,8 @@ interface FormularioCompletoProps {
   disabled?: boolean;
   // Lista de keys que NO deben renderizarse (p.ej. 'estado' en creación)
   excludeKeys?: string[];
+  // Estados disponibles para el campo estado
+  estadosDisponibles?: string[];
 }
 
 export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
@@ -20,7 +22,8 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   errores = {},
   titulo,
   disabled = false,
-  excludeKeys = []
+  excludeKeys = [],
+  estadosDisponibles = []
 }) => {
   const handleFieldChange = (key: string, value: any) => {
     // DEBUG: Log para campos SELECT problemáticos
@@ -214,6 +217,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
               error={errores[campo.key]}
               disabled={disabled}
               getValue={getNestedValue}
+              estadosDisponibles={estadosDisponibles}
             />
           ))}
         </div>
