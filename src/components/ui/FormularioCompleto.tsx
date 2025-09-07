@@ -23,7 +23,41 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   excludeKeys = []
 }) => {
   const handleFieldChange = (key: string, value: any) => {
+    // Si es un campo activador (como tipo_actividad), limpiar campos condicionales
+    if (key === 'tipo_actividad') {
+      limpiarCamposCondicionales(key, value);
+    }
+
     onChange(key, value);
+  };
+
+  // Función para limpiar campos condicionales cuando cambia un campo activador
+  const limpiarCamposCondicionales = (campoActivador: string, nuevoValor: any) => {
+    // Obtener todos los campos dinámicos que dependen de este campo activador
+    const camposDependientes = esquemaCompleto.campos_dinamicos.filter(campo =>
+      campo.conditional_on?.field === campoActivador
+    );
+
+    // Limpiar cada campo dependiente
+    camposDependientes.forEach(campo => {
+      // Solo limpiar si el nuevo valor no coincide con la condición del campo
+      if (campo.conditional_on?.value !== nuevoValor) {
+        onChange(campo.key, '');
+        console.log(`🧹 Limpiando campo condicional: ${campo.key} (dependía de ${campoActivador})`);
+      }
+    });
+
+    // También limpiar campos fijos que puedan tener condiciones
+    const camposFijosDependientes = esquemaCompleto.campos_fijos?.filter(campo =>
+      campo.conditional_on?.field === campoActivador
+    ) || [];
+
+    camposFijosDependientes.forEach(campo => {
+      if (campo.conditional_on?.value !== nuevoValor) {
+        onChange(campo.key, '');
+        console.log(`🧹 Limpiando campo fijo condicional: ${campo.key} (dependía de ${campoActivador})`);
+      }
+    });
   };
 
   // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas

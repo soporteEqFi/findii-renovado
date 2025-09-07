@@ -6,6 +6,7 @@ import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
 import { useEsquemaCompleto } from '../../hooks/useEsquemaCompleto';
 import { useEsquemaDetalleCreditoCompleto } from '../../hooks/useEsquemaDetalleCreditoCompleto';
 import { useSolicitanteCompleto } from '../../hooks/useSolicitanteCompleto';
+import { useLimpiezaCondicional } from '../../hooks/useLimpiezaCondicional';
 import { API_CONFIG, buildApiUrl } from '../../config/constants';
 import { emailService } from '../../services/emailService';
 import { referenciaService } from '../../services/referenciaService';
@@ -53,6 +54,9 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   useEsquemaCompleto('actividad_economica', parseInt(localStorage.getItem('empresa_id') || '1', 10));
   useEsquemaDetalleCreditoCompleto(parseInt(localStorage.getItem('empresa_id') || '1', 10));
 
+  // Hook para limpieza de campos condicionales
+  const { limpiarCamposCondicionalesGenerico } = useLimpiezaCondicional();
+
   // 4) Inicializar datos editables al cargar datosCompletos
   React.useEffect(() => {
     if (datosCompletos) {
@@ -68,13 +72,13 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       try {
         const solicitanteIdNumber = Number(solicitanteId);
         if (!solicitanteIdNumber) return;
-        
+
         const empresaId = localStorage.getItem('empresa_id') || '1';
         const userId = localStorage.getItem('user_id') || localStorage.getItem('cedula') || undefined;
         const fetched = await referenciaService.getReferenciasPorSolicitante(solicitanteIdNumber, empresaId, userId);
         const cont: any = (fetched as any)?.data || fetched;
         const lista: any[] = cont?.detalle_referencia?.referencias || [];
-        
+
         if (Array.isArray(lista) && lista.length > 0) {
           // Map auxiliar por id_tipo_referencia del contenedor superior
           const tipos = Array.isArray(cont?.tipo_referencia) ? cont.tipo_referencia : [];
@@ -90,10 +94,10 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
               tipo_referencia: r?.tipo_referencia ?? tipoFromIndex ?? null,
             };
           });
-          setEditedData((prev: any) => ({ 
-            ...prev, 
-            referencias: normalizadas, 
-            tipo_referencia: cont?.tipo_referencia || prev?.tipo_referencia 
+          setEditedData((prev: any) => ({
+            ...prev,
+            referencias: normalizadas,
+            tipo_referencia: cont?.tipo_referencia || prev?.tipo_referencia
           }));
         }
       } catch (e) {
@@ -101,7 +105,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         console.warn('No se pudieron cargar referencias iniciales', e);
       }
     };
-    
+
     // Solo cargar si editedData ya está inicializado
     if (editedData) {
       cargarReferenciasIniciales();
@@ -241,6 +245,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   };
 
   const handleFieldChange = (key: string, value: any) => {
+
     // Caso especial: cambio de tipo_credito
     if (key === 'tipo_credito') {
       if (!editedData) return;
@@ -264,6 +269,41 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         }
       });
       if (!dc[targetKey]) dc[targetKey] = {};
+
+      setEditedData(newData);
+      return;
+    }
+
+    // Caso especial: cambio de tipo_actividad (puede llamarse tipo_actividad o tipo_actividad_economica)
+    if (key === 'tipo_actividad' || key === 'tipo_actividad_economica') {
+      if (!editedData) return;
+      const newData = JSON.parse(JSON.stringify(editedData));
+
+      // Asegurar estructura base de actividad económica
+      if (!newData.actividad_economica) newData.actividad_economica = {};
+      if (!newData.actividad_economica.detalle_actividad) newData.actividad_economica.detalle_actividad = {};
+
+      // Escribir el tipo de actividad en ambos lugares para compatibilidad
+      newData.actividad_economica.tipo_actividad = value;
+      newData.actividad_economica.detalle_actividad.tipo_actividad_economica = value;
+
+
+      // Usar el hook para limpiar campos condicionales dinámicamente
+      // Buscar tanto 'tipo_actividad' como 'tipo_actividad_economica' en el esquema
+      limpiarCamposCondicionalesGenerico(
+        esquemas,
+        'actividad_economica',
+        'tipo_actividad_economica', // Usar el nombre real del campo
+        value,
+        newData,
+        (campoKey, campoValue) => {
+          // Actualizar el campo en la estructura anidada
+          if (newData.actividad_economica?.detalle_actividad) {
+            newData.actividad_economica.detalle_actividad[campoKey] = campoValue;
+          }
+        }
+      );
+
 
       setEditedData(newData);
       return;
@@ -381,13 +421,12 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const userId = localStorage.getItem('user_id') || localStorage.getItem('cedula') || '123';
 
       const requestData = buildRequestData(editedData);
-      // Asegurar que no mandemos referencias en el PATCH principal
-      if (requestData.referencias) delete requestData.referencias;
-      console.log('Request Data:', JSON.stringify(requestData, null, 2)); // Debug log
-      
-      const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());
-      const url = buildApiUrl(endpoint);
-      console.log('Sending request to:', url); // Debug log
+        // Asegurar que no mandemos referencias en el PATCH principal
+        if (requestData.referencias) delete requestData.referencias;
+
+
+        const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());
+        const url = buildApiUrl(endpoint);
 
       // 1) Diff de referencias y llamadas a endpoints dedicados
       const originalRefs: any[] = Array.isArray(datosCompletos?.referencias) ? datosCompletos!.referencias : [];
@@ -440,7 +479,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
             tipo_referencia: r.tipo_referencia || (r?.tipo?.tipo_referencia || r?.tipo?.nombre) || 'personal',
             detalle_referencia: { ...(r.detalle_referencia || {}) },
           };
-          console.debug('[CustomerFormDinamicoEdit] toAdd item:', addObj);
+          // console.debug('[CustomerFormDinamicoEdit] toAdd item:', addObj);
           toAdd.push(addObj);
         } else {
           const id = currentId;
@@ -457,7 +496,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
               updateData.tipo_referencia = r.tipo_referencia || 'personal';
             }
             if (changedDetalle) Object.assign(updateData, flatCurr);
-            console.debug('[CustomerFormDinamicoEdit] toUpdate item:', { id, updateData });
+            // console.debug('[CustomerFormDinamicoEdit] toUpdate item:', { id, updateData });
             toUpdate.push({ id, data: updateData });
           }
         }
@@ -466,13 +505,13 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // Importante: no hacer borrados por diff. Las eliminaciones solo se ejecutan al dar clic en el ícono de basura.
 
       // Ejecutar operaciones de referencias secuencialmente para control de errores
-      console.debug('[CustomerFormDinamicoEdit] toAdd count:', toAdd.length, 'toUpdate count:', toUpdate.length);
+      // console.debug('[CustomerFormDinamicoEdit] toAdd count:', toAdd.length, 'toUpdate count:', toUpdate.length);
       for (const ref of toAdd) {
         const addPayload: any = {
           tipo_referencia: ref.tipo_referencia || 'personal',
           detalle_referencia: { ...(ref.detalle_referencia || {}) },
         };
-        console.debug('[CustomerFormDinamicoEdit] addReferencia payload:', addPayload);
+        // console.debug('[CustomerFormDinamicoEdit] addReferencia payload:', addPayload);
         await referenciaService.addReferencia(solicitanteIdNumber, addPayload, empresaId, userId);
       }
       // Verificar existencia de referencias a actualizar para evitar 404
@@ -486,7 +525,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
             .map((r: any) => Number(r?.referencia_id ?? r?.id))
             .filter((n: any) => Number.isFinite(n) && n >= 0)
         );
-        console.debug('[CustomerFormDinamicoEdit] existing reference IDs from backend:', Array.from(existingIds));
+        // console.debug('[CustomerFormDinamicoEdit] existing reference IDs from backend:', Array.from(existingIds));
       } catch {}
 
       for (const upd of toUpdate) {
@@ -494,16 +533,16 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           toast.error(`La referencia ${String(upd.id)} no existe en el contenedor. Refresca e inténtalo de nuevo.`);
           continue;
         }
-        console.debug('[CustomerFormDinamicoEdit] updateReferencia call:', { solicitanteIdNumber, referencia_id: upd.id, updates: upd.data });
-        // Log explícito del body que enviaremos al backend
-        const updateBodyPreview: any = {
-          solicitante_id: solicitanteIdNumber,
-          referencia_id: upd.id,
-          updates: { ...upd.data },
-        };
-        try {
-          console.log('[PAYLOAD][REFERENCIAS_UPDATE] =>', JSON.stringify(updateBodyPreview));
-        } catch {}
+        // console.debug('[CustomerFormDinamicoEdit] updateReferencia call:', { solicitanteIdNumber, referencia_id: upd.id, updates: upd.data });
+        // // Log explícito del body que enviaremos al backend
+        // const updateBodyPreview: any = {
+        //   solicitante_id: solicitanteIdNumber,
+        //   referencia_id: upd.id,
+        //   updates: { ...upd.data },
+        // };
+        // try {
+        //   console.log('[PAYLOAD][REFERENCIAS_UPDATE] =>', JSON.stringify(updateBodyPreview));
+        // } catch {}
         await referenciaService.updateReferencia(solicitanteIdNumber, upd.id, upd.data, empresaId, userId);
       }
       // No se ejecutan eliminaciones aquí.
@@ -723,7 +762,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
               + Añadir Referencia
             </button>
           </div>
-          
+
           {(!editedData?.referencias || editedData.referencias.length === 0) ? (
             <div className="text-sm text-gray-500 italic">No hay referencias registradas</div>
           ) : (
@@ -752,12 +791,12 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                             console.log('[PAYLOAD][REFERENCIAS_DELETE] =>', JSON.stringify(deleteBodyPreview));
                           } catch {}
                           await referenciaService.deleteReferencia(Number(solicitanteId), refId, empresaId, userId);
-                        
+
                           // Refrescar desde backend para asegurar consistencia
                           const fetched = await referenciaService.getReferenciasPorSolicitante(Number(solicitanteId), empresaId, userId);
                           const cont = (fetched as any)?.data || fetched;
                           const nuevas = cont?.detalle_referencia?.referencias || [];
-                          console.debug('[CustomerFormDinamicoEdit] post-delete refresh, referencias:', nuevas);
+                          // console.debug('[CustomerFormDinamicoEdit] post-delete refresh, referencias:', nuevas);
                           setEditedData((prev: any) => ({ ...prev, referencias: Array.isArray(nuevas) ? nuevas : [] }));
                           toast.success('Referencia eliminada');
                         } catch (e: any) {
@@ -789,7 +828,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                       })()}
                     </button>
                   </div>
-                  
+
                   <FormularioCompleto
                     key={index}
                     esquemaCompleto={esquemas.referencia!.esquema as any}
@@ -880,20 +919,20 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         {(() => {
           const empresaIdNumber = parseInt(localStorage.getItem('empresa_id') || '1', 10);
           const solicitudIdNumber = Number(editedData?.solicitudes?.[0]?.id || datosCompletos?.solicitudes?.[0]?.id || 0);
-          
-          console.log('🔍 Debug CustomerFormDinamicoEdit - Observaciones:', {
-            empresaIdNumber,
-            solicitudIdNumber,
-            editedDataSolicitudes: editedData?.solicitudes,
-            datosCompletosSolicitudes: datosCompletos?.solicitudes,
-            editedDataSolicitudId: editedData?.solicitudes?.[0]?.id,
-            datosCompletosSolicitudId: datosCompletos?.solicitudes?.[0]?.id
-          });
-          
+
+          // console.log('🔍 Debug CustomerFormDinamicoEdit - Observaciones:', {
+          //   empresaIdNumber,
+          //   solicitudIdNumber,
+          //   editedDataSolicitudes: editedData?.solicitudes,
+          //   datosCompletosSolicitudes: datosCompletos?.solicitudes,
+          //   editedDataSolicitudId: editedData?.solicitudes?.[0]?.id,
+          //   datosCompletosSolicitudId: datosCompletos?.solicitudes?.[0]?.id
+          // });
+
           if (solicitudIdNumber > 0 && empresaIdNumber > 0) {
             return (
-              <ObservacionesSolicitud 
-                solicitudId={solicitudIdNumber} 
+              <ObservacionesSolicitud
+                solicitudId={solicitudIdNumber}
                 empresaId={empresaIdNumber}
                 onObservacionAgregada={(observacion) => {
                   // Actualizar el estado local con la nueva observación
@@ -911,7 +950,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           }
           return (
             <div className="text-sm text-gray-500">
-              No hay solicitud asociada aún para mostrar observaciones. 
+              No hay solicitud asociada aún para mostrar observaciones.
               <br />
               Debug: solicitudId={solicitudIdNumber}, empresaId={empresaIdNumber}
             </div>
