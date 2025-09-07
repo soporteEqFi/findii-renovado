@@ -35,6 +35,15 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
 
   const handleChange = (newValue: any) => {
+    // DEBUG: Log para campos SELECT problemáticos
+    if (campo.key.includes('ciudad') || campo.key.includes('departamento') || campo.key.includes('tipo_vivienda') || campo.key.includes('correspondencia')) {
+      console.log(`🎯 CampoDinamico handleChange para ${campo.key}:`, {
+        valorActual: efectiveValue,
+        nuevoValor: newValue,
+        tipo: campo.type
+      });
+    }
+
     // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
     if (campo.key === 'tipo_actividad') {
       limpiarCamposCondicionales(newValue);
