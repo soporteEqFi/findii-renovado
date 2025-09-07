@@ -15,7 +15,7 @@ const Sidebar = () => {
     { icon: Users, label: 'Inicio', path: '/' },
     { icon: BarChart3, label: 'Estadísticas', path: '/statistics' },
     { icon: User, label: 'Perfil', path: '/profile' },
-    { icon: Settings, label: 'Test', path: '/test' },
+    // { icon: Settings, label: 'Test', path: '/test' }, // Ocultado
   ];
 
   // Agregar elementos solo para administradores
