@@ -35,7 +35,53 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
 
   const handleChange = (newValue: any) => {
+    // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
+    if (campo.key === 'tipo_actividad') {
+      limpiarCamposCondicionales(newValue);
+    }
+
     onChange(campo.key, newValue);
+  };
+
+  // Función para limpiar campos condicionales cuando cambia tipo_actividad
+  const limpiarCamposCondicionales = (nuevoTipoActividad: string) => {
+    // Esta función ahora es más genérica y se enfoca en limpiar campos individuales
+    // La lógica de objetos anidados se maneja en el formulario principal
+
+    // Limpiar campos comunes que podrían existir independientemente del esquema
+    const camposComunesParaLimpiar = [
+      'codigo_ciiu_pension',
+      'fecha_pension',
+      'fondo_pension',
+      'nombre_empresa',
+      'telefono_empresa',
+      'sector_economico_empresa',
+      'codigo_ciuu',
+      'correo_electronico_empresa',
+      'tipo_contrato',
+      'departamento_empresa',
+      'nit_empresa',
+      'fecha_ingreso_empresa',
+      'nombre_negocio',
+      'direccion_negocio',
+      'departamento_negocio',
+      'ciudad_negocio',
+      'numero_empleados_negocio',
+      'antiguedad_actividad',
+      'pago_impuestos_fuera_colombia',
+      'institucion_educativa',
+      'programa_academico',
+      'semestre_actual',
+      'ultima_empresa',
+      'fecha_ultimo_trabajo',
+      'motivo_desempleo'
+    ];
+
+    // Limpiar cada campo condicional
+    camposComunesParaLimpiar.forEach(campoKey => {
+      onChange(campoKey, ''); // Limpiar con string vacío
+    });
+
   };
 
   // Si es un campo objeto, renderizar los subcampos directamente sin contenedor
