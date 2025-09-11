@@ -4,6 +4,7 @@ export * from './customer';
 export * from './esquemas';
 export * from './fieldDefinition';
 export * from './notification';
+export * from './categoria';
 
 // Tipo para documentos
 export interface Document {

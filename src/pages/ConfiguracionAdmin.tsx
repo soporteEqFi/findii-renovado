@@ -7,6 +7,7 @@ import FieldForm from '../components/configuracion/FieldForm';
 import { ConditionalFieldConfig } from '../components/configuracion/ConditionalFieldConfig';
 import { toast } from 'react-hot-toast';
 import TableColumnConfig from '../components/configuracion/TableColumnConfig';
+import CategoriasManager from '../components/configuracion/CategoriasManager';
 
 interface EntityGroup {
   entity: string;
@@ -26,7 +27,7 @@ const ConfiguracionAdmin: React.FC = () => {
   const [selectedGroup, setSelectedGroup] = useState<EntityGroup | null>(null);
   const [showConditionalConfig, setShowConditionalConfig] = useState<boolean>(false);
   const [configuringField, setConfiguringField] = useState<FieldDefinition | null>(null);
-  const [activeTab, setActiveTab] = useState<'campos' | 'tabla'>('campos');
+  const [activeTab, setActiveTab] = useState<'campos' | 'tabla' | 'categorias'>('campos');
 
   const entityConfig = useMemo(() => ([
     {
@@ -266,7 +267,7 @@ const ConfiguracionAdmin: React.FC = () => {
 
       // Recargar todos los grupos para obtener los campos con IDs correctos
       await loadAllGroups();
-      
+
       // Buscar el grupo actualizado y establecerlo como seleccionado
       const updatedGroups = await Promise.all(
         entityConfig.map(async (config) => {
@@ -288,11 +289,11 @@ const ConfiguracionAdmin: React.FC = () => {
           }
         })
       );
-      
-      const refreshedGroup = updatedGroups.find(g => 
+
+      const refreshedGroup = updatedGroups.find(g =>
         g.entity === targetGroup.entity && g.jsonColumn === targetGroup.jsonColumn
       );
-      
+
       if (refreshedGroup) {
         setSelectedGroup(refreshedGroup);
       }
@@ -393,6 +394,16 @@ const ConfiguracionAdmin: React.FC = () => {
           >
             Configuración Tabla
           </button>
+          <button
+            onClick={() => setActiveTab('categorias')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'categorias'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Gestión Categorías
+          </button>
         </nav>
       </div>
 
@@ -423,7 +434,7 @@ const ConfiguracionAdmin: React.FC = () => {
                 onSaveGroupConfiguration={handleSaveGroupConfiguration}
                 onGroupUpdate={(updatedGroup: EntityGroup) => {
                   // Actualizar el grupo en el estado local
-                  setEntityGroups(prev => prev.map(group => 
+                  setEntityGroups(prev => prev.map(group =>
                     group.entity === updatedGroup.entity && group.jsonColumn === updatedGroup.jsonColumn
                       ? updatedGroup
                       : group
@@ -516,6 +527,10 @@ const ConfiguracionAdmin: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm p-6">
           <TableColumnConfig empresaId={1} />
         </div>
+      )}
+
+      {activeTab === 'categorias' && (
+        <CategoriasManager empresaId={1} />
       )}
     </div>
   );
