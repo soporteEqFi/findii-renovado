@@ -122,7 +122,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
     <div className="fixed inset-0 z-50 flex items-start justify-end pt-16 pr-4">
       <div
         ref={panelRef}
-        className="w-96 max-h-[80vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden"
+        className="w-96 max-h-[80vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden flex flex-col"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-slate-50">
@@ -139,7 +139,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(80vh-80px)]">
+        <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>

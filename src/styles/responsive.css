@@ -1,0 +1,108 @@
+/* Custom scrollbar styles for horizontal table scrolling */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Responsive utilities */
+@media (max-width: 767px) {
+  /* Hide text labels on very small screens for space efficiency */
+  .mobile-icon-only .mobile-hide-text {
+    display: none;
+  }
+  
+  /* Ensure proper touch targets on mobile */
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Tablet specific adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Sidebar icon-only mode for tablets */
+  .sidebar-tablet-compact {
+    width: 4rem; /* 64px */
+  }
+}
+
+/* Smooth transitions for responsive elements */
+.responsive-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Table responsive enhancements */
+.table-container {
+  position: relative;
+}
+
+.table-scroll-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2rem;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.table-scroll-indicator.left {
+  left: 0;
+  background: linear-gradient(to right, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+}
+
+.table-scroll-indicator.right {
+  right: 0;
+  background: linear-gradient(to left, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0));
+}
+
+/* Mobile-first button styling */
+@media (max-width: 640px) {
+  .btn-mobile-full {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .btn-mobile-stack > * {
+    width: 100%;
+  }
+}
+
+/* Focus improvements for accessibility */
+.focus-visible:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading states for responsive elements */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

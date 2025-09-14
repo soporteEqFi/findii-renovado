@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import ProfileDetails from '../components/profile/ProfileDetails';
 import { useProfile } from '../hooks/useProfile';
-import { PageWrapper } from '../components/PageWrapper';
 import toast from 'react-hot-toast';
 
 const Profile = () => {
@@ -34,9 +33,9 @@ const Profile = () => {
 
   if (error || !userInfo) {
     return (
-      <div className="container mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-          <div className="text-center">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mt-4 sm:mt-6">
+          <div className="text-center text-sm sm:text-base">
             {error || 'No se pudo cargar la información del usuario'}
           </div>
         </div>
@@ -45,37 +44,40 @@ const Profile = () => {
   }
 
   return (
-    <div className="container mx-auto px-4">
-      <div className="py-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="py-4 sm:py-6 lg:py-8">
+        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
           <div className="flex flex-col items-center">
             <img
               src={userInfo.imagen_aliado || '/default-avatar.png'}
               alt={userInfo.nombre}
-              className="w-32 h-32 rounded-full mb-5 object-cover"
+              className="w-24 h-24 sm:w-32 sm:h-32 rounded-full mb-4 sm:mb-5 object-cover"
             />
-            <h2 className="text-2xl font-bold mb-2">{userInfo.nombre}</h2>
-            <p className="text-gray-600 mb-4">{userInfo.rol}</p>
-            <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">{userInfo.nombre}</h2>
+            <p className="text-gray-600 mb-4 sm:mb-6 text-center">{userInfo.rol}</p>
+            
+            {/* Responsive grid for user info */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-2xl mb-6">
               <div className="p-3 bg-gray-50 rounded">
                 <p className="text-sm font-medium text-gray-500">Correo</p>
-                <p className="">{userInfo.correo}</p>
+                <p className="text-sm sm:text-base break-words">{userInfo.correo}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
                 <p className="text-sm font-medium text-gray-500">Cédula</p>
-                <p className="">{userInfo.cedula}</p>
+                <p className="text-sm sm:text-base">{userInfo.cedula}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
                 <p className="text-sm font-medium text-gray-500">Empresa</p>
-                <p className="">{userInfo.empresa}</p>
+                <p className="text-sm sm:text-base break-words">{userInfo.empresa}</p>
               </div>
               <div className="p-3 bg-gray-50 rounded">
                 <p className="text-sm font-medium text-gray-500">Rol</p>
-                <p className="">{userInfo.rol}</p>
+                <p className="text-sm sm:text-base">{userInfo.rol}</p>
               </div>
             </div>
+            
             <button
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
               onClick={() => setIsModalOpen(true)}
             >
               Editar Perfil

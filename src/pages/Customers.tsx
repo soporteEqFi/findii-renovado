@@ -18,15 +18,12 @@ const Customers = () => {
     customers,
     isLoading,
     // error,
-    totalRecords,
     loadCustomers,
     // deleteCustomer,
     updateStatus
   } = useCustomers();
   const {
     canCreateCustomer,
-    canEditCustomer,
-    canDeleteCustomer,
     canDownloadSales
   } = usePermissions();
 
@@ -140,64 +137,38 @@ const Customers = () => {
     <>
       <div className="bg-white rounded-lg shadow">
         {/* Header */}
-        <div className="p-6 border-b flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-800">Creditos</h1>
-          <div className="flex items-center space-x-4">
-            {/* {canEdit() && (
-              <Link
-                to="/users"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <UserCog className="w-4 h-4 mr-2" />
-                Gestionar Usuarios
-              </Link>
-            )} */}
-            {/* Información del usuario (comentada para evitar confusión con filtros) */}
-            {/* { user && user.rol && (
-                  <span className="text-sm text-gray-600">
-                  Rol: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
-                    {user.rol}
-                  </span>
-                  </span>
-                )}
-
-            {user && user.info_extra && (
-              <span className="text-sm text-gray-600">
-                Banco: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
-                  {user.info_extra.banco_nombre}
-                </span>
-                Ciudad: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
-                  {user.info_extra.ciudad}
-                </span>
-                Linea de Credito: <span className="ml-2 mr-2 px-2 py-1 bg-purple-300 rounded-full text-xs">
-                  {user.info_extra.linea_credito}
-                </span>
-              </span>
-            )} */}
+        <div className="p-4 lg:p-6 border-b">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <h1 className="text-xl lg:text-2xl font-semibold text-gray-800">Creditos</h1>
+            <div className="flex items-center space-x-4">
+              {/* Additional header content can go here */}
+            </div>
           </div>
         </div>
 
-        {/* Botón Nuevo Cliente */}
-        <div className="flex justify-end p-4 bg-gray-50 border-b gap-4">
+        {/* Botones de acción */}
+        <div className="p-4 bg-gray-50 border-b">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
             {/* Botón de descargar ventas*/}
             {canDownloadSales() && (
               <button
                 onClick={handleDownloadSales}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Descargar Ventas
-            </button>
+                className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 w-full sm:w-auto"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                <span className="sm:inline">Descargar Ventas</span>
+              </button>
             )}
-          {canCreateCustomer() && (
-            <button
-              onClick={() => setIsNewCustomerModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nuevo Cliente
-            </button>
-          )}
+            {canCreateCustomer() && (
+              <button
+                onClick={() => setIsNewCustomerModalOpen(true)}
+                className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-600 w-full sm:w-auto"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span className="sm:inline">Nuevo Cliente</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Tabla de Clientes */}
@@ -206,7 +177,6 @@ const Customers = () => {
           customers={customers}
           onRowClick={handleRowClick}
           onStatusChange={handleStatusChange}
-          totalRecords={totalRecords}
           empresaId={1}
           refreshTrigger={refreshTrigger}
         />

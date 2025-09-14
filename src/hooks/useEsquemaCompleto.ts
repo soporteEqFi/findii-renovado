@@ -12,12 +12,6 @@ export interface EsquemaCompleto {
   campos_dinamicos: EsquemaCampo[];
 }
 
-// Interfaz para la respuesta del esquema completo
-interface EsquemaCompletoResponse {
-  ok: boolean;
-  data: EsquemaCompleto;
-  error?: string;
-}
 
 interface UseEsquemaCompletoReturn {
   esquema: EsquemaCompleto | null;
@@ -93,7 +87,47 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
           const esquemaCompleto = result.data;
 
           // Validar y limpiar campos fijos
-          const camposFijosLimpios = validarEsquema(esquemaCompleto.campos_fijos || []);
+          let camposFijosLimpios = validarEsquema(esquemaCompleto.campos_fijos || []);
+
+          // Para solicitante, aplicar orden personalizado de campos fijos si existe
+          if (entidad === 'solicitante' && camposFijosLimpios.length > 0) {
+            try {
+              const { FixedFieldsService } = await import('../services/fixedFieldsService');
+              const fixedFieldsOrdered = FixedFieldsService.getFixedFields();
+              
+              // Crear un mapa de los campos existentes
+              const camposExistentesMap = new Map(camposFijosLimpios.map(campo => [campo.key, campo]));
+              
+              // Reordenar según el servicio de campos fijos
+              const camposReordenados: EsquemaCampo[] = [];
+              
+              fixedFieldsOrdered.forEach((fixedField, index) => {
+                const campoExistente = camposExistentesMap.get(fixedField.key);
+                if (campoExistente) {
+                  // Usar el campo del backend pero con el orden del servicio
+                  camposReordenados.push({
+                    ...campoExistente,
+                    order_index: index + 1
+                  });
+                  camposExistentesMap.delete(fixedField.key);
+                }
+              });
+              
+              // Agregar campos que no están en el servicio al final
+              camposExistentesMap.forEach(campo => {
+                camposReordenados.push({
+                  ...campo,
+                  order_index: camposReordenados.length + 1
+                });
+              });
+              
+              camposFijosLimpios = camposReordenados;
+              console.log(`🔄 Aplicado orden personalizado para campos fijos de ${entidad}:`, 
+                camposFijosLimpios.map(c => c.key));
+            } catch (error) {
+              console.error('Error aplicando orden personalizado a campos fijos:', error);
+            }
+          }
 
           // Validar y limpiar campos dinámicos
           const camposDinamicosLimpios = validarEsquema(esquemaCompleto.campos_dinamicos || []);
@@ -193,6 +227,27 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
 
   // Función para obtener campos fijos por defecto en caso de error
   const getCamposFijosPorDefecto = (entidad: string): EsquemaCampo[] => {
+    // Para solicitante, usar los campos fijos del servicio con orden personalizado
+    if (entidad === 'solicitante') {
+      try {
+        // Importar dinámicamente para evitar dependencias circulares
+        const { FixedFieldsService } = require('../services/fixedFieldsService');
+        const fixedFields = FixedFieldsService.getFixedFields();
+        
+        return fixedFields.map((field: any, index: number) => ({
+          key: field.key,
+          type: field.type,
+          required: field.required || false,
+          description: field.description,
+          order_index: index + 1,
+          list_values: field.list_values || null
+        }));
+      } catch (error) {
+        console.error('Error loading FixedFieldsService:', error);
+        // Fallback a campos por defecto
+      }
+    }
+
     switch (entidad) {
       case 'solicitante':
         return [

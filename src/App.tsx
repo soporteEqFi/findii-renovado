@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import './styles/responsive.css';
 import Layout from './components/layout/Layout';
 import Login from './pages/Login';
 import Customers from './pages/Customers';

@@ -61,6 +61,9 @@ const NestedArrayConfiguration: React.FC<{
   onChange: (options: string[]) => void;
 }> = ({ value, onChange }) => {
   const [localValue, setLocalValue] = useState(value.join('\n'));
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [newOption, setNewOption] = useState('');
 
   // Actualizar el valor local cuando cambia el prop value
   useEffect(() => {
@@ -76,27 +79,148 @@ const NestedArrayConfiguration: React.FC<{
     onChange(options);
   };
 
+  // Funciones para drag-and-drop
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const newOptions = [...value];
+    const draggedItem = newOptions[draggedIndex];
+    newOptions.splice(draggedIndex, 1);
+    newOptions.splice(dropIndex, 0, draggedItem);
+
+    onChange(newOptions);
+    setDraggedIndex(null);
+  };
+
+  const handleAddOption = () => {
+    if (newOption.trim() && !value.includes(newOption.trim())) {
+      onChange([...value, newOption.trim()]);
+      setNewOption('');
+    }
+  };
+
+  const handleRemoveOption = (index: number) => {
+    const newOptions = value.filter((_, i) => i !== index);
+    onChange(newOptions);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddOption();
+    }
+  };
+
   return (
     <div className="mt-3 p-3 bg-gray-50 rounded border">
       <div className="space-y-3">
-        <div>
-          <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
-          <textarea
-            value={localValue}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
-            rows={5}
-            placeholder="Opción 1
-Opción 2
-Opción 3
-Opción 4
-Opción 5"
-          />
-          <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm text-gray-600">Opciones del Array</label>
+          {value.length >= 2 && (
+            <button
+              type="button"
+              onClick={() => setReorderMode(!reorderMode)}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
+                reorderMode 
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                  : 'bg-gray-100 text-gray-600 border border-gray-300'
+              } hover:bg-blue-50`}
+            >
+              <GripVertical size={12} />
+              {reorderMode ? 'Terminar Orden' : 'Reordenar'}
+            </button>
+          )}
         </div>
 
+        {reorderMode ? (
+          // Vista de reordenamiento con drag-and-drop
+          <div className="space-y-2">
+            {value.map((option, index) => (
+              <div
+                key={index}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                className={`flex items-center gap-2 p-2 bg-white border rounded cursor-move hover:bg-gray-50 ${
+                  draggedIndex === index ? 'opacity-50' : ''
+                }`}
+              >
+                <GripVertical size={14} className="text-gray-400" />
+                <span className="flex-1 text-sm">{option}</span>
+                <span className="text-xs text-gray-500">#{index + 1}</span>
+              </div>
+            ))}
+            <p className="text-xs text-gray-500 mt-2">
+              Arrastra las opciones para reordenarlas. Haz clic en "Terminar Orden" cuando termines.
+            </p>
+          </div>
+        ) : (
+          // Vista normal con lista de opciones
+          <div className="space-y-2">
+            {value.map((option, index) => (
+              <div key={index} className="flex items-center gap-2 p-2 bg-white border rounded">
+                <span className="flex-1 text-sm">{option}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveOption(index)}
+                  className="text-red-600 hover:text-red-800"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            ))}
+            
+            {/* Campo para agregar nueva opción */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newOption}
+                onChange={(e) => setNewOption(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Nueva opción..."
+                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+              <button
+                type="button"
+                onClick={handleAddOption}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 flex items-center gap-1"
+              >
+                <Plus size={12} />
+                Agregar
+              </button>
+            </div>
+          </div>
+        )}
 
+        {/* Opción alternativa: textarea para edición masiva */}
+        <details className="mt-3">
+          <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+            Edición masiva (una por línea)
+          </summary>
+          <div className="mt-2">
+            <textarea
+              value={localValue}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              rows={4}
+              placeholder="Opción 1\nOpción 2\nOpción 3"
+            />
+            <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+          </div>
+        </details>
       </div>
     </div>
   );
@@ -123,12 +247,82 @@ const ObjectConfiguration: React.FC<{
     objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
   }[]) => void;
   isEditing?: boolean;
-}> = ({ structure, onChange, isEditing = false }) => (
+}> = ({ structure, onChange, isEditing = false }) => {
+  const [reorderMode, setReorderMode] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Actualizar order_index basado en la posición actual
+  const updateOrderIndexes = (items: any[]) => {
+    return items.map((item, index) => ({
+      ...item,
+      order_index: index + 1,
+    }));
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const newStructure = [...structure];
+    const [movedItem] = newStructure.splice(draggedIndex, 1);
+    newStructure.splice(dropIndex, 0, movedItem);
+    
+    // Actualizar los índices de orden
+    const updatedStructure = updateOrderIndexes(newStructure);
+    onChange(updatedStructure);
+    setDraggedIndex(null);
+  };
+
+  return (
   <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-    <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Objeto</h5>
+    <div className="flex items-center justify-between mb-3">
+      <h5 className="text-sm font-medium text-gray-700">Configuración de Objeto</h5>
+      {structure.length >= 2 && (
+        <button
+          type="button"
+          onClick={() => setReorderMode(!reorderMode)}
+          className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
+            reorderMode 
+              ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+              : 'bg-gray-100 text-gray-600 border border-gray-300'
+          } hover:bg-blue-50`}
+        >
+          <GripVertical size={12} />
+          {reorderMode ? 'Terminar Orden' : 'Reordenar Campos'}
+        </button>
+      )}
+    </div>
     <div className="space-y-3">
       {structure.map((field, index) => (
-        <div key={index} className="p-3 bg-white rounded border space-y-2">
+        <div 
+          key={index} 
+          className={`p-3 bg-white rounded border space-y-2 ${
+            reorderMode ? 'cursor-move' : ''
+          } ${draggedIndex === index ? 'opacity-50' : ''}`}
+          draggable={reorderMode}
+          onDragStart={(e) => reorderMode && handleDragStart(e, index)}
+          onDragOver={reorderMode ? handleDragOver : undefined}
+          onDrop={reorderMode ? (e) => handleDrop(e, index) : undefined}
+        >
+          {reorderMode && (
+            <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs">
+              <GripVertical size={14} className="text-gray-400" />
+              <span>Arrastra para reordenar</span>
+              <span className="ml-auto bg-gray-100 px-2 py-0.5 rounded">
+                Posición: {index + 1}
+              </span>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <input
               type="text"
@@ -350,6 +544,7 @@ const ObjectConfiguration: React.FC<{
     </div>
   </div>
 );
+};
 
 // Componente reutilizable para configuración de Archivo
 const FileConfiguration: React.FC<{
@@ -882,6 +1077,29 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
     setSavingOrder(true);
     try {
+      // Si es el grupo de campos fijos, usar localStorage
+      if (selectedGroup.entity === 'campos_fijos') {
+        const sortedFields = [...selectedGroup.fields].sort((a, b) => {
+          const orderA = a.order_index || 999;
+          const orderB = b.order_index || 999;
+          return orderA - orderB;
+        });
+
+        const fieldKeys = sortedFields.map(field => field.key);
+        
+        // Importar dinámicamente el servicio para evitar problemas de dependencias circulares
+        const { FixedFieldsService } = await import('../../services/fixedFieldsService');
+        FixedFieldsService.reorderFields(fieldKeys);
+        
+        toast.success(`Orden actualizado para ${fieldKeys.length} campos fijos`);
+        setReorderMode(false);
+        
+        // Recargar la página de configuración para reflejar los cambios
+        window.location.reload();
+        return;
+      }
+
+      // Para otros grupos, usar la API normal
       const sortedFields = [...selectedGroup.fields].sort((a, b) => {
         const orderA = a.order_index || 999;
         const orderB = b.order_index || 999;

@@ -199,9 +199,9 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
     <div>
       {/* Filtros */}
       <div className="p-4 bg-white border-b">
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           {/* Búsqueda global */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -209,78 +209,84 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
                 value={globalFilter}
                 onChange={e => setGlobalFilter(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full pl-8 pr-3 py-2 border rounded"
+                className="w-full pl-8 pr-3 py-2 border rounded text-sm"
               />
             </div>
           </div>
 
           {/* Filtro de fecha */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
             <input
               type="date"
               value={dateRange.start}
               onChange={e => setDateRange(prev => ({ ...prev, start: e.target.value }))}
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
             />
-            <span>-</span>
+            <span className="hidden sm:inline">-</span>
             <input
               type="date"
               value={dateRange.end}
               onChange={e => setDateRange(prev => ({ ...prev, end: e.target.value }))}
-              className="border rounded px-2 py-1"
+              className="border rounded px-2 py-1 text-sm w-full sm:w-auto"
             />
           </div>
         </div>
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    {flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                onClick={() => onRowClick(row.original)}
-                className="hover:bg-gray-50 cursor-pointer"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                  >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="relative">
+        {/* Gradient indicators for horizontal scroll */}
+        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none md:hidden"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none md:hidden"></div>
+        
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap lg:px-6"
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  onClick={() => onRowClick(row.original)}
+                  className="hover:bg-gray-50 cursor-pointer"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-3 py-4 whitespace-nowrap text-sm text-gray-500 lg:px-6"
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Controles de paginación simplificados */}
-      <div className="px-6 py-4 flex items-center justify-between border-t">
-        <div className="flex items-center gap-4">
+      <div className="px-4 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between border-t gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           <select
             value={pageSize}
             onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            className="border rounded px-2 py-1"
+            className="border rounded px-2 py-1 text-sm"
           >
             {[10, 20, 30, 50].map(size => (
               <option key={size} value={size}>
@@ -294,32 +300,32 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
           </span>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-1 sm:gap-2">
           <button
             onClick={() => setPageIndex(0)}
             disabled={pageIndex === 0}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 border rounded disabled:opacity-50 text-sm"
           >
             {'<<'}
           </button>
           <button
             onClick={handlePreviousPage}
             disabled={pageIndex === 0}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 border rounded disabled:opacity-50 text-sm"
           >
             {'<'}
           </button>
           <button
             onClick={handleNextPage}
             disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 border rounded disabled:opacity-50 text-sm"
           >
             {'>'}
           </button>
           <button
             onClick={() => setPageIndex(Math.ceil(filteredData.length / pageSize) - 1)}
             disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-2 py-1 border rounded disabled:opacity-50 text-sm"
           >
             {'>>'}
           </button>

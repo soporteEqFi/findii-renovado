@@ -235,15 +235,34 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
+    // Si no se encontró pero la clave parece ser un contenedor de detalle de crédito (p.ej., 'credito_vehicular'),
+    // enrutarla explícitamente a solicitudes.0.detalle_credito.<key>
+    const creditContainers = new Set([
+      'detalle_credito',
+      'credito_vehicular',
+      'credito_hipotecario',
+      'credito_libre_inversion',
+      'credito_consumo',
+    ]);
+    if (creditContainers.has(key)) {
+      return `solicitudes.0.detalle_credito.${key}`;
+    }
+
     return null;
   }, []);
 
   // Mapeo de tipo de crédito a la clave de detalle
-  const normalizeTipoCredito = (tipo: string) => (tipo || '').toLowerCase().replace(/\s+/g, '_');
+  const normalizeTipoCredito = (tipo: string) =>
+    (tipo || '')
+      .toLowerCase()
+      // eliminar acentos/diacríticos
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '_');
   const detailKeyForTipoCredito = (tipo: string) => {
     const t = normalizeTipoCredito(tipo);
     if (t.includes('vivienda') || t.includes('hipotecario')) return 'credito_hipotecario';
-    if (t.includes('vehicular') || t.includes('vehiculo') || t.includes('auto')) return 'credito_vehicular';
+    if (t.includes('vehicular') || t.includes('vehiculo') || t.includes('auto') || t.includes('vehiculo')) return 'credito_vehicular';
     if (t.includes('libre')) return 'credito_libre_inversion';
     if (t.includes('consumo')) return 'credito_consumo';
     return 'detalle_generico';
@@ -275,6 +294,26 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       });
       if (!dc[targetKey]) dc[targetKey] = {};
 
+      setEditedData(newData);
+      return;
+    }
+
+    // Caso especial: objetos de detalle de crédito (p.ej., 'credito_vehicular') que llegan como objetos completos
+    // desde CampoDinamico al editar subcampos. Asegurar que se escriban dentro de solicitudes.0.detalle_credito
+    const creditContainers = new Set([
+      'credito_vehicular',
+      'credito_hipotecario',
+      'credito_libre_inversion',
+      'credito_consumo',
+      'detalle_credito',
+    ]);
+    if (creditContainers.has(key)) {
+      if (!editedData) return;
+      const newData = JSON.parse(JSON.stringify(editedData));
+      if (!newData.solicitudes) newData.solicitudes = [{}];
+      if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+      if (!newData.solicitudes[0].detalle_credito) newData.solicitudes[0].detalle_credito = {};
+      newData.solicitudes[0].detalle_credito[key] = value;
       setEditedData(newData);
       return;
     }
@@ -681,7 +720,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         <div className="relative p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {/* Avatar con iniciales */}
-            <div className="h-12 w-12 rounded-full bg-gray-700 text-white flex items-center justify-center text-lg font-semibold shadow">
+            <div className="h-12 w-12 rounded-full bg-gray-700 text-white flex items-center justify-center text-lg font-semibold shadow-md border-2 border-gray-300">
               {(editedData?.solicitante?.nombres?.[0] || 'U')}
             </div>
             <div>

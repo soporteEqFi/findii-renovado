@@ -3,7 +3,12 @@ import { Users, Settings, LogOut, UserCog, User, BarChart3 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationManager } from './NotificationManager';
 
-const Sidebar = () => {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -30,19 +35,25 @@ const Sidebar = () => {
   };
 
   return (
-    <div className="w-64 bg-slate-900 shadow-lg">
+    <div className={`
+      fixed lg:static inset-y-0 left-0 z-50
+      w-64 lg:w-64 md:w-16
+      bg-slate-900 shadow-lg
+      transform transition-transform duration-300 ease-in-out
+      ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+    `}>
       <div className="flex justify-center mt-6">
         {user?.imagen_aliado && (
-          <img src={user.imagen_aliado} alt="Logo del aliado" className="h-20 object-contain" />
+          <img src={user.imagen_aliado} alt="Logo del aliado" className="h-20 object-contain md:h-12 lg:h-20" />
         )}
       </div>
-      <div className="flex flex-col items-center p-6">
-        <h1 className="text-2xl font-bold text-white">{user?.empresa || 'Empresa'}</h1>
+      <div className="flex flex-col items-center p-6 md:p-2 lg:p-6">
+        <h1 className="text-2xl font-bold text-white md:hidden lg:block">{user?.empresa || 'Empresa'}</h1>
         {user && (
           <div className="mt-2 text-sm text-gray-600">
-            <p className="text-red">{user.nombre}</p>
-            <p className="text-xs bg-white text-slate-900 inline-block px-4 py-1 rounded-full mt-1">{user.rol}</p>
-            <div className="mt-2">
+            <p className="text-red md:hidden lg:block">{user.nombre}</p>
+            <p className="text-xs bg-white text-slate-900 inline-block px-4 py-1 rounded-full mt-1 md:hidden lg:block">{user.rol}</p>
+            <div className="mt-2 md:hidden lg:block">
               <NotificationManager empresaId={parseInt(localStorage.getItem('empresa_id') || '1')} />
             </div>
           </div>
@@ -54,14 +65,16 @@ const Sidebar = () => {
           <li key={item.path}>
             <Link
               to={item.path}
-              className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
+              onClick={onClose}
+              className={`flex items-center px-6 py-3 hover:bg-slate-700 md:px-3 lg:px-6 md:justify-center lg:justify-start ${
                 location.pathname === item.path
                   ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
                   : 'text-gray-300'
               }`}
+              title={item.label}
             >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.label}
+              <item.icon className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
+              <span className="md:hidden lg:block">{item.label}</span>
             </Link>
           </li>
         ))}
@@ -71,25 +84,28 @@ const Sidebar = () => {
           <li key={item.path}>
             <Link
               to={item.path}
-              className={`flex items-center px-6 py-3 hover:bg-slate-700 ${
+              onClick={onClose}
+              className={`flex items-center px-6 py-3 hover:bg-slate-700 md:px-3 lg:px-6 md:justify-center lg:justify-start ${
                 location.pathname === item.path
                   ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
                   : 'text-gray-300'
               }`}
+              title={item.label}
             >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.label}
+              <item.icon className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
+              <span className="md:hidden lg:block">{item.label}</span>
             </Link>
           </li>
         ))}
       </nav>
-      <div>
-      <button
+      <div className="absolute bottom-0 w-full">
+        <button
           onClick={handleLogout}
-          className="flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 w-full"
+          className="flex items-center px-6 py-3 text-white hover:bg-gray-100 hover:text-slate-900 w-full md:px-3 lg:px-6 md:justify-center lg:justify-start"
+          title="Salir"
         >
-          <LogOut className="w-5 h-5 mr-3" />
-          Salir
+          <LogOut className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
+          <span className="md:hidden lg:block">Salir</span>
         </button>
       </div>
     </div>

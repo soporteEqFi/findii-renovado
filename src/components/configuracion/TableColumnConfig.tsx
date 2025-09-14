@@ -255,10 +255,10 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Configuración Tabla</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Configuración Tabla</h2>
           <p className="text-sm text-gray-600 mt-1">
             Configura las columnas que se muestran en la tabla principal
           </p>
@@ -266,10 +266,10 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
         <button
           onClick={() => setShowAddColumn(true)}
           disabled={guardando || camposDisponibles.length === 0}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 font-medium disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
         >
           <Plus size={16} />
-          Agregar Columna
+          <span className="sm:inline">Agregar Columna</span>
         </button>
       </div>
 
@@ -277,7 +277,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
       {showAddColumn && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6 border">
           <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar Nueva Columna</h3>
-          <div className="flex gap-4 items-end">
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             <div className="flex-1">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Campo Disponible
@@ -295,11 +295,11 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                 ))}
               </select>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button
                 onClick={agregarColumna}
                 disabled={!selectedField || guardando}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed w-full sm:w-auto"
               >
                 Agregar
               </button>
@@ -308,7 +308,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                   setShowAddColumn(false);
                   setSelectedField('');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
               >
                 Cancelar
               </button>
@@ -318,87 +318,139 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
       )}
 
       {/* Lista de columnas con drag & drop */}
-      {columnas.length > 0 ? (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="columnas">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="space-y-2"
-              >
-                {columnas.map((columna, index) => (
-                  <Draggable
-                    key={`columna-${index}`}
-                    draggableId={`columna-${index}`}
-                    index={index}
-                  >
-                    {(provided, snapshot) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className={`flex items-center gap-4 p-4 bg-white border rounded-lg transition-all ${
-                          snapshot.isDragging ? 'shadow-lg rotate-1' : 'shadow-sm'
-                        }`}
-                      >
+      <div className="max-h-[60vh] overflow-y-auto">
+        {columnas.length > 0 ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="columnas">
+              {(provided) => (
+                <div
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="space-y-2"
+                >
+                  {columnas.map((columna, index) => (
+                    <Draggable
+                      key={`columna-${index}`}
+                      draggableId={`columna-${index}`}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
                         <div
-                          {...provided.dragHandleProps}
-                          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-white border rounded-lg transition-all ${
+                            snapshot.isDragging ? 'shadow-lg rotate-1' : 'shadow-sm'
+                          }`}
                         >
-                          <GripVertical size={20} />
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <button
-                            onClick={() => toggleColumnaActiva(index)}
-                            disabled={guardando}
-                            className={`p-1 rounded transition-colors ${
-                              columna.activo 
-                                ? 'text-green-600 hover:text-green-700' 
-                                : 'text-gray-400 hover:text-gray-500'
-                            }`}
-                          >
-                            {columna.activo ? <Eye size={18} /> : <EyeOff size={18} />}
-                          </button>
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className={`font-medium ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
-                            {columna.nombre}
-                          </div>
-                          {columna.nombre_interno && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Nombre interno: {columna.nombre_interno}
+                          {/* Mobile layout */}
+                          <div className="flex items-center justify-between w-full sm:hidden">
+                            <div className="flex items-center gap-3">
+                              <div
+                                {...provided.dragHandleProps}
+                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                              >
+                                <GripVertical size={18} />
+                              </div>
+                              <button
+                                onClick={() => toggleColumnaActiva(index)}
+                                disabled={guardando}
+                                className={`p-1 rounded transition-colors ${
+                                  columna.activo 
+                                    ? 'text-green-600 hover:text-green-700' 
+                                    : 'text-gray-400 hover:text-gray-500'
+                                }`}
+                              >
+                                {columna.activo ? <Eye size={16} /> : <EyeOff size={16} />}
+                              </button>
                             </div>
-                          )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                #{columna.orden}
+                              </span>
+                              <button
+                                onClick={() => eliminarColumna(index)}
+                                disabled={guardando}
+                                className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </div>
+                          
+                          {/* Desktop layout */}
+                          <div className="hidden sm:flex sm:items-center sm:gap-4 sm:w-full">
+                            <div
+                              {...provided.dragHandleProps}
+                              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                            >
+                              <GripVertical size={20} />
+                            </div>
+                            
+                            <div className="flex items-center">
+                              <button
+                                onClick={() => toggleColumnaActiva(index)}
+                                disabled={guardando}
+                                className={`p-1 rounded transition-colors ${
+                                  columna.activo 
+                                    ? 'text-green-600 hover:text-green-700' 
+                                    : 'text-gray-400 hover:text-gray-500'
+                                }`}
+                              >
+                                {columna.activo ? <Eye size={18} /> : <EyeOff size={18} />}
+                              </button>
+                            </div>
+                            
+                            <div className="flex-1">
+                              <div className={`font-medium ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                                {columna.nombre}
+                              </div>
+                              {columna.nombre_interno && (
+                                <div className="text-xs text-gray-500 mt-1">
+                                  Nombre interno: {columna.nombre_interno}
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="text-sm text-gray-500">
+                              Orden: {columna.orden}
+                            </div>
+                            
+                            <button
+                              onClick={() => eliminarColumna(index)}
+                              disabled={guardando}
+                              className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                          
+                          {/* Column info for mobile */}
+                          <div className="w-full sm:hidden">
+                            <div className={`font-medium text-sm ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                              {columna.nombre}
+                            </div>
+                            {columna.nombre_interno && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Nombre interno: {columna.nombre_interno}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        
-                        <div className="text-sm text-gray-500">
-                          Orden: {columna.orden}
-                        </div>
-                        
-                        <button
-                          onClick={() => eliminarColumna(index)}
-                          disabled={guardando}
-                          className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors disabled:text-gray-400 disabled:cursor-not-allowed"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      ) : (
-        <div className="text-center py-12 text-gray-500">
-          <div className="text-lg mb-2">No hay columnas configuradas</div>
-          <div className="text-sm">Agrega columnas para personalizar la tabla principal</div>
-        </div>
-      )}
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          <div className="text-center py-12 text-gray-500">
+            <div className="text-lg mb-2">No hay columnas configuradas</div>
+            <div className="text-sm">Agrega columnas para personalizar la tabla principal</div>
+          </div>
+        )}
+      </div>
 
       {guardando && (
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
