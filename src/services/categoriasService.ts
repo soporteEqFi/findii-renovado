@@ -117,8 +117,8 @@ class CategoriasService {
         return {
           categoria,
           configuracion: cleanData.configuracion || cleanData,
-          descripcion: cleanData.descripcion || `Configuración para ${categoria}`,
-          activo: cleanData.activo !== undefined ? cleanData.activo : true,
+          descripcion: (cleanData.descripcion as string) || `Configuración para ${categoria}`,
+          activo: (cleanData.activo as boolean) !== undefined ? (cleanData.activo as boolean) : true,
           empresa_id: this.empresaId,
           ...cleanData
         };
@@ -147,6 +147,14 @@ class CategoriasService {
     data: CreateCategoriaRequest
   ): Promise<Categoria> {
     try {
+      // La API espera la estructura completa con configuracion y descripcion
+      const payload = {
+        configuracion: data.configuracion,
+        descripcion: data.descripcion
+      };
+
+      console.log('📤 Enviando payload para crear categoría:', payload);
+
       const response = await fetch(
         `${this.baseUrl}/configuraciones/${categoria}?empresa_id=${this.empresaId}`,
         {
@@ -155,7 +163,7 @@ class CategoriasService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(payload)
         }
       );
 
@@ -180,6 +188,14 @@ class CategoriasService {
     data: UpdateCategoriaRequest
   ): Promise<Categoria> {
     try {
+      // La API espera la estructura completa con configuracion y descripcion
+      const payload = {
+        configuracion: data.configuracion,
+        descripcion: data.descripcion
+      };
+
+      console.log('📤 Enviando payload para actualizar categoría:', payload);
+
       const response = await fetch(
         `${this.baseUrl}/configuraciones/${categoria}?empresa_id=${this.empresaId}`,
         {
@@ -188,7 +204,7 @@ class CategoriasService {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify(data)
+          body: JSON.stringify(payload)
         }
       );
 
@@ -317,7 +333,7 @@ class CategoriasService {
     if (typeof configuracion === 'object' && configuracion !== null) {
       // Si es un objeto con configuración, extraer los valores relevantes
       if (configuracion.configuracion && Array.isArray(configuracion.configuracion)) {
-        return configuracion.configuracion.map(item => String(item));
+        return configuracion.configuracion.map((item: any) => String(item));
       }
       // Si no, convertir valores que no sean del sistema
       const systemFields = ['total', 'id', 'created_at', 'updated_at', 'empresa_id', 'descripcion'];

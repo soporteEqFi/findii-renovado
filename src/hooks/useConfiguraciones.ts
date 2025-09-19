@@ -1,9 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { configuracionesService } from '../services/configuracionesService';
-
-// Cache global para evitar consultas repetidas
-const configuracionesCache: Record<string, string[]> = {};
-let cargandoConfiguraciones = false; // Flag para evitar múltiples cargas simultáneas
 
 interface UseConfiguracionesReturn {
   ciudades: string[];
@@ -13,112 +9,74 @@ interface UseConfiguracionesReturn {
   refetch: () => void;
 }
 
-export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn => {
-  // Inicializar con valores por defecto básicos (solo para mostrar algo mientras carga)
-  const [ciudades, setCiudades] = useState<string[]>(['Bogotá', 'Medellín', 'Cali', 'Barranquilla']);
-  const [bancos, setBancos] = useState<string[]>(['Bancolombia', 'Banco de Bogotá', 'BBVA']);
-  const [loading, setLoading] = useState(false); // Cambiar a false para evitar loading permanente
+// Cache global - UNA SOLA VEZ
+let datosCargados = false;
+let cacheCiudades: string[] = [];
+let cacheBancos: string[] = [];
+
+export const useConfiguraciones = (empresaId?: string | number): UseConfiguracionesReturn => {
+  const [ciudades, setCiudades] = useState<string[]>(cacheCiudades);
+  const [bancos, setBancos] = useState<string[]>(cacheBancos);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // DEBUG: Log cuando se inicializa el hook
-  console.log('🚀 useConfiguraciones inicializado con empresaId:', empresaId);
+  useEffect(() => {
+    if (!empresaId) return;
 
-  const cargarConfiguraciones = useCallback(async () => {
-    // Evitar múltiples cargas simultáneas
-    if (cargandoConfiguraciones) {
-      console.log('⏳ Ya se están cargando configuraciones, esperando...');
+    // Si ya se cargaron los datos, no hacer nada
+    if (datosCargados) {
+      setCiudades(cacheCiudades);
+      setBancos(cacheBancos);
       return;
     }
 
-    cargandoConfiguraciones = true;
     setLoading(true);
-    setError(null);
+    datosCargados = true; // Marcar como cargando
 
-    try {
-      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
-      console.log('🔧 === CARGANDO CONFIGURACIONES DESDE BACKEND ===');
-      console.log('🏢 Empresa ID:', empresaIdToUse);
-
-      // Cargar ciudades y bancos en paralelo
-      const [ciudadesData, bancosData] = await Promise.all([
-        configuracionesService.obtenerCiudades(empresaIdToUse),
-        configuracionesService.obtenerBancos(empresaIdToUse)
-      ]);
-
-      // Actualizar con los datos del backend y guardar en localStorage
-      // El backend devuelve un objeto con {categoria, total, valores}, necesitamos extraer .valores
-      const ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : ((ciudadesData as any)?.valores || []);
-      const bancosArray = Array.isArray(bancosData) ? bancosData : ((bancosData as any)?.valores || []);
-
-      setCiudades(ciudadesArray);
-      configuracionesCache[`ciudades_${empresaId}`] = ciudadesArray;
-      localStorage.setItem(`configuraciones_ciudades_${empresaId}`, JSON.stringify(ciudadesArray));
-      console.log('🏙️ Ciudades cargadas desde backend:', ciudadesArray);
-
-      setBancos(bancosArray);
-      configuracionesCache[`bancos_${empresaId}`] = bancosArray;
-      localStorage.setItem(`configuraciones_bancos_${empresaId}`, JSON.stringify(bancosArray));
-      console.log('🏦 Bancos cargados desde backend:', bancosArray);
-
-      console.log('✅ Configuraciones cargadas desde backend y guardadas en localStorage');
-
-    } catch (err: any) {
-      console.error('❌ Error al cargar configuraciones desde backend:', err);
-      setError(err.message || 'Error al cargar configuraciones');
-      // Mantener valores por defecto si falla
-    } finally {
-      setLoading(false);
-      cargandoConfiguraciones = false;
-    }
-  }, [empresaId]);
-
-  const refetch = () => {
-    // Limpiar cache y recargar
-    delete configuracionesCache[`ciudades_${empresaId}`];
-    delete configuracionesCache[`bancos_${empresaId}`];
-    cargarConfiguraciones();
-  };
-
-  useEffect(() => {
-    // DEBUG: Log cuando se ejecuta el useEffect
-    console.log('🔄 useConfiguraciones useEffect ejecutándose con empresaId:', empresaId);
-
-    // Primero intentar cargar desde localStorage
-    const ciudadesGuardadas = localStorage.getItem(`configuraciones_ciudades_${empresaId}`);
-    const bancosGuardados = localStorage.getItem(`configuraciones_bancos_${empresaId}`);
-
-    if (ciudadesGuardadas && bancosGuardados) {
+    const cargarDatos = async () => {
       try {
-        const ciudadesData = JSON.parse(ciudadesGuardadas);
-        const bancosData = JSON.parse(bancosGuardados);
+        const empresaIdNumber = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
 
-        console.log('📋 Usando configuraciones desde localStorage');
+        const [ciudadesData, bancosData] = await Promise.all([
+          configuracionesService.obtenerCiudades(empresaIdNumber),
+          configuracionesService.obtenerBancos(empresaIdNumber)
+        ]);
 
-        // Extraer arrays de los objetos si es necesario
-        const ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : (ciudadesData?.valores || []);
-        const bancosArray = Array.isArray(bancosData) ? bancosData : (bancosData?.valores || []);
+        // Extraer valores
+        let ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : ((ciudadesData as any)?.valores || []);
+        let bancosArray = Array.isArray(bancosData) ? bancosData : ((bancosData as any)?.valores || []);
+
+        // Filtrar primer elemento
+        if (ciudadesArray.length > 0 && ciudadesArray[0] === 'ciudades') {
+          ciudadesArray = ciudadesArray.slice(1);
+        }
+        if (bancosArray.length > 0 && bancosArray[0] === 'bancos') {
+          bancosArray = bancosArray.slice(1);
+        }
+
+        // Guardar en cache global
+        cacheCiudades = ciudadesArray;
+        cacheBancos = bancosArray;
 
         setCiudades(ciudadesArray);
         setBancos(bancosArray);
+
+      } catch (err: any) {
+        console.error('❌ Error:', err);
+        setError(err.message || 'Error');
+      } finally {
         setLoading(false);
-
-        // Guardar en cache también
-        configuracionesCache[`ciudades_${empresaId}`] = ciudadesArray;
-        configuracionesCache[`bancos_${empresaId}`] = bancosArray;
-
-        console.log('🏙️ Ciudades desde localStorage:', ciudadesArray);
-        console.log('🏦 Bancos desde localStorage:', bancosArray);
-      } catch (error) {
-        console.error('Error al parsear configuraciones de localStorage:', error);
-        // Si falla el parseo, cargar desde backend
-        cargarConfiguraciones();
       }
-    } else {
-      // Si no hay datos en localStorage, cargar desde backend
-      console.log('🔄 No hay configuraciones en localStorage, cargando desde backend...');
-      cargarConfiguraciones();
-    }
-  }, [empresaId]); // Remover cargarConfiguraciones de las dependencias
+    };
+
+    cargarDatos();
+  }, [empresaId]);
+
+  const refetch = () => {
+    datosCargados = false;
+    cacheCiudades = [];
+    cacheBancos = [];
+  };
 
   return {
     ciudades,

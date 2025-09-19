@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { categoriasService } from '../../services/categoriasService';
 import {
   CategoriaListItem,
-  CreateCategoriaRequest,
-  detectConfigFormat,
-  ConfigFormat
+  CreateCategoriaRequest
 } from '../../types/categoria';
 
 interface CategoriasManagerProps {
@@ -24,9 +22,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
     configuracion: [],
     descripcion: ''
   });
-  const [originalConfig, setOriginalConfig] = useState<any>(null);
-  const [configFormat, setConfigFormat] = useState<ConfigFormat>('simple_array');
-  const [showAdvancedEditor, setShowAdvancedEditor] = useState<boolean>(false);
+  const [jsonText, setJsonText] = useState<string>('');
 
   // Cargar categorías al montar el componente
   useEffect(() => {
@@ -63,8 +59,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
   const handleCreate = () => {
     setEditingCategoria(null);
     setFormData({ configuracion: [], descripcion: '' });
-    setConfigFormat('simple_array');
-    setShowAdvancedEditor(false);
+    setJsonText('[]');
     setShowForm(true);
   };
 
@@ -74,17 +69,48 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
       const categoriaData = await categoriasService.getCategoria(categoria);
       setEditingCategoria(categoria);
 
-      // Preservar los datos originales tal como vienen del servidor
-      setOriginalConfig(categoriaData.configuracion);
+
+      // Procesar la configuración para extraer solo los valores
+      let processedConfig = categoriaData.configuracion;
+      console.log('🔍 Configuración original del servidor:', processedConfig);
+
+      // Si viene como objeto con estructura {categoria, total, valores}, extraer solo valores
+      if (processedConfig && typeof processedConfig === 'object' && !Array.isArray(processedConfig)) {
+        if (processedConfig.valores && Array.isArray(processedConfig.valores)) {
+          processedConfig = processedConfig.valores;
+          console.log('🔍 Extraídos valores del objeto:', processedConfig);
+        }
+      }
+
+      // Si es array, procesar strings concatenados
+      if (Array.isArray(processedConfig)) {
+        processedConfig = processedConfig.flatMap(item => {
+          console.log('🔍 Procesando item:', item, 'tipo:', typeof item, 'contiene comas:', typeof item === 'string' && item.includes(','));
+          if (typeof item === 'string' && item.includes(',')) {
+            // Es un string concatenado, separarlo por comas
+            const separated = item.split(',').map(city => city.trim()).filter(city => city.length > 0);
+            console.log('🔍 Item separado:', separated);
+            return separated;
+          }
+          return [item];
+        });
+      }
+
+      // Asegurar que siempre sea un array
+      if (!Array.isArray(processedConfig)) {
+        processedConfig = [];
+      }
+
+      console.log('🔍 Configuración procesada final:', processedConfig);
+
       setFormData({
-        configuracion: categoriaData.configuracion,
+        configuracion: processedConfig,
         descripcion: categoriaData.descripcion
       });
 
-      // Detectar formato automáticamente
-      const format = detectConfigFormat(categoriaData.configuracion);
-      setConfigFormat(format);
-      setShowAdvancedEditor(format === 'complex');
+      // Actualizar el texto JSON para el editor
+      setJsonText(JSON.stringify(processedConfig, null, 2));
+
 
       setShowForm(true);
     } catch (error: any) {
@@ -146,62 +172,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
     }
   };
 
-  const handleConfigFormatChange = (format: ConfigFormat) => {
-    setConfigFormat(format);
 
-    // Solo convertir si realmente es necesario y preservar los datos originales
-    setFormData(prev => {
-      const currentConfig = prev.configuracion;
-
-      // Si ya estamos en el formato correcto, no convertir
-      if (format === 'simple_array' && Array.isArray(currentConfig) && currentConfig.every(item => typeof item === 'string')) {
-        return prev;
-      }
-
-      // Si estamos editando y tenemos datos originales, usar esos como base
-      const baseConfig = editingCategoria && originalConfig ? originalConfig : currentConfig;
-
-      // Solo convertir si es necesario
-      switch (format) {
-        case 'simple_array':
-          return {
-            ...prev,
-            configuracion: categoriasService.convertToSimpleArray(baseConfig)
-          };
-        case 'complex':
-          setShowAdvancedEditor(true);
-          return {
-            ...prev,
-            configuracion: baseConfig
-          };
-        default:
-          return prev;
-      }
-    });
-  };
-
-  const addSimpleItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      configuracion: [...(prev.configuracion as string[]), '']
-    }));
-  };
-
-  const updateSimpleItem = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      configuracion: (prev.configuracion as string[]).map((item, i) =>
-        i === index ? value : item
-      )
-    }));
-  };
-
-  const removeSimpleItem = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      configuracion: (prev.configuracion as string[]).filter((_, i) => i !== index)
-    }));
-  };
 
 
   if (loading) {
@@ -371,122 +342,58 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
                   />
                 </div>
 
-                {/* Selector de formato */}
+                {/* Solo configuración de valores */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Formato de Configuración
+                    Valores de la Categoría
                   </label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <label className="flex flex-col p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="radio"
-                          value="simple_array"
-                          checked={configFormat === 'simple_array'}
-                          onChange={() => handleConfigFormatChange('simple_array')}
-                          className="mr-2"
-                        />
-                        <span className="font-medium">Lista Simple</span>
-                      </div>
-                      <p className="text-xs text-gray-600 ml-6">
-                        Array de strings simples. Ideal para listas como ciudades, tipos de documento, bancos, etc.
-                      </p>
-                    </label>
-
-                    <label className="flex flex-col p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="radio"
-                          value="complex"
-                          checked={configFormat === 'complex'}
-                          onChange={() => handleConfigFormatChange('complex')}
-                          className="mr-2"
-                        />
-                        <span className="font-medium">Configuración Compleja</span>
-                      </div>
-                      <p className="text-xs text-gray-600 ml-6">
-                        Estructura JSON libre. Para configuraciones muy específicas, anidadas o con múltiples propiedades.
-                      </p>
-                    </label>
+                  <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Array de strings simples. Ideal para listas como ciudades, tipos de documento, bancos, etc.
+                    </p>
                   </div>
                 </div>
 
-                {/* Editor según formato */}
-                {configFormat === 'simple_array' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Elementos de la Lista
-                    </label>
-                    <div className="space-y-2">
-                      {(formData.configuracion as string[]).map((item, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={item}
-                            onChange={(e) => updateSimpleItem(index, e.target.value)}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder={`Elemento ${index + 1}`}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => removeSimpleItem(index)}
-                            className="px-3 py-2 text-red-600 hover:text-red-800"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={addSimpleItem}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-2"
-                      >
-                        <Plus size={16} />
-                        Agregar Elemento
-                      </button>
-                    </div>
-                  </div>
-                )}
 
-
-                {configFormat === 'complex' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Configuración JSON
-                    </label>
-                    <div className="flex items-center gap-2 mb-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowAdvancedEditor(!showAdvancedEditor)}
-                        className="px-3 py-1 text-sm bg-gray-600 text-white rounded hover:bg-gray-700 flex items-center gap-1"
-                      >
-                        {showAdvancedEditor ? <EyeOff size={16} /> : <Eye size={16} />}
-                        {showAdvancedEditor ? 'Ocultar' : 'Mostrar'} Editor JSON
-                      </button>
-                    </div>
-                    {showAdvancedEditor ? (
-                      <textarea
-                        value={JSON.stringify(formData.configuracion, null, 2)}
-                        onChange={(e) => {
-                          try {
-                            const parsed = JSON.parse(e.target.value);
-                            setFormData(prev => ({ ...prev, configuracion: parsed }));
-                          } catch (error) {
-                            // No actualizar si el JSON es inválido
-                          }
-                        }}
-                        className="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-                        placeholder="Ingrese la configuración en formato JSON"
-                      />
-                    ) : (
-                      <div className="p-4 bg-gray-50 rounded-md">
-                        <p className="text-sm text-gray-600">
-                          Configuración compleja detectada. Use el editor JSON para modificarla.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Editor de valores */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Valores de la Categoría
+                  </label>
+                  <textarea
+                    value={jsonText}
+                    onChange={(e) => {
+                      setJsonText(e.target.value);
+                      // Intentar parsear y actualizar formData si es válido
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        if (Array.isArray(parsed)) {
+                          setFormData(prev => ({ ...prev, configuracion: parsed }));
+                        }
+                      } catch (error) {
+                        // No actualizar formData si el JSON es inválido, pero permitir escribir
+                      }
+                    }}
+                    onBlur={() => {
+                      // Al perder el foco, intentar parsear y corregir si es necesario
+                      try {
+                        const parsed = JSON.parse(jsonText);
+                        if (Array.isArray(parsed)) {
+                          setFormData(prev => ({ ...prev, configuracion: parsed }));
+                          setJsonText(JSON.stringify(parsed, null, 2));
+                        }
+                      } catch (error) {
+                        // Si hay error, mostrar mensaje pero no bloquear
+                        console.warn('JSON inválido:', error);
+                      }
+                    }}
+                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    placeholder='Ingrese los valores como array JSON, ejemplo: ["Bogotá", "Medellín", "Cali"]'
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Formato: Array de strings. Ejemplo: ["Bogotá", "Medellín", "Cali"]
+                  </p>
+                </div>
 
                 {/* Botones */}
                 <div className="flex justify-end gap-3 pt-4 border-t">
