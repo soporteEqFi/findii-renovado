@@ -11,6 +11,9 @@ export interface FixedField {
 export class FixedFieldsService {
   // Solo campos que realmente son fijos y no están en las entidades de BD
   private static FIXED_FIELDS: FixedField[] = [
+    // =======================
+    // Sección: Solicitante
+    // =======================
     // Campos que aparecen en el formulario pero no están en ninguna entidad específica
     {
       key: 'nombres',
@@ -64,6 +67,43 @@ export class FixedFieldsService {
       description: 'Correo electrónico',
       type: 'string',
       required: true
+    },
+
+    // =======================
+    // Sección: Ubicación
+    // =======================
+    // Estos campos son usados en la sección de Ubicación del formulario
+    // y se agregan aquí para permitir reordenarlos desde "Campos Fijos".
+    // El orden personalizado se aplicará cuando se renderice la entidad "ubicacion".
+    {
+      key: 'departamento_residencia',
+      description: 'Departamento',
+      type: 'string',
+      required: true
+    },
+    {
+      key: 'ciudad_residencia',
+      description: 'Ciudad',
+      type: 'string',
+      required: true
+    },
+    {
+      key: 'direccion_residencia',
+      description: 'Dirección principal de residencia',
+      type: 'string',
+      required: true
+    },
+    {
+      key: 'tipo_vivienda',
+      description: 'Tipo de vivienda',
+      type: 'string',
+      required: false
+    },
+    {
+      key: 'preferencia_correspondencia',
+      description: 'Preferencia de correspondencia',
+      type: 'string',
+      required: false
     }
   ];
 

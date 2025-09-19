@@ -89,8 +89,8 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
           // Validar y limpiar campos fijos
           let camposFijosLimpios = validarEsquema(esquemaCompleto.campos_fijos || []);
 
-          // Para solicitante, aplicar orden personalizado de campos fijos si existe
-          if (entidad === 'solicitante' && camposFijosLimpios.length > 0) {
+          // Para solicitante y ubicación, aplicar orden personalizado de campos fijos si existe
+          if ((entidad === 'solicitante' || entidad === 'ubicacion') && camposFijosLimpios.length > 0) {
             try {
               const { FixedFieldsService } = await import('../services/fixedFieldsService');
               const fixedFieldsOrdered = FixedFieldsService.getFixedFields();
@@ -98,7 +98,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
               // Crear un mapa de los campos existentes
               const camposExistentesMap = new Map(camposFijosLimpios.map(campo => [campo.key, campo]));
 
-              // Reordenar según el servicio de campos fijos
+              // Reordenar según el servicio de campos fijos (solo claves existentes en esta entidad)
               const camposReordenados: EsquemaCampo[] = [];
 
               fixedFieldsOrdered.forEach((fixedField, index) => {

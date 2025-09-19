@@ -173,29 +173,87 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
     });
   };
 
-  // Crear un array ordenado insertando los campos dinámicos después de sus campos activadores
+  // DEBUG: Log para identificar el problema con tipo_credito
+  if (titulo === 'Información del Crédito') {
+    console.log('🔍 FormularioCompleto DEBUG - Información del Crédito:', {
+      titulo,
+      camposFijos: camposFijosVisibles.map(c => ({ key: c.key, order_index: c.order_index })),
+      camposDinamicos: camposDinamicosVisibles.map(c => ({ key: c.key, order_index: c.order_index, conditional_on: c.conditional_on })),
+      tipoCreditoEnFijos: camposFijosVisibles.find(c => c.key === 'tipo_credito'),
+      tipoCreditoEnDinamicos: camposDinamicosVisibles.find(c => c.key === 'tipo_credito')
+    });
+  }
+
+  // Crear un array ordenado con lógica mejorada para preservar posiciones específicas
   const todosLosCampos: any[] = [];
 
-  // Primero agregar todos los campos fijos (ordenados)
+  // Primero agregar todos los campos fijos (ordenados) manteniendo su posición original
   const camposFijosOrdenados = ordenarCampos(camposFijosVisibles);
-  camposFijosOrdenados.forEach(campoFijo => {
-    todosLosCampos.push(campoFijo);
-
-    // Buscar campos dinámicos que se activen con este campo fijo
-    const camposDinamicosRelacionados = camposDinamicosVisibles.filter(campoDinamico =>
-      campoDinamico.conditional_on?.field === campoFijo.key
-    );
-
-    // Insertar los campos dinámicos relacionados justo después del campo fijo (ordenados)
-    todosLosCampos.push(...ordenarCampos(camposDinamicosRelacionados));
+  
+  // Identificar campos dinámicos por su campo activador
+  const camposDinamicosPorActivador = new Map<string, any[]>();
+  camposDinamicosVisibles.forEach(campoDinamico => {
+    const activador = campoDinamico.conditional_on?.field;
+    if (activador) {
+      if (!camposDinamicosPorActivador.has(activador)) {
+        camposDinamicosPorActivador.set(activador, []);
+      }
+      camposDinamicosPorActivador.get(activador)!.push(campoDinamico);
+    }
   });
 
-  // Agregar campos dinámicos que no tienen campo activador específico al final (ordenados)
-  const camposDinamicosSinActivador = camposDinamicosVisibles.filter(campoDinamico =>
-    !camposFijosVisibles.some(campoFijo => campoFijo.key === campoDinamico.conditional_on?.field)
-  );
+  // LÓGICA ESPECIAL: Asegurar que tipo_credito aparezca en su posición correcta
+  // independientemente de si está clasificado como fijo o dinámico
+  const campoTipoCredito = camposFijosVisibles.find(c => c.key === 'tipo_credito') || 
+                           camposDinamicosVisibles.find(c => c.key === 'tipo_credito');
+  
+  if (campoTipoCredito && titulo === 'Información del Crédito') {
+    console.log('🔧 Aplicando lógica especial para tipo_credito:', campoTipoCredito);
+    
+    // Remover tipo_credito de las listas originales si existe
+    const camposFijosSinTipoCredito = camposFijosOrdenados.filter(c => c.key !== 'tipo_credito');
+    const camposDinamicosSinTipoCredito = camposDinamicosVisibles.filter(c => c.key !== 'tipo_credito');
+    
+    // Encontrar la posición correcta para tipo_credito (después de banco_nombre y ciudad_solicitud)
+    const camposAntesDeCredito = ['banco_nombre', 'ciudad_solicitud'];
+    let posicionInsercion = 0;
+    
+    for (let i = 0; i < camposFijosSinTipoCredito.length; i++) {
+      if (camposAntesDeCredito.includes(camposFijosSinTipoCredito[i].key)) {
+        posicionInsercion = i + 1;
+      }
+    }
+    
+    // Insertar tipo_credito en la posición correcta
+    camposFijosSinTipoCredito.splice(posicionInsercion, 0, campoTipoCredito);
+    
+    // Agregar todos los campos fijos (incluyendo tipo_credito en su posición correcta)
+    todosLosCampos.push(...camposFijosSinTipoCredito);
+    
+    // Actualizar la lista de campos dinámicos para el procesamiento posterior
+    camposDinamicosVisibles.length = 0;
+    camposDinamicosVisibles.push(...camposDinamicosSinTipoCredito);
+  } else {
+    // Lógica normal para otras secciones
+    todosLosCampos.push(...camposFijosOrdenados);
+  }
 
-  todosLosCampos.push(...ordenarCampos(camposDinamicosSinActivador));
+  // Procesar campos dinámicos activados por tipo_credito
+  const camposDinamicosActivadosPorTipoCredito = camposDinamicosVisibles.filter(c => 
+    c.conditional_on?.field === 'tipo_credito'
+  );
+  
+  // Agregar campos dinámicos activados por tipo_credito inmediatamente después
+  if (camposDinamicosActivadosPorTipoCredito.length > 0) {
+    todosLosCampos.push(...ordenarCampos(camposDinamicosActivadosPorTipoCredito));
+  }
+
+  // Agregar el resto de campos dinámicos al final
+  const otrosCamposDinamicos = camposDinamicosVisibles.filter(c => 
+    c.conditional_on?.field !== 'tipo_credito'
+  );
+  
+  todosLosCampos.push(...ordenarCampos(otrosCamposDinamicos));
 
   return (
     <div className="space-y-6">
