@@ -132,8 +132,8 @@ const NestedArrayConfiguration: React.FC<{
               type="button"
               onClick={() => setReorderMode(!reorderMode)}
               className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
-                reorderMode 
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+                reorderMode
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
                   : 'bg-gray-100 text-gray-600 border border-gray-300'
               } hover:bg-blue-50`}
             >
@@ -181,7 +181,7 @@ const NestedArrayConfiguration: React.FC<{
                 </button>
               </div>
             ))}
-            
+
             {/* Campo para agregar nueva opción */}
             <div className="flex gap-2">
               <input
@@ -276,7 +276,7 @@ const ObjectConfiguration: React.FC<{
     const newStructure = [...structure];
     const [movedItem] = newStructure.splice(draggedIndex, 1);
     newStructure.splice(dropIndex, 0, movedItem);
-    
+
     // Actualizar los índices de orden
     const updatedStructure = updateOrderIndexes(newStructure);
     onChange(updatedStructure);
@@ -292,8 +292,8 @@ const ObjectConfiguration: React.FC<{
           type="button"
           onClick={() => setReorderMode(!reorderMode)}
           className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
-            reorderMode 
-              ? 'bg-blue-100 text-blue-700 border border-blue-300' 
+            reorderMode
+              ? 'bg-blue-100 text-blue-700 border border-blue-300'
               : 'bg-gray-100 text-gray-600 border border-gray-300'
           } hover:bg-blue-50`}
         >
@@ -304,8 +304,8 @@ const ObjectConfiguration: React.FC<{
     </div>
     <div className="space-y-3">
       {structure.map((field, index) => (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={`p-3 bg-white rounded border space-y-2 ${
             reorderMode ? 'cursor-move' : ''
           } ${draggedIndex === index ? 'opacity-50' : ''}`}
@@ -1034,7 +1034,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
-    
+
     if (draggedIndex === null || draggedIndex === dropIndex || !selectedGroup) {
       setDraggedIndex(null);
       return;
@@ -1048,13 +1048,13 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
     const newFields = [...sortedFields];
     const draggedField = newFields[draggedIndex];
-    
+
     // Remover el campo arrastrado de su posición original
     newFields.splice(draggedIndex, 1);
-    
+
     // Insertar en la nueva posición
     newFields.splice(dropIndex, 0, draggedField);
-    
+
     // Actualizar order_index para todos los campos
     const updatedFields = newFields.map((field, index) => ({
       ...field,
@@ -1068,7 +1068,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         fields: updatedFields
       });
     }
-    
+
     setDraggedIndex(null);
   };
 
@@ -1086,14 +1086,14 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         });
 
         const fieldKeys = sortedFields.map(field => field.key);
-        
+
         // Importar dinámicamente el servicio para evitar problemas de dependencias circulares
         const { FixedFieldsService } = await import('../../services/fixedFieldsService');
         FixedFieldsService.reorderFields(fieldKeys);
-        
+
         toast.success(`Orden actualizado para ${fieldKeys.length} campos fijos`);
         setReorderMode(false);
-        
+
         // Recargar la página de configuración para reflejar los cambios
         window.location.reload();
         return;
@@ -1132,7 +1132,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
       toast.success(`Orden actualizado para ${fieldOrders.length} campos`);
       setReorderMode(false);
-      
+
     } catch (error: any) {
       console.error('Error saving field order:', error);
       toast.error(error.message || 'Error al guardar el orden de los campos');
@@ -1318,7 +1318,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   return (
     <div className="space-y-6">
       {/* Group Information Section */}
-      <div className="bg-gray-50 p-4 rounded-lg">
+      <div className={`bg-gray-50 p-4 rounded-lg ${showAddField ? 'opacity-50' : ''}`}>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Información de la Entidad</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -1425,8 +1425,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   return orderA - orderB;
                 })
                 .map((field, index) => (
-                <div 
-                  key={field.key} 
+                <div
+                  key={field.key}
                   className={`
                     flex items-center justify-between bg-white p-3 rounded border
                     ${reorderMode ? 'cursor-move hover:shadow-md transition-shadow' : ''}
@@ -1500,8 +1500,17 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
         {/* Add New Field Section */}
         {showAddField ? (
-          <div className="mt-4 bg-white border border-gray-200 rounded-lg p-4">
-            <h4 className="text-sm font-medium text-gray-700 mb-3">Agregar Nuevo Campo</h4>
+          <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-lg font-semibold text-blue-800">✨ Agregar Nuevo Campo</h4>
+              <button
+                type="button"
+                onClick={() => setShowAddField(false)}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+              >
+                ✕ Cancelar
+              </button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm text-gray-600 mb-1">Nombre Interno</label>

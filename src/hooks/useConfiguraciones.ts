@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { configuracionesService } from '../services/configuracionesService';
+import { getConfiguracionesLocales, cargarConfiguracionesDesdeAPI, subscribeToConfiguraciones, refrescarConfiguraciones } from '../data/configuraciones';
 
 interface UseConfiguracionesReturn {
   ciudades: string[];
@@ -7,75 +7,66 @@ interface UseConfiguracionesReturn {
   loading: boolean;
   error: string | null;
   refetch: () => void;
+  refrescar: () => Promise<void>;
 }
 
-// Cache global - UNA SOLA VEZ
-let datosCargados = false;
-let cacheCiudades: string[] = [];
-let cacheBancos: string[] = [];
-
 export const useConfiguraciones = (empresaId?: string | number): UseConfiguracionesReturn => {
-  const [ciudades, setCiudades] = useState<string[]>(cacheCiudades);
-  const [bancos, setBancos] = useState<string[]>(cacheBancos);
+  // Cargar datos locales INMEDIATAMENTE
+  const datosLocales = getConfiguracionesLocales();
+  const [ciudades, setCiudades] = useState<string[]>(datosLocales.ciudades);
+  const [bancos, setBancos] = useState<string[]>(datosLocales.bancos);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!empresaId) return;
 
-    // Si ya se cargaron los datos, no hacer nada
-    if (datosCargados) {
-      setCiudades(cacheCiudades);
-      setBancos(cacheBancos);
-      return;
-    }
+    // Cargar desde API (automáticamente si el cache está expirado)
+    const empresaIdNumber = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
 
     setLoading(true);
-    datosCargados = true; // Marcar como cargando
+    cargarConfiguracionesDesdeAPI(empresaIdNumber).then((nuevosDatos) => {
+      setCiudades(nuevosDatos.ciudades);
+      setBancos(nuevosDatos.bancos);
+      setLoading(false);
+    }).catch((err) => {
+      setError(err.message);
+      setLoading(false);
+      console.error('Error en useConfiguraciones:', err);
+    });
+  }, [empresaId]); // Solo depende de empresaId
 
-    const cargarDatos = async () => {
+  // Efecto para suscribirse a cambios en las configuraciones globales
+  useEffect(() => {
+    const unsubscribe = subscribeToConfiguraciones((nuevasCiudades, nuevosBancos) => {
+      setCiudades(nuevasCiudades);
+      setBancos(nuevosBancos);
+    });
+
+    // Limpiar suscripción al desmontar
+    return unsubscribe;
+  }, []);
+
+  const refetch = () => {
+    if (empresaId) {
+      const empresaIdNumber = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
+      cargarConfiguracionesDesdeAPI(empresaIdNumber);
+    }
+  };
+
+  const refrescar = async () => {
+    if (empresaId) {
+      const empresaIdNumber = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
+      setLoading(true);
       try {
-        const empresaIdNumber = typeof empresaId === 'string' ? parseInt(empresaId, 10) : empresaId;
-
-        const [ciudadesData, bancosData] = await Promise.all([
-          configuracionesService.obtenerCiudades(empresaIdNumber),
-          configuracionesService.obtenerBancos(empresaIdNumber)
-        ]);
-
-        // Extraer valores
-        let ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : ((ciudadesData as any)?.valores || []);
-        let bancosArray = Array.isArray(bancosData) ? bancosData : ((bancosData as any)?.valores || []);
-
-        // Filtrar primer elemento
-        if (ciudadesArray.length > 0 && ciudadesArray[0] === 'ciudades') {
-          ciudadesArray = ciudadesArray.slice(1);
-        }
-        if (bancosArray.length > 0 && bancosArray[0] === 'bancos') {
-          bancosArray = bancosArray.slice(1);
-        }
-
-        // Guardar en cache global
-        cacheCiudades = ciudadesArray;
-        cacheBancos = bancosArray;
-
-        setCiudades(ciudadesArray);
-        setBancos(bancosArray);
-
-      } catch (err: any) {
-        console.error('❌ Error:', err);
-        setError(err.message || 'Error');
+        await refrescarConfiguraciones(empresaIdNumber);
+      } catch (error) {
+        console.error('Error refrescando configuraciones:', error);
+        setError('Error al refrescar configuraciones');
       } finally {
         setLoading(false);
       }
-    };
-
-    cargarDatos();
-  }, [empresaId]);
-
-  const refetch = () => {
-    datosCargados = false;
-    cacheCiudades = [];
-    cacheBancos = [];
+    }
   };
 
   return {
@@ -83,6 +74,7 @@ export const useConfiguraciones = (empresaId?: string | number): UseConfiguracio
     bancos,
     loading,
     error,
-    refetch
+    refetch,
+    refrescar
   };
 };

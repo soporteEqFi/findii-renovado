@@ -36,25 +36,8 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
   const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
 
-  // DEBUG: Log cuando se actualizan las configuraciones
-  console.log('🔄 CampoDinamico - Configuraciones actualizadas:', {
-    campo: campo.key,
-    ciudades: ciudades,
-    bancos: bancos,
-    loading: loadingConfiguraciones,
-    empresaId: empresaId
-  });
 
   const handleChange = (newValue: any) => {
-    // DEBUG: Log para campos SELECT problemáticos
-    if (campo.key.includes('ciudad') || campo.key.includes('departamento') || campo.key.includes('tipo_vivienda') || campo.key.includes('correspondencia')) {
-      console.log(`🎯 CampoDinamico handleChange para ${campo.key}:`, {
-        valorActual: efectiveValue,
-        nuevoValor: newValue,
-        tipo: campo.type
-      });
-    }
-
     // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
     if (campo.key === 'tipo_actividad') {
       limpiarCamposCondicionales();
@@ -259,13 +242,6 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     }
 
     if (campo.key === 'banco_nombre') {
-      // DEBUG: Log cuando se renderiza el campo banco_nombre
-      console.log('🏦 CampoDinamico renderizando banco_nombre:', {
-        bancos: bancos,
-        loadingConfiguraciones: loadingConfiguraciones,
-        efectiveValue: efectiveValue
-      });
-
       return (
         <select
           value={efectiveValue || ''}
