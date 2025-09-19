@@ -10,7 +10,7 @@ import { documentService } from '../../services/documentService';
 import { referenciaService } from '../../services/referenciaService';
 
 interface CustomerFormDinamicoProps {
-  onSubmit: (e: React.FormEvent) => Promise<void>;
+  onSubmit: () => Promise<void>;
   onCancel: () => void;
   isLoading: boolean;
 }
@@ -620,7 +620,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         toast.success('Solicitud creada exitosamente');
       }
 
-      await onSubmit(e);
+      // Llamar al callback del padre para cerrar el modal y recargar datos
+      await onSubmit();
 
     } catch (error) {
       console.error('❌ ERROR EN EL PROCESO:', error);

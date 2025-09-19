@@ -204,8 +204,7 @@ const Customers = () => {
       >
         <CustomerFormDinamico
           onSubmit={async () => {
-            await loadCustomers();
-            setIsNewCustomerModalOpen(false);
+            // Solo quitar el reinicio, mantener el modal abierto
           }}
           onCancel={() => setIsNewCustomerModalOpen(false)}
           isLoading={isLoading}
