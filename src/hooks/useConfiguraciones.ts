@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { configuracionesService } from '../services/configuracionesService';
 
-// Cache para evitar consultas repetidas
+// Cache global para evitar consultas repetidas
 const configuracionesCache: Record<string, string[]> = {};
+let cargandoConfiguraciones = false; // Flag para evitar múltiples cargas simultáneas
 
 interface UseConfiguracionesReturn {
   ciudades: string[];
@@ -16,10 +17,20 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
   // Inicializar con valores por defecto básicos (solo para mostrar algo mientras carga)
   const [ciudades, setCiudades] = useState<string[]>(['Bogotá', 'Medellín', 'Cali', 'Barranquilla']);
   const [bancos, setBancos] = useState<string[]>(['Bancolombia', 'Banco de Bogotá', 'BBVA']);
-  const [loading, setLoading] = useState(true); // Volver a true para cargar desde backend
+  const [loading, setLoading] = useState(false); // Cambiar a false para evitar loading permanente
   const [error, setError] = useState<string | null>(null);
 
-    const cargarConfiguraciones = async () => {
+  // DEBUG: Log cuando se inicializa el hook
+  console.log('🚀 useConfiguraciones inicializado con empresaId:', empresaId);
+
+  const cargarConfiguraciones = useCallback(async () => {
+    // Evitar múltiples cargas simultáneas
+    if (cargandoConfiguraciones) {
+      console.log('⏳ Ya se están cargando configuraciones, esperando...');
+      return;
+    }
+
+    cargandoConfiguraciones = true;
     setLoading(true);
     setError(null);
 
@@ -35,21 +46,19 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
       ]);
 
       // Actualizar con los datos del backend y guardar en localStorage
-      if (ciudadesData.length > 0) {
-        setCiudades(ciudadesData);
-        configuracionesCache[`ciudades_${empresaId}`] = ciudadesData;
-        // Guardar en localStorage para uso futuro
-        localStorage.setItem(`configuraciones_ciudades_${empresaId}`, JSON.stringify(ciudadesData));
-        // console.log('🏙️ Ciudades cargadas desde backend y guardadas:', ciudadesData);
-      }
+      // El backend devuelve un objeto con {categoria, total, valores}, necesitamos extraer .valores
+      const ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : ((ciudadesData as any)?.valores || []);
+      const bancosArray = Array.isArray(bancosData) ? bancosData : ((bancosData as any)?.valores || []);
 
-      if (bancosData.length > 0) {
-        setBancos(bancosData);
-        configuracionesCache[`bancos_${empresaId}`] = bancosData;
-        // Guardar en localStorage para uso futuro
-        localStorage.setItem(`configuraciones_bancos_${empresaId}`, JSON.stringify(bancosData));
-        console.log('🏦 Bancos cargados desde backend y guardados:', bancosData);
-      }
+      setCiudades(ciudadesArray);
+      configuracionesCache[`ciudades_${empresaId}`] = ciudadesArray;
+      localStorage.setItem(`configuraciones_ciudades_${empresaId}`, JSON.stringify(ciudadesArray));
+      console.log('🏙️ Ciudades cargadas desde backend:', ciudadesArray);
+
+      setBancos(bancosArray);
+      configuracionesCache[`bancos_${empresaId}`] = bancosArray;
+      localStorage.setItem(`configuraciones_bancos_${empresaId}`, JSON.stringify(bancosArray));
+      console.log('🏦 Bancos cargados desde backend:', bancosArray);
 
       console.log('✅ Configuraciones cargadas desde backend y guardadas en localStorage');
 
@@ -59,8 +68,9 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
       // Mantener valores por defecto si falla
     } finally {
       setLoading(false);
+      cargandoConfiguraciones = false;
     }
-  };
+  }, [empresaId]);
 
   const refetch = () => {
     // Limpiar cache y recargar
@@ -70,6 +80,9 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
   };
 
   useEffect(() => {
+    // DEBUG: Log cuando se ejecuta el useEffect
+    console.log('🔄 useConfiguraciones useEffect ejecutándose con empresaId:', empresaId);
+
     // Primero intentar cargar desde localStorage
     const ciudadesGuardadas = localStorage.getItem(`configuraciones_ciudades_${empresaId}`);
     const bancosGuardados = localStorage.getItem(`configuraciones_bancos_${empresaId}`);
@@ -80,16 +93,21 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
         const bancosData = JSON.parse(bancosGuardados);
 
         console.log('📋 Usando configuraciones desde localStorage');
-        setCiudades(ciudadesData);
-        setBancos(bancosData);
+
+        // Extraer arrays de los objetos si es necesario
+        const ciudadesArray = Array.isArray(ciudadesData) ? ciudadesData : (ciudadesData?.valores || []);
+        const bancosArray = Array.isArray(bancosData) ? bancosData : (bancosData?.valores || []);
+
+        setCiudades(ciudadesArray);
+        setBancos(bancosArray);
         setLoading(false);
 
         // Guardar en cache también
-        configuracionesCache[`ciudades_${empresaId}`] = ciudadesData;
-        configuracionesCache[`bancos_${empresaId}`] = bancosData;
+        configuracionesCache[`ciudades_${empresaId}`] = ciudadesArray;
+        configuracionesCache[`bancos_${empresaId}`] = bancosArray;
 
-        // console.log('🏙️ Ciudades desde localStorage:', ciudadesData);
-        // console.log('🏦 Bancos desde localStorage:', bancosData);
+        console.log('🏙️ Ciudades desde localStorage:', ciudadesArray);
+        console.log('🏦 Bancos desde localStorage:', bancosArray);
       } catch (error) {
         console.error('Error al parsear configuraciones de localStorage:', error);
         // Si falla el parseo, cargar desde backend
@@ -100,7 +118,7 @@ export const useConfiguraciones = (empresaId?: number): UseConfiguracionesReturn
       console.log('🔄 No hay configuraciones en localStorage, cargando desde backend...');
       cargarConfiguraciones();
     }
-  }, [empresaId]);
+  }, [empresaId]); // Remover cargarConfiguraciones de las dependencias
 
   return {
     ciudades,

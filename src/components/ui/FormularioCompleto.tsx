@@ -71,13 +71,13 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas
   const getNestedValue = (key: string): any => {
     // DEBUG: Log para campos SELECT problemáticos
-    if (key.includes('ciudad') || key.includes('departamento') || key.includes('tipo_vivienda') || key.includes('correspondencia')) {
-      console.log(`🔍 getNestedValue para ${key}:`, {
-        valorDirecto: valores?.[key],
-        ubicaciones: valores?.ubicaciones?.[0]?.[key],
-        detalleDireccion: valores?.ubicaciones?.[0]?.detalle_direccion?.[key]
-      });
-    }
+    // if (key.includes('ciudad') || key.includes('departamento') || key.includes('tipo_vivienda') || key.includes('correspondencia')) {
+    //   // console.log(`🔍 getNestedValue para ${key}:`, {
+    //   //   valorDirecto: valores?.[key],
+    //   //   ubicaciones: valores?.ubicaciones?.[0]?.[key],
+    //   //   detalleDireccion: valores?.ubicaciones?.[0]?.detalle_direccion?.[key]
+    //   // });
+    // }
     // Aliases comunes entre esquemas/valores
     if (key === 'tipo_referencia' && valores && valores['tipo'] !== undefined) {
       return valores['tipo'];

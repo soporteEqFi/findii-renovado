@@ -250,6 +250,13 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     }
 
     if (campo.key === 'banco_nombre') {
+      // DEBUG: Log cuando se renderiza el campo banco_nombre
+      console.log('🏦 CampoDinamico renderizando banco_nombre:', {
+        bancos: bancos,
+        loadingConfiguraciones: loadingConfiguraciones,
+        efectiveValue: efectiveValue
+      });
+
       return (
         <select
           value={efectiveValue || ''}

@@ -94,7 +94,7 @@ class CamposDinamicosService {
     // Verificar cache
     const cached = this.getCached<EsquemaCompletoResponse['data']>(cacheKey);
     if (cached) {
-      console.log(`📦 Cache hit para esquema completo: ${entidad}`);
+      // console.log(`📦 Cache hit para esquema completo: ${entidad}`);
       return cached;
     }
 
