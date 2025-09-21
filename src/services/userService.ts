@@ -217,6 +217,144 @@ export const userService = {
     });
 
     return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+  },
+
+  // Obtener información del usuario logueado desde localStorage (perfil)
+  async getCurrentUserInfo(): Promise<{
+    id: number;
+    nombre: string;
+    correo: string;
+    cedula: string;
+    rol: string;
+    empresa_id: number;
+  }> {
+    try {
+      // Primero intentar obtener desde localStorage (información del perfil)
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const userObj = JSON.parse(userData);
+        console.log('📋 Información del usuario desde localStorage:', userObj);
+        
+        return {
+          id: userObj.id || parseInt(localStorage.getItem('user_id') || '0'),
+          nombre: userObj.nombre || userObj.nombres || 'Usuario',
+          correo: userObj.correo || userObj.email || '',
+          cedula: userObj.cedula || localStorage.getItem('cedula') || '',
+          rol: userObj.rol || 'user',
+          empresa_id: parseInt(localStorage.getItem('empresa_id') || '1')
+        };
+      }
+
+      // Si no hay información en localStorage, intentar desde API
+      console.log('⚠️ No hay información en localStorage, intentando desde API...');
+      const response = await fetch(buildApiUrl('/get-user-info'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al obtener información del usuario: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result.data || result;
+    } catch (error) {
+      console.error('Error obteniendo información del usuario logueado:', error);
+      
+      // Fallback: usar información básica disponible en localStorage
+      return {
+        id: parseInt(localStorage.getItem('user_id') || '0'),
+        nombre: localStorage.getItem('user_name') || 'Usuario',
+        correo: localStorage.getItem('user_email') || '',
+        cedula: localStorage.getItem('cedula') || '',
+        rol: localStorage.getItem('user_role') || 'user',
+        empresa_id: parseInt(localStorage.getItem('empresa_id') || '1')
+      };
+    }
+  },
+
+  // Buscar banquero por criterios de banco y ciudad
+  async findBankerByCriteria(bancoNombre: string, ciudadSolicitud: string, empresaId?: number): Promise<{
+    nombre: string;
+    correo: string;
+  } | null> {
+    try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      
+      console.log('🔍 Buscando banquero con criterios:', {
+        banco: bancoNombre,
+        ciudad: ciudadSolicitud,
+        empresaId: empresaIdToUse
+      });
+      
+      // Obtener todos los usuarios de la empresa
+      const users = await this.getUsers(empresaIdToUse);
+      console.log('👥 Total usuarios obtenidos:', users.length);
+      
+      // Filtrar usuarios con rol 'banco'
+      const bankUsers = users.filter(user => user.rol === 'banco');
+      console.log('🏦 Usuarios con rol banco:', bankUsers.length);
+      
+      // Log de usuarios banco para debug
+      bankUsers.forEach((user, index) => {
+        const infoExtra = this.processInfoExtra(user.info_extra);
+        console.log(`🏦 Banquero ${index + 1}:`, {
+          nombre: user.nombre,
+          correo: user.correo,
+          info_extra: infoExtra
+        });
+      });
+      
+      // Buscar usuarios con rol 'banco' que tengan información adicional que coincida
+      const banker = bankUsers.find(user => {
+        // Verificar información adicional
+        const infoExtra = this.processInfoExtra(user.info_extra);
+        if (!infoExtra) {
+          console.log(`❌ Usuario ${user.nombre} no tiene información adicional`);
+          return false;
+        }
+        
+        // Buscar coincidencias en la información adicional
+        // La información adicional debe contener el banco y la ciudad
+        const infoString = JSON.stringify(infoExtra).toLowerCase();
+        const bancoLower = bancoNombre.toLowerCase();
+        const ciudadLower = ciudadSolicitud.toLowerCase();
+        
+        const hasBanco = infoString.includes(bancoLower);
+        const hasCiudad = infoString.includes(ciudadLower);
+        
+        console.log(`🔍 Verificando ${user.nombre}:`, {
+          infoString,
+          bancoLower,
+          ciudadLower,
+          hasBanco,
+          hasCiudad,
+          match: hasBanco && hasCiudad
+        });
+        
+        return hasBanco && hasCiudad;
+      });
+      
+      if (banker) {
+        console.log('✅ Banquero encontrado:', {
+          nombre: banker.nombre,
+          correo: banker.correo
+        });
+        return {
+          nombre: banker.nombre,
+          correo: banker.correo
+        };
+      }
+      
+      console.log('❌ No se encontró banquero que coincida con los criterios');
+      return null;
+    } catch (error) {
+      console.error('Error buscando banquero por criterios:', error);
+      return null;
+    }
   }
 };
 

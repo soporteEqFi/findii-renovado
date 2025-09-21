@@ -12,6 +12,7 @@ import { API_CONFIG, buildApiUrl } from '../../config/constants';
 import { emailService } from '../../services/emailService';
 import { referenciaService } from '../../services/referenciaService';
 import { documentService } from '../../services/documentService';
+import { userService } from '../../services/userService';
 import { NotificationHistory } from '../NotificationHistory';
 import { ObservacionesSolicitud } from './ObservacionesSolicitud';
 
@@ -26,6 +27,18 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   onSaved,
   onCancel,
 }) => {
+  // 🔍 DEBUG: Verificar qué información tenemos en localStorage
+  React.useEffect(() => {
+    console.log('🔍 === DEBUG LOCALSTORAGE (EDIT) ===');
+    console.log('user:', localStorage.getItem('user'));
+    console.log('user_id:', localStorage.getItem('user_id'));
+    console.log('user_name:', localStorage.getItem('user_name'));
+    console.log('user_email:', localStorage.getItem('user_email'));
+    console.log('cedula:', localStorage.getItem('cedula'));
+    console.log('empresa_id:', localStorage.getItem('empresa_id'));
+    console.log('access_token:', localStorage.getItem('access_token') ? 'EXISTE' : 'NO EXISTE');
+    console.log('='.repeat(50));
+  }, []);
   // 1) Cargar registro completo del solicitante
   const { datos: datosCompletos, loading: loadingCompletos, error: errorCompletos, refetch } = useSolicitanteCompleto(
     isNaN(solicitanteId) || solicitanteId <= 0 ? null : solicitanteId
@@ -70,6 +83,42 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       setOriginalBankValue(originalBank);
     }
   }, [datosCompletos]);
+
+  // Obtener información del asesor al montar el componente
+  React.useEffect(() => {
+    const obtenerInformacionAsesor = async () => {
+      try {
+        const currentUser = await userService.getCurrentUserInfo();
+        if (editedData) {
+          const newData = JSON.parse(JSON.stringify(editedData));
+          
+          // Asegurar estructura de solicitudes
+          if (!newData.solicitudes) newData.solicitudes = [{}];
+          if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+          
+          // Solo añadir información del asesor si no existe
+          if (!newData.solicitudes[0].nombre_asesor) {
+            newData.solicitudes[0].nombre_asesor = currentUser.nombre;
+          }
+          if (!newData.solicitudes[0].correo_asesor) {
+            newData.solicitudes[0].correo_asesor = currentUser.correo;
+          }
+          
+          setEditedData(newData);
+          console.log('🧑‍💼 Información del asesor cargada (Edit):', {
+            nombre: currentUser.nombre,
+            correo: currentUser.correo
+          });
+        }
+      } catch (error) {
+        console.error('Error obteniendo información del asesor:', error);
+      }
+    };
+
+    if (editedData) {
+      obtenerInformacionAsesor();
+    }
+  }, [editedData?.solicitante?.id]); // Solo ejecutar cuando editedData esté listo
 
   // Cargar/rellenar referencias desde el endpoint unificado al iniciar
   React.useEffect(() => {
@@ -268,6 +317,65 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     return 'detalle_generico';
   };
 
+  // Función para obtener información del asesor y banquero
+  const obtenerInformacionAsesorYBanquero = async (bancoNombre: string, ciudadSolicitud: string) => {
+    try {
+      // Obtener información del usuario logueado (asesor)
+      const currentUser = await userService.getCurrentUserInfo();
+      
+      // Buscar banquero por criterios
+      const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
+      
+      // Actualizar formulario con la información obtenida
+      if (!editedData) return;
+      const newData = JSON.parse(JSON.stringify(editedData));
+      
+      // Asegurar estructura de solicitudes
+      if (!newData.solicitudes) newData.solicitudes = [{}];
+      if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+      
+      // Añadir campos de asesor y banquero
+      newData.solicitudes[0].nombre_asesor = currentUser.nombre;
+      newData.solicitudes[0].correo_asesor = currentUser.correo;
+      newData.solicitudes[0].nombre_banco_usuario = banker?.nombre || '';
+      newData.solicitudes[0].correo_banco_usuario = banker?.correo || '';
+      
+      setEditedData(newData);
+
+      console.log('🏦 Información de asesor y banquero obtenida (Edit):', {
+        asesor: {
+          nombre: currentUser.nombre,
+          correo: currentUser.correo
+        },
+        banquero: banker ? {
+          nombre: banker.nombre,
+          correo: banker.correo
+        } : 'No encontrado'
+      });
+
+    } catch (error) {
+      console.error('Error obteniendo información de asesor y banquero:', error);
+      // En caso de error, solo obtener información del asesor
+      try {
+        const currentUser = await userService.getCurrentUserInfo();
+        if (!editedData) return;
+        const newData = JSON.parse(JSON.stringify(editedData));
+        
+        if (!newData.solicitudes) newData.solicitudes = [{}];
+        if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+        
+        newData.solicitudes[0].nombre_asesor = currentUser.nombre;
+        newData.solicitudes[0].correo_asesor = currentUser.correo;
+        newData.solicitudes[0].nombre_banco_usuario = '';
+        newData.solicitudes[0].correo_banco_usuario = '';
+        
+        setEditedData(newData);
+      } catch (asesorError) {
+        console.error('Error obteniendo información del asesor:', asesorError);
+      }
+    }
+  };
+
   const handleFieldChange = (key: string, value: any) => {
 
     // Caso especial: cambio de tipo_credito
@@ -355,6 +463,26 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
     const path = findPathForKey(editedData, key) || key;
     updateNestedData(path, value);
+
+    // Si cambia el banco o la ciudad, obtener información del banquero
+    if (key === 'banco_nombre' || key === 'ciudad_solicitud') {
+      // Obtener valores actuales considerando el cambio
+      let bancoNombre = '';
+      let ciudadSolicitud = '';
+      
+      if (key === 'banco_nombre') {
+        bancoNombre = value;
+        ciudadSolicitud = editedData?.solicitudes?.[0]?.ciudad_solicitud || '';
+      } else if (key === 'ciudad_solicitud') {
+        bancoNombre = editedData?.solicitudes?.[0]?.banco_nombre || '';
+        ciudadSolicitud = value;
+      }
+      
+      // Solo ejecutar si ambos campos tienen valor
+      if (bancoNombre && ciudadSolicitud) {
+        obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud);
+      }
+    }
   };
 
   // 9) Preparar requestData igual que en CustomerDetails.handleSave()
@@ -419,6 +547,11 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           banco_nombre: solicitud.banco_nombre,
           ciudad_solicitud: solicitud.ciudad_solicitud,
           observaciones_historial: solicitud.observaciones_historial || [],
+          // Campos de asesor y banquero
+          nombre_asesor: solicitud.nombre_asesor,
+          correo_asesor: solicitud.correo_asesor,
+          nombre_banco_usuario: solicitud.nombre_banco_usuario,
+          correo_banco_usuario: solicitud.correo_banco_usuario,
         };
         if (solicitud.detalle_credito) {
           if (solicitud.detalle_credito.tipo_credito) {
@@ -467,6 +600,21 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const requestData = buildRequestData(editedData);
         // Asegurar que no mandemos referencias en el PATCH principal
         if (requestData.referencias) delete requestData.referencias;
+
+      // 🏦 LOG ESPECÍFICO PARA CAMPOS DE ASESOR Y BANQUERO EN EDICIÓN
+      console.log('\n🏦 === CAMPOS DE ASESOR Y BANQUERO (EDICIÓN) ===');
+      console.log('📋 Campos que se enviarán en el JSON/form a la API:');
+      const solicitudData = requestData.solicitudes?.[0];
+      if (solicitudData) {
+        console.log('  🧑‍💼 nombre_asesor:', solicitudData.nombre_asesor || '(NO DEFINIDO)');
+        console.log('  📧 correo_asesor:', solicitudData.correo_asesor || '(NO DEFINIDO)');
+        console.log('  🏦 nombre_banco_usuario:', solicitudData.nombre_banco_usuario || '(NO DEFINIDO)');
+        console.log('  📧 correo_banco_usuario:', solicitudData.correo_banco_usuario || '(NO DEFINIDO)');
+      } else {
+        console.log('  ⚠️ No se encontró solicitud en requestData');
+      }
+      console.log('🔍 Estos campos se incluyen automáticamente en el payload de edición que se envía a la API');
+      console.log('='.repeat(80));
 
 
         const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());

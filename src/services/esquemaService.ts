@@ -438,6 +438,14 @@ export const esquemaService = {
     empresaId?: number
   ): Promise<any> {
     try {
+      // 🔍 LOG: Verificar campos de asesor y banquero en formData
+      console.log('🔍 === VERIFICANDO CAMPOS EN FORMDATA ===');
+      console.log('📋 nombre_asesor en formData:', formData.nombre_asesor);
+      console.log('📋 correo_asesor en formData:', formData.correo_asesor);
+      console.log('📋 nombre_banco_usuario en formData:', formData.nombre_banco_usuario);
+      console.log('📋 correo_banco_usuario en formData:', formData.correo_banco_usuario);
+      console.log('='.repeat(60));
+
       // Transformar datos del formulario plano a la estructura esperada por el backend
       const datosCompletos = this.transformarDatosFormulario(formData, esquemasCompletos);
 
@@ -461,12 +469,41 @@ export const esquemaService = {
         userEmail = userObj.correo || '';
       }
 
+      // Asegurar que existe la estructura de solicitudes
+      if (!datosCompletos.solicitudes) {
+        datosCompletos.solicitudes = [{}];
+      }
+      if (!datosCompletos.solicitudes[0]) {
+        datosCompletos.solicitudes[0] = {};
+      }
+
       // Agregar campos adicionales a la solicitud
       if (datosCompletos.solicitudes && datosCompletos.solicitudes[0]) {
         datosCompletos.solicitudes[0].created_by_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].estado = 'Pendiente';
         datosCompletos.solicitudes[0].created_by_user_email = userEmail; // Agregar correo del usuario
+        
+        // 🏦 AÑADIR CAMPOS DE ASESOR Y BANQUERO
+        if (formData.nombre_asesor) {
+          datosCompletos.solicitudes[0].nombre_asesor = formData.nombre_asesor;
+        }
+        if (formData.correo_asesor) {
+          datosCompletos.solicitudes[0].correo_asesor = formData.correo_asesor;
+        }
+        if (formData.nombre_banco_usuario) {
+          datosCompletos.solicitudes[0].nombre_banco_usuario = formData.nombre_banco_usuario;
+        }
+        if (formData.correo_banco_usuario) {
+          datosCompletos.solicitudes[0].correo_banco_usuario = formData.correo_banco_usuario;
+        }
+        
+        console.log('🏦 === CAMPOS DE ASESOR Y BANQUERO AÑADIDOS ===');
+        console.log('📋 nombre_asesor:', datosCompletos.solicitudes[0].nombre_asesor);
+        console.log('📋 correo_asesor:', datosCompletos.solicitudes[0].correo_asesor);
+        console.log('📋 nombre_banco_usuario:', datosCompletos.solicitudes[0].nombre_banco_usuario);
+        console.log('📋 correo_banco_usuario:', datosCompletos.solicitudes[0].correo_banco_usuario);
+        console.log('='.repeat(60));
       }
 
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);

@@ -8,6 +8,7 @@ import { esquemaService } from '../../services/esquemaService';
 // Removed unused imports: useConfiguraciones, CampoDinamico
 import { documentService } from '../../services/documentService';
 import { referenciaService } from '../../services/referenciaService';
+import { userService } from '../../services/userService';
 
 interface CustomerFormDinamicoProps {
   onSubmit: () => Promise<void>;
@@ -20,6 +21,18 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   onCancel,
   isLoading
 }) => {
+  // 🔍 DEBUG: Verificar qué información tenemos en localStorage
+  React.useEffect(() => {
+    console.log('🔍 === DEBUG LOCALSTORAGE ===');
+    console.log('user:', localStorage.getItem('user'));
+    console.log('user_id:', localStorage.getItem('user_id'));
+    console.log('user_name:', localStorage.getItem('user_name'));
+    console.log('user_email:', localStorage.getItem('user_email'));
+    console.log('cedula:', localStorage.getItem('cedula'));
+    console.log('empresa_id:', localStorage.getItem('empresa_id'));
+    console.log('access_token:', localStorage.getItem('access_token') ? 'EXISTE' : 'NO EXISTE');
+    console.log('='.repeat(50));
+  }, []);
   // Estados para todos los campos (base + dinámicos) - INICIALMENTE VACÍO
   const [datosFormulario, setDatosFormulario] = useState<Record<string, any>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -331,12 +344,122 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     }
   }, [esquemasLoading, esquemasCompletos]);
 
+  // Obtener información del asesor al montar el componente
+  React.useEffect(() => {
+    const obtenerInformacionAsesor = async () => {
+      try {
+        console.log('🚀 Iniciando obtención de información del asesor...');
+        const currentUser = await userService.getCurrentUserInfo();
+        console.log('📋 Información del usuario obtenida:', currentUser);
+        
+        setDatosFormulario(prev => {
+          const newData = {
+            ...prev,
+            nombre_asesor: currentUser.nombre,
+            correo_asesor: currentUser.correo
+          };
+          console.log('✅ Datos del formulario actualizados con asesor:', {
+            nombre_asesor: newData.nombre_asesor,
+            correo_asesor: newData.correo_asesor
+          });
+          return newData;
+        });
+        
+        console.log('🧑‍💼 Información del asesor cargada exitosamente:', {
+          nombre: currentUser.nombre,
+          correo: currentUser.correo
+        });
+      } catch (error) {
+        console.error('❌ Error obteniendo información del asesor:', error);
+      }
+    };
+
+    obtenerInformacionAsesor();
+  }, []);
+
+  // Función para obtener información del asesor y banquero
+  const obtenerInformacionAsesorYBanquero = async (bancoNombre: string, ciudadSolicitud: string) => {
+    try {
+      console.log('🚀 Iniciando búsqueda de asesor y banquero...', {
+        banco: bancoNombre,
+        ciudad: ciudadSolicitud
+      });
+      
+      // Obtener información del usuario logueado (asesor)
+      const currentUser = await userService.getCurrentUserInfo();
+      console.log('👤 Asesor obtenido:', currentUser);
+      
+      // Buscar banquero por criterios
+      const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
+      console.log('🏦 Resultado búsqueda banquero:', banker);
+      
+      // Actualizar formulario con la información obtenida
+      setDatosFormulario(prev => {
+        const newData = {
+          ...prev,
+          nombre_asesor: currentUser.nombre,
+          correo_asesor: currentUser.correo,
+          nombre_banco_usuario: banker?.nombre || '',
+          correo_banco_usuario: banker?.correo || ''
+        };
+        
+        console.log('📝 Actualizando formulario con:', {
+          nombre_asesor: newData.nombre_asesor,
+          correo_asesor: newData.correo_asesor,
+          nombre_banco_usuario: newData.nombre_banco_usuario,
+          correo_banco_usuario: newData.correo_banco_usuario
+        });
+        
+        return newData;
+      });
+
+      console.log('✅ Información de asesor y banquero obtenida exitosamente:', {
+        asesor: {
+          nombre: currentUser.nombre,
+          correo: currentUser.correo
+        },
+        banquero: banker ? {
+          nombre: banker.nombre,
+          correo: banker.correo
+        } : 'No encontrado'
+      });
+
+    } catch (error) {
+      console.error('❌ Error obteniendo información de asesor y banquero:', error);
+      // En caso de error, solo obtener información del asesor
+      try {
+        const currentUser = await userService.getCurrentUserInfo();
+        setDatosFormulario(prev => ({
+          ...prev,
+          nombre_asesor: currentUser.nombre,
+          correo_asesor: currentUser.correo,
+          nombre_banco_usuario: '',
+          correo_banco_usuario: ''
+        }));
+        console.log('⚠️ Solo se pudo obtener información del asesor');
+      } catch (asesorError) {
+        console.error('❌ Error crítico obteniendo información del asesor:', asesorError);
+      }
+    }
+  };
+
   // Manejar cambios en todos los campos
   const handleFieldChange = (key: string, value: any) => {
     setDatosFormulario(prev => ({ ...prev, [key]: value }));
     // Limpiar error del campo
     if (errores[key]) {
       setErrores(prev => ({ ...prev, [key]: '' }));
+    }
+
+    // Si cambia el banco o la ciudad, obtener información del banquero
+    if (key === 'banco_nombre' || key === 'ciudad_solicitud') {
+      const bancoNombre = key === 'banco_nombre' ? value : datosFormulario.banco_nombre;
+      const ciudadSolicitud = key === 'ciudad_solicitud' ? value : datosFormulario.ciudad_solicitud;
+      
+      // Solo ejecutar si ambos campos tienen valor
+      if (bancoNombre && ciudadSolicitud) {
+        obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud);
+      }
     }
   };
 
@@ -442,7 +565,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           destino_credito: datosFormulario.destino_credito,
           cuota_inicial: datosFormulario.cuota_inicial,
           ciudad_solicitud: datosFormulario.ciudad_solicitud,
-          banco_nombre: datosFormulario.banco_nombre
+          banco_nombre: datosFormulario.banco_nombre,
+          nombre_asesor: datosFormulario.nombre_asesor,
+          correo_asesor: datosFormulario.correo_asesor,
+          nombre_banco_usuario: datosFormulario.nombre_banco_usuario,
+          correo_banco_usuario: datosFormulario.correo_banco_usuario
         }
       };
 
@@ -470,6 +597,16 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
       // No incluir referencias en el payload unificado. Se gestionan con endpoints dedicados.
       const datosParaEnviar = { ...datosFormulario };
+
+      // 🏦 LOG ESPECÍFICO PARA CAMPOS DE ASESOR Y BANQUERO
+      console.log('\n🏦 === CAMPOS DE ASESOR Y BANQUERO ===');
+      console.log('📋 Campos que se enviarán en el JSON/form a la API:');
+      console.log('  🧑‍💼 nombre_asesor:', datosParaEnviar.nombre_asesor || '(NO DEFINIDO)');
+      console.log('  📧 correo_asesor:', datosParaEnviar.correo_asesor || '(NO DEFINIDO)');
+      console.log('  🏦 nombre_banco_usuario:', datosParaEnviar.nombre_banco_usuario || '(NO DEFINIDO)');
+      console.log('  📧 correo_banco_usuario:', datosParaEnviar.correo_banco_usuario || '(NO DEFINIDO)');
+      console.log('🔍 Estos campos se incluyen automáticamente en el payload completo que se envía a la API');
+      console.log('='.repeat(80));
 
       const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
