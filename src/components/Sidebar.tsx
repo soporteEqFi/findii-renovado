@@ -1,5 +1,5 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, Settings, LogOut, UserCog, User, BarChart3 } from 'lucide-react';
+import { Users, Settings, LogOut, UserCog, User, BarChart3, GraduationCap } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationManager } from './NotificationManager';
 
@@ -19,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const menuItems = [
     { icon: Users, label: 'Inicio', path: '/' },
     { icon: BarChart3, label: 'Estadísticas', path: '/statistics' },
+    { icon: GraduationCap, label: 'Academia', path: 'https://drive.google.com/drive/folders/1MzDWIZUnS3L-3oQvleyCe9n3v7opmJA1?usp=drive_link', external: true },
     { icon: User, label: 'Perfil', path: '/profile' },
     // { icon: Settings, label: 'Test', path: '/test' }, // Ocultado
   ];
@@ -63,19 +64,33 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         {/* Elementos de menú comunes */}
         {menuItems.map((item) => (
           <li key={item.path}>
-            <Link
-              to={item.path}
-              onClick={onClose}
-              className={`flex items-center px-6 py-3 hover:bg-slate-700 md:px-3 lg:px-6 md:justify-center lg:justify-start ${
-                location.pathname === item.path
-                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
-                  : 'text-gray-300'
-              }`}
-              title={item.label}
-            >
-              <item.icon className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
-              <span className="md:hidden lg:block">{item.label}</span>
-            </Link>
+            {item.external ? (
+              <a
+                href={item.path}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onClose}
+                className="flex items-center px-6 py-3 hover:bg-slate-700 md:px-3 lg:px-6 md:justify-center lg:justify-start text-gray-300"
+                title={item.label}
+              >
+                <item.icon className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
+                <span className="md:hidden lg:block">{item.label}</span>
+              </a>
+            ) : (
+              <Link
+                to={item.path}
+                onClick={onClose}
+                className={`flex items-center px-6 py-3 hover:bg-slate-700 md:px-3 lg:px-6 md:justify-center lg:justify-start ${
+                  location.pathname === item.path
+                    ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
+                    : 'text-gray-300'
+                }`}
+                title={item.label}
+              >
+                <item.icon className="w-5 h-5 mr-3 md:mr-0 lg:mr-3" />
+                <span className="md:hidden lg:block">{item.label}</span>
+              </Link>
+            )}
           </li>
         ))}
 

@@ -20,7 +20,7 @@ interface TableColumnConfigProps {
 const AVAILABLE_FIELDS = {
   // Campos del solicitante
   'nombres': 'Nombres',
-  'primer_apellido': 'Primer Apellido', 
+  'primer_apellido': 'Primer Apellido',
   'segundo_apellido': 'Segundo Apellido',
   'numero_documento': 'Numero Documento',
   'tipo_identificacion': 'Tipo Identificacion',
@@ -36,14 +36,14 @@ const AVAILABLE_FIELDS = {
   'personas_a_cargo': 'Personas A Cargo',
   'profesion': 'Profesion',
   'telefono': 'Telefono',
-  
+
   // Campos de ubicación
   'ciudad_residencia': 'Ciudad Residencia',
   'departamento_residencia': 'Departamento Residencia',
   'direccion_residencia': 'Direccion Residencia',
   'tipo_vivienda': 'Tipo Vivienda',
   'paga_arriendo': 'Paga Arriendo',
-  
+
   // Campos de actividad económica
   'tipo_actividad_economica': 'Tipo Actividad Economica',
   'codigo_ciuu_empresa': 'Codigo CIUU Empresa',
@@ -56,7 +56,7 @@ const AVAILABLE_FIELDS = {
   'telefono_empresa': 'Telefono Empresa',
   'tipo_contrato': 'Tipo Contrato',
   'paga_impuestos_fuera': 'Paga Impuestos Fuera',
-  
+
   // Campos financieros
   'arriendos': 'Arriendos',
   'declara_renta': 'Declara Renta',
@@ -74,7 +74,7 @@ const AVAILABLE_FIELDS = {
   'total_egresos_mensuales': 'Total Egresos Mensuales',
   'total_ingresos_mensuales': 'Total Ingresos Mensuales',
   'total_pasivos': 'Total Pasivos',
-  
+
   // Campos de solicitud
   'banco_nombre': 'Banco',
   'ciudad_solicitud': 'Ciudad Solicitud',
@@ -82,13 +82,16 @@ const AVAILABLE_FIELDS = {
   'tipo_credito': 'Tipo Credito',
   'monto_solicitado': 'Monto Solicitado',
   'plazo_tiempo': 'Plazo Tiempo',
-  
+
   // Campos de referencias
   'celular_referencia': 'Celular Referencia',
   'ciudad_referencia': 'Ciudad Referencia',
   'nombre_referencia': 'Nombre Referencia',
   'relacion_referencia': 'Relacion Referencia',
-  'tipo_referencia': 'Tipo Referencia'
+  'tipo_referencia': 'Tipo Referencia',
+
+  // Campos del sistema
+  'created_by_user_name': 'Creado por'
 };
 
 export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId, onConfigurationChange }) => {
@@ -105,12 +108,12 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
   const cargarColumnas = async () => {
     try {
       const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.COLUMNAS_TABLA}?empresa_id=${empresaId}`, {
-        headers: { 
+        headers: {
           'X-Empresa-Id': empresaId.toString(),
           'Content-Type': 'application/json'
         }
       });
-      
+
       const result = await response.json();
       if (result.ok) {
         setColumnas(result.data.columnas || []);
@@ -355,8 +358,8 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                                 onClick={() => toggleColumnaActiva(index)}
                                 disabled={guardando}
                                 className={`p-1 rounded transition-colors ${
-                                  columna.activo 
-                                    ? 'text-green-600 hover:text-green-700' 
+                                  columna.activo
+                                    ? 'text-green-600 hover:text-green-700'
                                     : 'text-gray-400 hover:text-gray-500'
                                 }`}
                               >
@@ -376,7 +379,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                               </button>
                             </div>
                           </div>
-                          
+
                           {/* Desktop layout */}
                           <div className="hidden sm:flex sm:items-center sm:gap-4 sm:w-full">
                             <div
@@ -385,21 +388,21 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                             >
                               <GripVertical size={20} />
                             </div>
-                            
+
                             <div className="flex items-center">
                               <button
                                 onClick={() => toggleColumnaActiva(index)}
                                 disabled={guardando}
                                 className={`p-1 rounded transition-colors ${
-                                  columna.activo 
-                                    ? 'text-green-600 hover:text-green-700' 
+                                  columna.activo
+                                    ? 'text-green-600 hover:text-green-700'
                                     : 'text-gray-400 hover:text-gray-500'
                                 }`}
                               >
                                 {columna.activo ? <Eye size={18} /> : <EyeOff size={18} />}
                               </button>
                             </div>
-                            
+
                             <div className="flex-1">
                               <div className={`font-medium ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
                                 {columna.nombre}
@@ -410,11 +413,11 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                                 </div>
                               )}
                             </div>
-                            
+
                             <div className="text-sm text-gray-500">
                               Orden: {columna.orden}
                             </div>
-                            
+
                             <button
                               onClick={() => eliminarColumna(index)}
                               disabled={guardando}
@@ -423,7 +426,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                               <Trash2 size={16} />
                             </button>
                           </div>
-                          
+
                           {/* Column info for mobile */}
                           <div className="w-full sm:hidden">
                             <div className={`font-medium text-sm ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>

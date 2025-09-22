@@ -146,7 +146,7 @@ export const fetchColumnConfig = async (empresaId: number, apiData?: any[]): Pro
         .filter((col: any) => col.activo)
         .sort((a: any, b: any) => a.orden - b.orden)
         .map((col: any) => col.nombre);
-      
+
       console.log('✅ Columnas cargadas desde configuración:', columnasActivas);
       return columnasActivas;
     } else {
@@ -226,7 +226,8 @@ export const getColumnFieldMapping = (): Record<string, string> => {
     [normalize('Ingresos Mensuales')]: 'total_ingresos_mensuales',
     [normalize('Egresos Mensuales')]: 'total_egresos_mensuales',
     [normalize('Total Activos')]: 'total_activos',
-    [normalize('Total Pasivos')]: 'total_pasivos'
+    [normalize('Total Pasivos')]: 'total_pasivos',
+    [normalize('Creado por')]: 'created_by_user_name'
   };
 };
 
@@ -325,7 +326,8 @@ const getFieldEquivalences = (): Record<string, string> => {
     'Total Ingresos Mensuales': 'total_ingresos_mensuales',
     'Total Egresos Mensuales': 'total_egresos_mensuales',
     'Nacionalidad': 'nacionalidad',
-    'Personas A Cargo': 'personas_a_cargo'
+    'Personas A Cargo': 'personas_a_cargo',
+    'Creado por': 'created_by_user_name'
   };
 };
 
@@ -408,6 +410,9 @@ export const getColumnValue = (customer: any, columnName: string): any => {
 
     case normalize('Plazo Tiempo'):
       return customer.plazo_tiempo;
+
+    case normalize('Creado por'):
+      return customer.created_by_user_name;
 
     default:
       // Usar búsqueda recursiva con equivalencias
