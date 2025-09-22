@@ -1,5 +1,5 @@
 import { createColumnHelper } from '@tanstack/react-table';
-import { Mail, User as UserIcon, Calendar, MapPin, Building } from 'lucide-react';
+import { Mail, User as UserIcon, Calendar, MapPin, Building, Users } from 'lucide-react';
 import { User } from '../../types/user';
 
 const columnHelper = createColumnHelper<User>();
@@ -94,6 +94,20 @@ export const columns = [
               {banco}
             </div>
           )}
+        </div>
+      );
+    },
+  }),
+  columnHelper.accessor('reports_to_nombre', {
+    header: 'Supervisor',
+    cell: (info) => {
+      const reportsToNombre = info.getValue();
+      return (
+        <div className="flex items-center">
+          <Users className="w-4 h-4 mr-2 text-gray-500" />
+          <span className="text-sm text-gray-600">
+            {reportsToNombre || 'Sin supervisor'}
+          </span>
         </div>
       );
     },

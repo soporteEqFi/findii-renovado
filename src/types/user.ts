@@ -6,6 +6,7 @@ export interface User {
   contraseña?: string;
   rol: string;
   reports_to_id?: number | null;
+  reports_to_nombre?: string | null;
   created_at?: string;
   empresa?: string;
   empresa_id?: number;
