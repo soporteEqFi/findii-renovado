@@ -1,6 +1,6 @@
 // Configuración de la API
 // Cambia esta variable para cambiar entre desarrollo y producción
-const IS_PRODUCTION = true; // Cambia a false para desarrollo
+const IS_PRODUCTION = false; // Cambia a false para desarrollo
 
 export const API_CONFIG = {
   BASE_URL: IS_PRODUCTION ? 'https://api-findii.onrender.com' : 'http://localhost:5000',
@@ -140,6 +140,7 @@ export const PERMISSIONS = {
   [USER_ROLES.MANAGER]: ['create', 'read', 'update'],
   [USER_ROLES.USER]: ['read'],
   [USER_ROLES.BANCO]: ['view_customer', 'download_sales'],
+  [USER_ROLES.ASESOR]: ['create', 'read', 'update'],
 } as const;
 
 // API para ciudades de Colombia

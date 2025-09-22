@@ -13,13 +13,11 @@ import { userService } from '../../services/userService';
 interface CustomerFormDinamicoProps {
   onSubmit: () => Promise<void>;
   onCancel: () => void;
-  isLoading: boolean;
 }
 
 export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   onSubmit,
-  onCancel,
-  isLoading
+  onCancel
 }) => {
   // 🔍 DEBUG: Verificar qué información tenemos en localStorage
   React.useEffect(() => {
@@ -36,6 +34,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   // Estados para todos los campos (base + dinámicos) - INICIALMENTE VACÍO
   const [datosFormulario, setDatosFormulario] = useState<Record<string, any>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados para archivos y checkboxes
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -351,7 +350,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         console.log('🚀 Iniciando obtención de información del asesor...');
         const currentUser = await userService.getCurrentUserInfo();
         console.log('📋 Información del usuario obtenida:', currentUser);
-        
+
         setDatosFormulario(prev => {
           const newData = {
             ...prev,
@@ -364,7 +363,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           });
           return newData;
         });
-        
+
         console.log('🧑‍💼 Información del asesor cargada exitosamente:', {
           nombre: currentUser.nombre,
           correo: currentUser.correo
@@ -384,15 +383,15 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         banco: bancoNombre,
         ciudad: ciudadSolicitud
       });
-      
+
       // Obtener información del usuario logueado (asesor)
       const currentUser = await userService.getCurrentUserInfo();
       console.log('👤 Asesor obtenido:', currentUser);
-      
+
       // Buscar banquero por criterios
       const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
       console.log('🏦 Resultado búsqueda banquero:', banker);
-      
+
       // Actualizar formulario con la información obtenida
       setDatosFormulario(prev => {
         const newData = {
@@ -402,14 +401,14 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           nombre_banco_usuario: banker?.nombre || '',
           correo_banco_usuario: banker?.correo || ''
         };
-        
+
         console.log('📝 Actualizando formulario con:', {
           nombre_asesor: newData.nombre_asesor,
           correo_asesor: newData.correo_asesor,
           nombre_banco_usuario: newData.nombre_banco_usuario,
           correo_banco_usuario: newData.correo_banco_usuario
         });
-        
+
         return newData;
       });
 
@@ -455,7 +454,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     if (key === 'banco_nombre' || key === 'ciudad_solicitud') {
       const bancoNombre = key === 'banco_nombre' ? value : datosFormulario.banco_nombre;
       const ciudadSolicitud = key === 'ciudad_solicitud' ? value : datosFormulario.ciudad_solicitud;
-      
+
       // Solo ejecutar si ambos campos tienen valor
       if (bancoNombre && ciudadSolicitud) {
         obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud);
@@ -498,7 +497,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       return;
     }
 
-        try {
+    setIsSubmitting(true);
+    try {
       console.log('🚀 INICIANDO PROCESO DE CREACIÓN DE REGISTRO');
       console.log('='.repeat(80));
 
@@ -794,6 +794,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       console.error('  - Keys:', Object.keys(error || {}));
 
       toast.error(error instanceof Error ? error.message : 'Error al crear la solicitud');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -1172,15 +1174,15 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           </button>
           <button
             type="submit"
-            disabled={isLoading}
+            disabled={isSubmitting}
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? (
+            {isSubmitting ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Guardar
+            {isSubmitting ? 'Creando...' : 'Guardar'}
           </button>
         </div>
       </div>

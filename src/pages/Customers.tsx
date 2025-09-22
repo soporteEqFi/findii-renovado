@@ -207,7 +207,6 @@ const Customers = () => {
             // Solo quitar el reinicio, mantener el modal abierto
           }}
           onCancel={() => setIsNewCustomerModalOpen(false)}
-          isLoading={isLoading}
         />
       </Modal>
     </>
