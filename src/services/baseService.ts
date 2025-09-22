@@ -21,6 +21,18 @@ const getBaseHeaders = (includeAuth = true): HeadersInit => {
     }
   }
 
+  // Agregar headers de empresa y usuario
+  const empresaId = localStorage.getItem('empresa_id');
+  const userId = localStorage.getItem('user_id');
+
+  if (empresaId) {
+    headers['X-Empresa-Id'] = empresaId;
+  }
+
+  if (userId) {
+    headers['X-User-Id'] = userId;
+  }
+
   return headers;
 };
 

@@ -7,6 +7,70 @@ import {
 } from '../types/notification';
 
 class NotificationService {
+  // Obtener tipos de notificación configurados
+  async getNotificationTypes(empresaId: number): Promise<string[]> {
+    try {
+      const endpoint = `/notificaciones/tipos-configurados?empresa_id=${empresaId}`;
+      console.log('🔍 Consultando tipos de notificación en:', endpoint);
+
+      const response = await apiGet<{
+        data: {
+          tipos: string[];
+          estados: string[];
+          prioridades: string[];
+        }
+      }>(endpoint);
+      console.log('📋 Respuesta completa del endpoint tipos-configurados:', response);
+
+      const tipos = response.data?.tipos || [];
+      console.log('📋 Tipos extraídos:', tipos);
+
+      return tipos;
+    } catch (error) {
+      console.error('Error al obtener tipos de notificación:', error);
+      return [];
+    }
+  }
+
+  // Obtener configuración completa de notificaciones
+  async getNotificationConfig(empresaId: number): Promise<{
+    tipos: string[];
+    estados: string[];
+    prioridades: string[];
+    estadosActuales: string[];
+    accionesRequeridas: string[];
+  }> {
+    try {
+      const endpoint = `/notificaciones/tipos-configurados?empresa_id=${empresaId}`;
+      const response = await apiGet<{
+        data: {
+          tipos: string[];
+          estados: string[];
+          prioridades: string[];
+          estadosActuales: string[];
+          accionesRequeridas: string[];
+        }
+      }>(endpoint);
+
+      return {
+        tipos: response.data?.tipos || [],
+        estados: response.data?.estados || [],
+        prioridades: response.data?.prioridades || [],
+        estadosActuales: response.data?.estadosActuales || [],
+        accionesRequeridas: response.data?.accionesRequeridas || []
+      };
+    } catch (error) {
+      console.error('Error al obtener configuración de notificaciones:', error);
+      return {
+        tipos: [],
+        estados: [],
+        prioridades: [],
+        estadosActuales: [],
+        accionesRequeridas: []
+      };
+    }
+  }
+
     // Obtener todas las notificaciones
   async getNotifications(filters: NotificationFilters): Promise<Notification[]> {
     try {
@@ -22,7 +86,12 @@ class NotificationService {
       const response = await apiGet<NotificationResponse>(endpoint);
 
       // console.log('📋 Notificaciones recibidas:', response.data);
-      return response.data || [];
+      const notifications = response.data || [];
+
+      // Ordenar por fecha de creación (más reciente primero)
+      return notifications.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     } catch (error) {
       console.error('Error al obtener notificaciones:', error);
       return [];
@@ -35,7 +104,12 @@ class NotificationService {
             const endpoint = `/notificaciones/pendientes?empresa_id=${empresaId}`;
       const response = await apiGet<NotificationResponse>(endpoint);
 
-      return response.data || [];
+      const notifications = response.data || [];
+
+      // Ordenar por fecha de creación (más reciente primero)
+      return notifications.sort((a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
     } catch (error) {
       console.error('Error al obtener notificaciones pendientes:', error);
       return [];
@@ -107,6 +181,36 @@ class NotificationService {
   async createNotification(empresaId: number, data: any): Promise<boolean> {
     try {
       const endpoint = `/notificaciones?empresa_id=${empresaId}`;
+
+      // Obtener tipos disponibles para validación
+      const tiposDisponibles = await this.getNotificationTypes(empresaId);
+      console.log('📋 TIPOS DE NOTIFICACIÓN DISPONIBLES:', tiposDisponibles);
+
+      console.log('📤 EXACTAMENTE LO QUE SE ENVÍA PARA CREAR NOTIFICACIÓN:');
+      console.log('Endpoint:', endpoint);
+      console.log('Data:', JSON.stringify(data, null, 2));
+
+      // TEMPORAL: Si no hay tipos disponibles, usar los tipos conocidos
+      if (tiposDisponibles.length === 0) {
+        console.log('⚠️ No se obtuvieron tipos del endpoint, usando tipos conocidos');
+        const tiposConocidos = ['retomar_operacion', 'revisar_documentos'];
+        console.log('📋 Usando tipos conocidos:', tiposConocidos);
+
+        // Validar con tipos conocidos
+        if (data.tipo && !tiposConocidos.includes(data.tipo)) {
+          console.error('❌ TIPO DE NOTIFICACIÓN INVÁLIDO:', data.tipo);
+          console.log('✅ Tipos válidos:', tiposConocidos);
+          throw new Error(`Tipo de notificación inválido: ${data.tipo}. Tipos disponibles: ${tiposConocidos.join(', ')}`);
+        }
+      } else {
+        // Validar con tipos obtenidos del endpoint
+        if (data.tipo && !tiposDisponibles.includes(data.tipo)) {
+          console.error('❌ TIPO DE NOTIFICACIÓN INVÁLIDO:', data.tipo);
+          console.log('✅ Tipos válidos:', tiposDisponibles);
+          throw new Error(`Tipo de notificación inválido: ${data.tipo}. Tipos disponibles: ${tiposDisponibles.join(', ')}`);
+        }
+      }
+
       await apiPost(endpoint, data);
       return true;
     } catch (error) {

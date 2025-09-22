@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../hooks/useNotifications';
 import { Notification } from '../types/notification';
+import { notificationService } from '../services/notificationService';
 import Card from './ui/Card';
 import Button from './ui/Button';
 import Modal from './ui/Modal';
@@ -17,7 +18,8 @@ const NotificationForm: React.FC<{
   onClose: () => void;
   onSave: (data: any) => Promise<boolean>;
   solicitudId: number;
-}> = ({ notification, isOpen, onClose, onSave, solicitudId }) => {
+  empresaId: number;
+}> = ({ notification, isOpen, onClose, onSave, solicitudId, empresaId }) => {
   const [formData, setFormData] = useState({
     titulo: '',
     mensaje: '',
@@ -35,6 +37,19 @@ const NotificationForm: React.FC<{
 
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [notificationConfig, setNotificationConfig] = useState<{
+    tipos: string[];
+    estados: string[];
+    prioridades: string[];
+    estadosActuales: string[];
+    accionesRequeridas: string[];
+  }>({
+    tipos: [],
+    estados: [],
+    prioridades: [],
+    estadosActuales: [],
+    accionesRequeridas: []
+  });
 
     useEffect(() => {
     if (notification) {
@@ -75,6 +90,22 @@ const NotificationForm: React.FC<{
     }
   }, [notification]);
 
+  // Cargar configuración de notificaciones cuando se abre el modal
+  useEffect(() => {
+    if (isOpen) {
+      const loadConfig = async () => {
+        try {
+          const config = await notificationService.getNotificationConfig(empresaId);
+          setNotificationConfig(config);
+          console.log('📋 Configuración de notificaciones cargada:', config);
+        } catch (error) {
+          console.error('Error al cargar configuración de notificaciones:', error);
+        }
+      };
+      loadConfig();
+    }
+  }, [isOpen, empresaId]);
+
     const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -96,33 +127,59 @@ const NotificationForm: React.FC<{
     }
   };
 
-  // Tipos de notificación hardcodeados
-  const notificationTypes = [
-    { value: 'retomar_operacion', label: 'Retomar Operación' },
-    { value: 'revisar_documentos', label: 'Revisar Documentos' },
-    { value: 'aprobar_solicitud', label: 'Aprobar Solicitud' },
-    { value: 'contactar_cliente', label: 'Contactar Cliente' },
-    { value: 'seguimiento_credito', label: 'Seguimiento de Crédito' },
-    { value: 'documentacion_pendiente', label: 'Documentación Pendiente' },
-    { value: 'analisis_credito', label: 'Análisis de Crédito' },
-    { value: 'desembolso', label: 'Desembolso' }
-  ];
+  // Mapeo de tipos dinámicos a etiquetas legibles
+  const getTypeLabel = (type: string) => {
+    const typeLabels: Record<string, string> = {
+      'retomar_operacion': 'Retomar Operación',
+      'revisar_documentos': 'Revisar Documentos'
+    };
+    return typeLabels[type] || type;
+  };
 
-  // Estados actuales hardcodeados según validación del backend
-  const currentStates = [
-    { value: 'pendiente_revision', label: 'Pendiente de Revisión' },
-    { value: 'en_proceso', label: 'En Proceso' },
-    { value: 'aprobada', label: 'Aprobada' },
-    { value: 'rechazada', label: 'Rechazada' }
-  ];
+  // Mapeo de estados dinámicos a etiquetas legibles
+  const getStateLabel = (state: string) => {
+    const stateLabels: Record<string, string> = {
+      'pendiente': 'Pendiente',
+      'leida': 'Leída',
+      'vencida': 'Vencida',
+      'completada': 'Completada'
+    };
+    return stateLabels[state] || state;
+  };
 
-  // Acciones requeridas hardcodeadas según validación del backend
-  const requiredActions = [
-    { value: 'revisar_documentos', label: 'Revisar Documentos' },
-    { value: 'aprobar_solicitud', label: 'Aprobar Solicitud' },
-    { value: 'solicitar_info', label: 'Solicitar Información' },
-    { value: 'contactar_cliente', label: 'Contactar Cliente' }
-  ];
+  // Mapeo de prioridades dinámicas a etiquetas legibles
+  const getPriorityLabel = (priority: string) => {
+    const priorityLabels: Record<string, string> = {
+      'baja': 'Baja',
+      'normal': 'Normal',
+      'alta': 'Alta',
+      'urgente': 'Urgente'
+    };
+    return priorityLabels[priority] || priority;
+  };
+
+  // Mapeo de estados actuales dinámicos a etiquetas legibles
+  const getEstadoActualLabel = (estado: string) => {
+    const estadoLabels: Record<string, string> = {
+      'en_proceso': 'En Proceso',
+      'pendiente_revision': 'Pendiente de Revisión',
+      'completado': 'Completado',
+      'cancelado': 'Cancelado'
+    };
+    return estadoLabels[estado] || estado;
+  };
+
+  // Mapeo de acciones requeridas dinámicas a etiquetas legibles
+  const getAccionRequeridaLabel = (accion: string) => {
+    const accionLabels: Record<string, string> = {
+      'contactar_cliente': 'Contactar Cliente',
+      'revisar_documentos': 'Revisar Documentos',
+      'aprobar_solicitud': 'Aprobar Solicitud',
+      'rechazar_solicitud': 'Rechazar Solicitud',
+      'solicitar_informacion': 'Solicitar Información'
+    };
+    return accionLabels[accion] || accion;
+  };
 
   // Función para auto-completar la acción requerida basada en el tipo
   const handleTipoChange = (tipo: string) => {
@@ -130,17 +187,13 @@ const NotificationForm: React.FC<{
 
     // Auto-completar la acción requerida basada en el tipo
     const actionMap: Record<string, string> = {
-      'retomar_operacion': 'revisar_documentos',
-      'revisar_documentos': 'revisar_documentos',
-      'aprobar_solicitud': 'aprobar_solicitud',
-      'contactar_cliente': 'contactar_cliente',
-      'seguimiento_credito': 'solicitar_info',
-      'documentacion_pendiente': 'revisar_documentos',
-      'analisis_credito': 'revisar_documentos',
-      'desembolso': 'aprobar_solicitud'
+      'retomar_operacion': 'contactar_cliente',
+      'revisar_documentos': 'revisar_documentos'
     };
 
-    setMetadata({ ...metadata, accion_requerida: actionMap[tipo] || 'revisar_documentos' });
+    // Usar la primera acción disponible como fallback si no hay mapeo específico
+    const fallbackAction = notificationConfig.accionesRequeridas[0] || 'contactar_cliente';
+    setMetadata({ ...metadata, accion_requerida: actionMap[tipo] || fallbackAction });
   };
 
   return (
@@ -183,9 +236,9 @@ const NotificationForm: React.FC<{
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              {notificationTypes.map(type => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
+              {notificationConfig.tipos.map(type => (
+                <option key={type} value={type}>
+                  {getTypeLabel(type)}
                 </option>
               ))}
             </select>
@@ -200,10 +253,11 @@ const NotificationForm: React.FC<{
                 onChange={(e) => setFormData({ ...formData, prioridad: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="baja">Baja</option>
-                <option value="normal">Normal</option>
-                <option value="alta">Alta</option>
-                <option value="urgente">Urgente</option>
+                {notificationConfig.prioridades.map(priority => (
+                  <option key={priority} value={priority}>
+                    {getPriorityLabel(priority)}
+                  </option>
+                ))}
               </select>
           </div>
         </div>
@@ -218,9 +272,11 @@ const NotificationForm: React.FC<{
               onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="pendiente">Pendiente</option>
-              <option value="leida">Leída</option>
-              <option value="completada">Completada</option>
+              {notificationConfig.estados.map(state => (
+                <option key={state} value={state}>
+                  {getStateLabel(state)}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -233,9 +289,9 @@ const NotificationForm: React.FC<{
               onChange={(e) => setMetadata({ ...metadata, estado_actual: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              {currentStates.map(state => (
-                <option key={state.value} value={state.value}>
-                  {state.label}
+              {notificationConfig.estadosActuales.map(estado => (
+                <option key={estado} value={estado}>
+                  {getEstadoActualLabel(estado)}
                 </option>
               ))}
             </select>
@@ -278,9 +334,9 @@ const NotificationForm: React.FC<{
              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
              required
            >
-             {requiredActions.map(action => (
-               <option key={action.value} value={action.value}>
-                 {action.label}
+             {notificationConfig.accionesRequeridas.map(accion => (
+               <option key={accion} value={accion}>
+                 {getAccionRequeridaLabel(accion)}
                </option>
              ))}
            </select>
@@ -558,6 +614,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
         onClose={() => setShowForm(false)}
         onSave={handleSave}
         solicitudId={solicitudId}
+        empresaId={empresaId}
       />
 
       {/* Modal para crear notificación */}
@@ -567,6 +624,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
         onClose={() => setShowCreateForm(false)}
         onSave={handleSave}
         solicitudId={solicitudId}
+        empresaId={empresaId}
       />
     </>
   );
