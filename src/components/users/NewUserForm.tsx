@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { CreateUserData } from '../../types/user';
+import { CreateUserData, User } from '../../types/user';
+import { userService } from '../../services/userService';
 
 interface NewUserFormProps {
   onSubmit: (userData: CreateUserData) => Promise<void>;
@@ -19,12 +20,33 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
     nombre: '',
     rol: '',
     cedula: '',
+    reports_to_id: null,
     info_extra: {
       ciudad: '',
       banco_nombre: '',
       linea_credito: ''
     }
   });
+
+  const [supervisors, setSupervisors] = useState<User[]>([]);
+  const [loadingSupervisors, setLoadingSupervisors] = useState(false);
+
+  // Cargar supervisores al montar el componente
+  useEffect(() => {
+    const loadSupervisors = async () => {
+      setLoadingSupervisors(true);
+      try {
+        const supervisorsData = await userService.getSupervisors();
+        setSupervisors(supervisorsData);
+      } catch (error) {
+        console.error('Error cargando supervisores:', error);
+      } finally {
+        setLoadingSupervisors(false);
+      }
+    };
+
+    loadSupervisors();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +63,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
     await onSubmit(dataToSubmit);
   };
 
-  const handleInputChange = (field: keyof CreateUserData, value: string) => {
+  const handleInputChange = (field: keyof CreateUserData, value: string | number | null) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -118,6 +140,29 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
             <option value="asesor">Asesor</option>
           </select>
         </div>
+
+        {/* Campo de Supervisor - Solo visible para asesores */}
+        {formData.rol === 'asesor' && (
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700">Supervisor (Opcional)</label>
+            <select
+              className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              value={formData.reports_to_id || ''}
+              onChange={(e) => handleInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
+              disabled={loadingSupervisors}
+            >
+              <option value="">Sin supervisor</option>
+              {supervisors.map((supervisor) => (
+                <option key={supervisor.id} value={supervisor.id}>
+                  {supervisor.nombre}
+                </option>
+              ))}
+            </select>
+            {loadingSupervisors && (
+              <p className="mt-1 text-sm text-gray-500">Cargando supervisores...</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Información adicional */}

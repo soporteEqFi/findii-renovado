@@ -1,4 +1,4 @@
-import { USER_ROLES, PERMISSIONS } from '../config/constants';
+import { USER_ROLES } from '../config/constants';
 
 // Definimos las acciones posibles
 export type Permission =
@@ -16,6 +16,7 @@ const permissionMapping: Record<string, Permission[]> = {
   [USER_ROLES.USER]: ['view_customer'],
   [USER_ROLES.BANCO]: ['view_customer', 'change_status', 'edit_customer'],
   [USER_ROLES.SUPERVISOR]: ['delete_customer', 'edit_customer', 'change_status', 'create_customer', 'view_customer'],
+  [USER_ROLES.ASESOR]: ['create_customer', 'view_customer', 'edit_customer'],
 };
 
 // Hook personalizado para manejar permisos

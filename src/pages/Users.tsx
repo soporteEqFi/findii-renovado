@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, Plus, UserPlus } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2, UserPlus } from 'lucide-react';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useUsers } from '../hooks/useUsers';
@@ -64,6 +64,7 @@ const Users = () => {
       if (editedUser.cedula !== selectedUser?.cedula) updateData.cedula = editedUser.cedula;
       if (editedUser.correo !== selectedUser?.correo) updateData.correo = editedUser.correo;
       if (editedUser.rol !== selectedUser?.rol) updateData.rol = editedUser.rol;
+      if (editedUser.reports_to_id !== selectedUser?.reports_to_id) updateData.reports_to_id = editedUser.reports_to_id;
       if (editedUser.info_extra !== selectedUser?.info_extra) updateData.info_extra = editedUser.info_extra;
 
       const updatedUser = await updateUser(editedUser.id, updateData, empresaId);
@@ -92,7 +93,7 @@ const Users = () => {
     }
   };
 
-  const handleInputChange = (field: keyof User, value: string) => {
+  const handleInputChange = (field: keyof User, value: string | number | null) => {
     if (!editedUser) return;
     setEditedUser({ ...editedUser, [field]: value });
   };

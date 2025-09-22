@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User } from '../../types/user';
 import { Loader2, MapPin, Building, CreditCard } from 'lucide-react';
+import { userService } from '../../services/userService';
 
 interface UserDetailsProps {
   user: User;
@@ -13,7 +14,7 @@ interface UserDetailsProps {
   onEdit: () => void;
   onSave: () => void;
   onDelete: () => void;
-  onInputChange: (field: keyof User, value: string) => void;
+  onInputChange: (field: keyof User, value: string | number | null) => void;
 }
 
 export const UserDetails: React.FC<UserDetailsProps> = ({
@@ -29,6 +30,26 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   onDelete,
   onInputChange,
 }) => {
+  const [supervisors, setSupervisors] = useState<User[]>([]);
+  const [loadingSupervisors, setLoadingSupervisors] = useState(false);
+
+  // Cargar supervisores al montar el componente
+  useEffect(() => {
+    const loadSupervisors = async () => {
+      setLoadingSupervisors(true);
+      try {
+        const supervisorsData = await userService.getSupervisors();
+        setSupervisors(supervisorsData);
+      } catch (error) {
+        console.error('Error cargando supervisores:', error);
+      } finally {
+        setLoadingSupervisors(false);
+      }
+    };
+
+    loadSupervisors();
+  }, []);
+
   if (!user) return <div>No se seleccionó ningún usuario</div>;
 
   // Función para manejar cambios en info_extra
@@ -142,6 +163,38 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
             <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.rol}</p>
           )}
         </div>
+
+        {/* Campo de Supervisor - Solo visible para asesores */}
+        {(editedUser.rol === 'asesor' || user.rol === 'asesor') && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Supervisor</label>
+            {isEditing ? (
+              <select
+                className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                value={editedUser.reports_to_id || ''}
+                onChange={(e) => onInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
+                disabled={loadingSupervisors}
+              >
+                <option value="">Sin supervisor</option>
+                {supervisors.map((supervisor) => (
+                  <option key={supervisor.id} value={supervisor.id}>
+                    {supervisor.nombre}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">
+                {user.reports_to_id ?
+                  supervisors.find(s => s.id === user.reports_to_id)?.nombre || `ID: ${user.reports_to_id}`
+                  : 'Sin supervisor'
+                }
+              </p>
+            )}
+            {loadingSupervisors && (
+              <p className="mt-1 text-sm text-gray-500">Cargando supervisores...</p>
+            )}
+          </div>
+        )}
 
         <div>
           <label className="block text-sm font-medium text-gray-700">ID</label>

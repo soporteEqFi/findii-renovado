@@ -35,6 +35,41 @@ export const userService = {
     }
   },
 
+  // Obtener solo los supervisores de una empresa
+  async getSupervisors(empresaId?: number): Promise<User[]> {
+    try {
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const response = await fetch(
+        buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error al obtener supervisores: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      const users = result.data || result || [];
+
+      // Filtrar solo usuarios con rol "supervisor"
+      const supervisors = users.filter((user: User) => user.rol === 'supervisor');
+
+      return supervisors.map((user: User) => ({
+        ...user,
+        info_extra: this.processInfoExtra(user.info_extra)
+      }));
+    } catch (error) {
+      console.error('Error obteniendo supervisores:', error);
+      throw error;
+    }
+  },
+
   // Obtener un usuario específico por ID
   async getUserById(userId: number, empresaId?: number): Promise<User> {
     try {
@@ -74,6 +109,7 @@ export const userService = {
     correo: string;
     contraseña: string;
     rol: string;
+    reports_to_id?: number | null;
     info_extra?: UserInfoExtra;
   }, empresaId?: number): Promise<User> {
     try {
@@ -123,6 +159,7 @@ export const userService = {
       correo?: string;
       contraseña?: string;
       rol?: string;
+      reports_to_id?: number | null;
       info_extra?: UserInfoExtra;
     },
     empresaId?: number
@@ -234,7 +271,7 @@ export const userService = {
       if (userData) {
         const userObj = JSON.parse(userData);
         console.log('📋 Información del usuario desde localStorage:', userObj);
-        
+
         return {
           id: userObj.id || parseInt(localStorage.getItem('user_id') || '0'),
           nombre: userObj.nombre || userObj.nombres || 'Usuario',
@@ -263,7 +300,7 @@ export const userService = {
       return result.data || result;
     } catch (error) {
       console.error('Error obteniendo información del usuario logueado:', error);
-      
+
       // Fallback: usar información básica disponible en localStorage
       return {
         id: parseInt(localStorage.getItem('user_id') || '0'),
@@ -283,21 +320,21 @@ export const userService = {
   } | null> {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
-      
+
       console.log('🔍 Buscando banquero con criterios:', {
         banco: bancoNombre,
         ciudad: ciudadSolicitud,
         empresaId: empresaIdToUse
       });
-      
+
       // Obtener todos los usuarios de la empresa
       const users = await this.getUsers(empresaIdToUse);
       console.log('👥 Total usuarios obtenidos:', users.length);
-      
+
       // Filtrar usuarios con rol 'banco'
       const bankUsers = users.filter(user => user.rol === 'banco');
       console.log('🏦 Usuarios con rol banco:', bankUsers.length);
-      
+
       // Log de usuarios banco para debug
       bankUsers.forEach((user, index) => {
         const infoExtra = this.processInfoExtra(user.info_extra);
@@ -307,7 +344,7 @@ export const userService = {
           info_extra: infoExtra
         });
       });
-      
+
       // Buscar usuarios con rol 'banco' que tengan información adicional que coincida
       const banker = bankUsers.find(user => {
         // Verificar información adicional
@@ -316,16 +353,16 @@ export const userService = {
           console.log(`❌ Usuario ${user.nombre} no tiene información adicional`);
           return false;
         }
-        
+
         // Buscar coincidencias en la información adicional
         // La información adicional debe contener el banco y la ciudad
         const infoString = JSON.stringify(infoExtra).toLowerCase();
         const bancoLower = bancoNombre.toLowerCase();
         const ciudadLower = ciudadSolicitud.toLowerCase();
-        
+
         const hasBanco = infoString.includes(bancoLower);
         const hasCiudad = infoString.includes(ciudadLower);
-        
+
         console.log(`🔍 Verificando ${user.nombre}:`, {
           infoString,
           bancoLower,
@@ -334,10 +371,10 @@ export const userService = {
           hasCiudad,
           match: hasBanco && hasCiudad
         });
-        
+
         return hasBanco && hasCiudad;
       });
-      
+
       if (banker) {
         console.log('✅ Banquero encontrado:', {
           nombre: banker.nombre,
@@ -348,7 +385,7 @@ export const userService = {
           correo: banker.correo
         };
       }
-      
+
       console.log('❌ No se encontró banquero que coincida con los criterios');
       return null;
     } catch (error) {

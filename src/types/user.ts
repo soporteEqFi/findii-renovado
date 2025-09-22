@@ -5,6 +5,7 @@ export interface User {
   correo: string;
   contraseña?: string;
   rol: string;
+  reports_to_id?: number | null;
   created_at?: string;
   empresa?: string;
   empresa_id?: number;
@@ -28,6 +29,7 @@ export interface CreateUserData {
   correo: string;
   contraseña: string;
   rol: string;
+  reports_to_id?: number | null;
   info_extra?: UserInfoExtra;
 }
 
@@ -37,5 +39,6 @@ export interface UpdateUserData {
   correo?: string;
   contraseña?: string;
   rol?: string;
+  reports_to_id?: number | null;
   info_extra?: UserInfoExtra;
 }
