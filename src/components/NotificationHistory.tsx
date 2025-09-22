@@ -111,9 +111,13 @@ const NotificationForm: React.FC<{
     setLoading(true);
 
     try {
+      // Obtener el ID del usuario actual del localStorage
+      const currentUserId = localStorage.getItem('user_id');
+
       const success = await onSave({
         ...formData,
         solicitud_id: solicitudId,
+        usuario_id: currentUserId ? parseInt(currentUserId) : null,
         metadata: metadata
       });
 
@@ -369,6 +373,7 @@ const NotificationForm: React.FC<{
                   fecha_recordatorio: formData.fecha_recordatorio,
                   fecha_vencimiento: formData.fecha_vencimiento,
                   solicitud_id: solicitudId,
+                  usuario_id: localStorage.getItem('user_id') ? parseInt(localStorage.getItem('user_id')!) : null,
                   metadata: metadata
                 }, null, 2)}
               </pre>
