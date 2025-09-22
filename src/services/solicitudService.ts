@@ -34,6 +34,46 @@ export interface SolicitudUpdateData {
 }
 
 export const solicitudService = {
+  // Obtener información básica de una solicitud (incluyendo solicitante_id)
+  async obtenerSolicitud(
+    solicitudId: number,
+    empresaId: number = 1
+  ): Promise<{ id: number; solicitante_id: number; estado: string } | null> {
+    try {
+      const url = buildApiUrl(`/solicitudes/${solicitudId}?empresa_id=${empresaId}`);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Empresa-Id': empresaId.toString(),
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error desconocido' }));
+        console.error('❌ Error del servidor:', errorData);
+        throw new Error(errorData.message || errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.ok && result.data) {
+        return {
+          id: result.data.id,
+          solicitante_id: result.data.solicitante_id,
+          estado: result.data.estado
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Error al obtener solicitud:', error);
+      return null;
+    }
+  },
+
   // Obtener historial de observaciones de una solicitud
   async obtenerObservaciones(
     solicitudId: number,

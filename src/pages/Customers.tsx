@@ -5,15 +5,16 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCustomers } from '../hooks/useCustomers';
 import { CustomerFormDinamico } from '../components/customers/CustomerFormDinamico';
 import { CustomerTable } from '../components/customers/CustomerTable';
-import { DynamicEditModal } from '../components/customers/DynamicEditModal';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
 import { buildApiUrl } from '../config/constants';
 import { useTableConfig } from '../contexts/TableConfigContext';
+import { useEditModal } from '../contexts/EditModalContext';
 
 const Customers = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshTrigger } = useTableConfig();
+  const { openModal } = useEditModal();
   const {
     customers,
     isLoading,
@@ -31,8 +32,6 @@ const Customers = () => {
   // Eliminados estados del modal legacy CustomerDetails
   const [isNewCustomerModalOpen, setIsNewCustomerModalOpen] = useState(false);
   const tableKey = 0;
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [selectedSolicitanteId, setSelectedSolicitanteId] = useState<number | null>(null);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -46,8 +45,9 @@ const Customers = () => {
   // Manejadores de eventos
   const handleRowClick = (customer: Customer) => {
     const idNum = customer.id != null ? Number(customer.id) : null;
-    setSelectedSolicitanteId(Number.isFinite(idNum as number) ? (idNum as number) : null);
-    setIsEditOpen(true);
+    if (Number.isFinite(idNum as number)) {
+      openModal(idNum as number, 'Editar Registro');
+    }
   };
 
   // Eliminados handlers específicos del modal legacy
@@ -183,17 +183,7 @@ const Customers = () => {
       </div>
 
       {/* Modal legacy CustomerDetails eliminado */}
-
-      {/* Modal de Edición Dinámica */}
-      <DynamicEditModal
-        open={isEditOpen}
-        solicitanteId={selectedSolicitanteId}
-        onClose={() => setIsEditOpen(false)}
-        onSaved={async () => {
-          await loadCustomers();
-          setIsEditOpen(false);
-        }}
-      />
+      {/* Modal de Edición Dinámica ahora se maneja globalmente */}
 
       {/* Modal de Nuevo Cliente */}
       <Modal
