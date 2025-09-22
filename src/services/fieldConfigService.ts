@@ -29,14 +29,12 @@ export const fieldConfigService = {
     const empresaId = getEmpresaId();
     // ✅ CORRECTO SEGÚN GUÍA: GET /json/schema/{entity}/{json_field} para VER campos configurados
     const url = buildApiUrl(`/json/schema/${entity}/${jsonColumn}`);
-    console.log(`🔍 Obteniendo definiciones con GET: ${url}?empresa_id=${empresaId}`);
 
     const res = await fetch(`${url}?empresa_id=${encodeURIComponent(empresaId)}`, {
       method: 'GET', // ✅ Explícitamente GET
       headers: authHeaders(empresaId)
     });
 
-    console.log(`📡 Respuesta definiciones: ${res.status} ${res.statusText}`);
 
     if (!res.ok) throw new Error(`Error cargando definiciones: ${res.status} ${res.statusText}`);
     const json = await res.json();
@@ -52,12 +50,27 @@ export const fieldConfigService = {
     const fullUrl = `${url}?empresa_id=${encodeURIComponent(empresaId)}`;
 
     // ✅ FORMATO SEGÚN GUÍA: { "definitions": [...] }
+    // Eliminar campos que la API no reconoce (como isActive, arrayOptions)
     const bodyItems = items.map(({ key, type, required, description, default_value, order_index, list_values }) => ({
-      key, type, required, description, default_value, order_index, list_values
+      key,
+      type,
+      required: required ?? false,
+      description,
+      default_value,
+      order_index,
+      list_values
     }));
 
-    console.log(`💾 Creando/actualizando definiciones con POST: ${fullUrl}`);
-    console.log(`📋 Definiciones a enviar:`, bodyItems);
+
+    const requestBody = {
+      definitions: bodyItems // ✅ Formato según guía
+    };
+
+    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API:');
+    console.log('URL:', fullUrl);
+    console.log('MÉTODO:', 'POST');
+    console.log('HEADERS:', authHeaders(empresaId));
+    console.log('BODY (JSON):', JSON.stringify(requestBody, null, 2));
 
     // Intento con la URL correcta según guía
     const res = await fetch(fullUrl, {
@@ -68,14 +81,12 @@ export const fieldConfigService = {
       })
     });
 
-    console.log(`📡 Respuesta definiciones: ${res.status} ${res.statusText}`);
 
     if (!res.ok) {
       const error = await res.text().catch(() => 'Error desconocido');
       throw new Error(`Error guardando definiciones: ${res.status} - ${error}`);
     }
 
-    console.log(`✅ Definiciones guardadas exitosamente`);
     },
 
 
@@ -109,9 +120,11 @@ export const fieldConfigService = {
       }
     });
 
-    console.log(`🔧 Actualizando campo individual con PATCH: ${fullUrl}`);
-    console.log(`📋 Actualizaciones originales:`, updates);
-    console.log(`📋 Actualizaciones limpias:`, cleanedUpdates);
+    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API:');
+    console.log('URL:', fullUrl);
+    console.log('MÉTODO:', 'PATCH');
+    console.log('HEADERS:', authHeaders(empresaId));
+    console.log('BODY (JSON):', JSON.stringify(cleanedUpdates, null, 2));
 
     const res = await fetch(fullUrl, {
       method: 'PATCH',
@@ -119,15 +132,12 @@ export const fieldConfigService = {
       body: JSON.stringify(cleanedUpdates)
     });
 
-    console.log(`📡 Respuesta actualización: ${res.status} ${res.statusText}`);
-
     if (!res.ok) {
       const error = await res.text().catch(() => 'Error desconocido');
       throw new Error(`Error actualizando campo: ${res.status} - ${error}`);
     }
 
     const result = await res.json();
-    console.log(`✅ Campo actualizado exitosamente`);
     return result.data || result;
   },
 

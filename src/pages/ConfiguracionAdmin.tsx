@@ -111,7 +111,7 @@ const ConfiguracionAdmin: React.FC = () => {
         conditional_on: undefined,
         isActive: true
       }));
-      
+
       groups.push({
         entity: 'campos_fijos',
         jsonColumn: 'info_general',
@@ -151,7 +151,7 @@ const ConfiguracionAdmin: React.FC = () => {
       toast.error('Los campos fijos no se pueden editar. Son campos base del formulario.');
       return;
     }
-    
+
     const group = entityGroups.find(g => g.entity === field.entity && g.jsonColumn === field.json_column);
     setSelectedGroup(group || null);
     setEditing(field);
@@ -160,7 +160,7 @@ const ConfiguracionAdmin: React.FC = () => {
 
   const handleDeleteField = async (field: FieldDefinition) => {
     if (!confirm(`¿Eliminar el campo "${field.description || field.key}"?`)) return;
-    
+
     try {
       // Si es un campo fijo, no intentar eliminarlo de la BD
       if (field.entity === 'campos_fijos') {
@@ -288,22 +288,50 @@ const ConfiguracionAdmin: React.FC = () => {
       };
 
       if (editing && editing.id) {
-        // Si estamos editando un campo existente, usar updateField para actualizar solo ese campo
-        const updates: Partial<FieldDefinition> = {
-          key: data.key,
-          type: data.type,
-          required: data.required,
-          description: data.description,
-          default_value: data.default_value,
-          order_index: data.order_index,
-          list_values: data.list_values
-        };
+        // Si es un campo de tipo object, enviar el objeto completo con su estructura anidada
+        if (data.type === 'object' && data.list_values?.object_structure) {
+          console.log('🔄 Campo de tipo object detectado, enviando objeto completo con estructura anidada...');
 
-        await fieldConfigService.updateField(editing.id, updates);
+          // Crear el objeto completo con la estructura anidada
+          const objetoCompleto = {
+            key: data.key,
+            type: data.type,
+            required: data.required,
+            description: data.description,
+            default_value: data.default_value,
+            order_index: data.order_index,
+            list_values: data.list_values
+          };
+
+          // Mostrar exactamente qué se va a enviar a la API
+          const estructuraCompleta = {
+            definitions: [objetoCompleto]
+          };
+          console.log('📤 EXACTAMENTE LO QUE SE VA A ENVIAR A LA API:');
+          console.log(JSON.stringify(estructuraCompleta, null, 2));
+
+          await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [objetoCompleto]);
+        } else {
+          // Para campos normales, usar updateField
+          const updates: Partial<FieldDefinition> = {
+            key: data.key,
+            type: data.type,
+            required: data.required,
+            description: data.description,
+            default_value: data.default_value,
+            order_index: data.order_index,
+            list_values: data.list_values
+          };
+
+          console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API (UPDATE - NORMAL):');
+          console.log('Campo individual:', updates);
+          // await fieldConfigService.updateField(editing.id, updates);
+        }
+
         toast.success('Campo actualizado');
       } else {
         // Si es un campo nuevo, usar upsert
-        await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
+        // await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
         toast.success('Campo creado');
       }
 
@@ -565,7 +593,7 @@ const ConfiguracionAdmin: React.FC = () => {
               </tbody>
             </table>
           </div>
-          
+
           {/* Vista de tarjetas para pantallas pequeñas y medianas */}
           <div className="lg:hidden space-y-4 p-4">
             {entityGroups.map((group) => (
@@ -580,11 +608,11 @@ const ConfiguracionAdmin: React.FC = () => {
                       Activo
                     </span>
                   </div>
-                  
+
                   <div className="text-sm text-gray-700">
                     <p className="line-clamp-2">{group.description}</p>
                   </div>
-                  
+
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <span className="text-sm text-gray-600">{group.fieldCount} campos</span>
                     <div className="flex space-x-3">

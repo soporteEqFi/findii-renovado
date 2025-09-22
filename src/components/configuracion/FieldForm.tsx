@@ -67,6 +67,7 @@ const NestedArrayConfiguration: React.FC<{
 
   // Actualizar el valor local cuando cambia el prop value
   useEffect(() => {
+    console.log('🔄 useEffect triggered, updating localValue:', value);
     setLocalValue(value.join('\n'));
   }, [value]);
 
@@ -104,9 +105,18 @@ const NestedArrayConfiguration: React.FC<{
   };
 
   const handleAddOption = () => {
+    console.log('🔍 handleAddOption called:', { newOption, currentValue: value });
     if (newOption.trim() && !value.includes(newOption.trim())) {
-      onChange([...value, newOption.trim()]);
+      const newValue = [...value, newOption.trim()];
+      console.log('✅ Adding new option:', newValue);
+      onChange(newValue);
       setNewOption('');
+      console.log('🧹 Cleared newOption input');
+    } else {
+      console.log('❌ Cannot add option:', {
+        isEmpty: !newOption.trim(),
+        alreadyExists: value.includes(newOption.trim())
+      });
     }
   };
 
@@ -235,6 +245,7 @@ const ObjectConfiguration: React.FC<{
     description: string;
     order_index?: number;
     arrayOptions?: string[];
+    list_values?: { enum?: string[] };
     objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
   }[];
   onChange: (structure: {
@@ -244,6 +255,7 @@ const ObjectConfiguration: React.FC<{
     description: string;
     order_index?: number;
     arrayOptions?: string[];
+    list_values?: { enum?: string[] };
     objectStructure?: { key: string; type: string; required: boolean; description: string; order_index?: number }[];
   }[]) => void;
   isEditing?: boolean;
@@ -402,8 +414,10 @@ const ObjectConfiguration: React.FC<{
               <NestedArrayConfiguration
                 value={field.arrayOptions || []}
                 onChange={(options) => {
+                  console.log('🔄 NestedArrayConfiguration onChange called:', { options, fieldIndex: index });
                   const newStructure = [...structure];
                   newStructure[index].arrayOptions = options;
+                  console.log('📝 New structure before onChange:', newStructure);
                   onChange(newStructure);
                 }}
               />
@@ -844,18 +858,23 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         key: field.key,
         type: field.type,
         required: field.required,
-        isActive: field.isActive ?? true,
         description: field.description,
         order_index: field.order_index
       };
 
                    // Validar y limpiar configuración de array
-       if (field.type === 'array' && field.arrayOptions && field.arrayOptions.length > 0) {
-         // Filtrar líneas vacías solo al guardar
-         const filteredOptions = field.arrayOptions.filter((opt: string) => opt.trim() !== '');
-         cleanedField.list_values = { enum: filteredOptions };
-         // Eliminar arrayOptions ya que no debe existir en la estructura final
-         delete cleanedField.arrayOptions;
+       if (field.type === 'array') {
+         // Si tiene arrayOptions, usarlo; si no, usar list_values.enum existente
+         if (field.arrayOptions && field.arrayOptions.length > 0) {
+           // Filtrar líneas vacías solo al guardar
+           const filteredOptions = field.arrayOptions.filter((opt: string) => opt.trim() !== '');
+           cleanedField.list_values = { enum: filteredOptions };
+           // Eliminar arrayOptions ya que no debe existir en la estructura final
+           delete cleanedField.arrayOptions;
+         } else if (field.list_values?.enum) {
+           // Si ya tiene list_values.enum, mantenerlo
+           cleanedField.list_values = field.list_values;
+         }
        }
 
       // Validar y limpiar configuración de objeto anidado
@@ -865,17 +884,22 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             key: subField.key,
             type: subField.type,
             required: subField.required,
-            isActive: subField.isActive ?? true,
             description: subField.description,
             order_index: subField.order_index
           };
 
                                           // Para sub-campos de tipo array, agregar list_values.enum y eliminar arrayOptions
-           if (subField.type === 'array' && subField.arrayOptions && subField.arrayOptions.length > 0) {
-             // Filtrar líneas vacías solo al guardar
-             const filteredOptions = subField.arrayOptions.filter((opt: string) => opt.trim() !== '');
-             nestedField.list_values = { enum: filteredOptions };
-             delete nestedField.arrayOptions;
+           if (subField.type === 'array') {
+             // Si tiene arrayOptions, usarlo; si no, usar list_values.enum existente
+             if (subField.arrayOptions && subField.arrayOptions.length > 0) {
+               // Filtrar líneas vacías solo al guardar
+               const filteredOptions = subField.arrayOptions.filter((opt: string) => opt.trim() !== '');
+               nestedField.list_values = { enum: filteredOptions };
+               delete nestedField.arrayOptions;
+             } else if (subField.list_values?.enum) {
+               // Si ya tiene list_values.enum, mantenerlo
+               nestedField.list_values = subField.list_values;
+             }
            }
 
           return nestedField;
@@ -1272,18 +1296,36 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
                  {form.type === 'object' && form.list_values?.object_structure && (
            <ObjectConfiguration
-             structure={form.list_values.object_structure.map((field: any) => ({
-               ...field,
-               // Transformar list_values.enum a arrayOptions para campos de tipo array
-               arrayOptions: field.type === 'array' && field.list_values?.enum
-                 ? field.list_values.enum
-                 : field.arrayOptions || []
-             }))}
+             structure={form.list_values.object_structure.map((field: any) => {
+               if (field.type === 'array' && field.list_values?.enum) {
+                 return {
+                   ...field,
+                   arrayOptions: field.list_values.enum
+                 };
+               }
+               return field;
+             })}
              onChange={(structure) => {
-               // NO limpiar aquí, solo actualizar el estado
+               // Transformar arrayOptions de vuelta a list_values.enum para campos de tipo array
+               const transformedStructure = structure.map((field: any) => {
+                 if (field.type === 'array' && field.arrayOptions) {
+                   const { arrayOptions, ...fieldWithoutArrayOptions } = field;
+                   return {
+                     ...fieldWithoutArrayOptions,
+                     list_values: {
+                       ...field.list_values,
+                       enum: arrayOptions
+                     }
+                   };
+                 }
+                 // Para campos que no son array, devolver tal como están
+                 return field;
+               });
+
+               console.log('🔄 Transformed structure:', transformedStructure);
                setForm(prev => ({
                  ...prev,
-                 list_values: { ...prev.list_values, object_structure: structure }
+                 list_values: { ...prev.list_values, object_structure: transformedStructure }
                }));
              }}
              isEditing={true}
