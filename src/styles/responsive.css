@@ -94,6 +94,82 @@
   }
 }
 
+/* Notification panel responsive improvements */
+@media (max-width: 640px) {
+  .notification-panel-mobile {
+    width: calc(100vw - 1rem);
+    max-width: 20rem;
+    margin: 0 0.5rem;
+  }
+  
+  .notification-card-mobile {
+    padding: 0.75rem;
+  }
+  
+  .notification-actions-mobile {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .notification-actions-mobile > * {
+    width: 100%;
+  }
+}
+
+/* Sidebar notification button improvements */
+@media (max-width: 1023px) {
+  .sidebar-notification-button {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    transition: background-color 0.2s;
+  }
+  
+  .sidebar-notification-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* Tablet sidebar improvements */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .sidebar-root {
+    width: 12rem; /* 192px - más ancho que el anterior md:w-16 (64px) */
+  }
+  
+  .sidebar-root .menu-item {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    justify-content: flex-start;
+  }
+  
+  .sidebar-root .menu-icon {
+    margin-right: 0.75rem;
+  }
+  
+  .sidebar-root .menu-text {
+    display: block;
+    font-size: 0.875rem;
+  }
+  
+  .sidebar-root .logo {
+    height: 3rem;
+  }
+  
+  .sidebar-root h1 {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+  }
+  
+  .sidebar-root .user-info {
+    font-size: 0.75rem;
+  }
+  
+  .sidebar-root .user-role {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+  }
+}
+
 /* Focus improvements for accessibility */
 .focus-visible:focus {
   outline: 2px solid #3b82f6;

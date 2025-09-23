@@ -42,7 +42,7 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
         <button
           onClick={handleBellClick}
           disabled={loading}
-          className="relative p-2 hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="relative p-2 hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 sidebar-notification-button"
           title={loading ? "Cargando..." : "Ver notificaciones"}
         >
           <Bell className={`w-5 h-5 ${pendingCount > 0 ? 'text-yellow-400' : 'text-gray-400'}`} />
