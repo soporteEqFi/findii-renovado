@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { NotificationBadge } from './NotificationBadge';
 import { NotificationHistory } from './NotificationHistory';
 import { Notification } from '../types/notification';
-import Modal from './ui/Modal';
+import { solicitudService } from '../services/solicitudService';
+import { useEditModal } from '../contexts/EditModalContext';
+import toast from 'react-hot-toast';
 
 interface NotificationManagerProps {
   empresaId: number;
@@ -15,17 +17,34 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
   solicitudId,
   showFullHistory = false
 }) => {
-  const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const { openModal } = useEditModal();
+  const [loadingSolicitante, setLoadingSolicitante] = useState(false);
 
-  const handleEditNotification = (notification: Notification) => {
-    setSelectedNotification(notification);
-    setShowEditModal(true);
-  };
+  const handleEditNotification = async (notification: Notification) => {
+    if (!notification.solicitud_id) {
+      toast.error('No se pudo obtener el ID de solicitud de la notificación');
+      return;
+    }
 
-  const handleCloseEditModal = () => {
-    setShowEditModal(false);
-    setSelectedNotification(null);
+    setLoadingSolicitante(true);
+    try {
+      // Obtener el solicitante_id desde el solicitud_id
+      const solicitudData = await solicitudService.obtenerSolicitud(notification.solicitud_id, empresaId);
+      
+      if (!solicitudData || !solicitudData.solicitante_id) {
+        toast.error('No se pudo obtener la información del solicitante');
+        return;
+      }
+
+      // Abrir el modal de edición del cliente usando el contexto global
+      openModal(solicitudData.solicitante_id, 'Editar Cliente desde Notificación');
+      
+    } catch (error) {
+      console.error('Error al obtener información del solicitante:', error);
+      toast.error('Error al cargar la información del cliente');
+    } finally {
+      setLoadingSolicitante(false);
+    }
   };
 
   return (
@@ -34,6 +53,7 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
       <NotificationBadge
         empresaId={empresaId}
         onEditNotification={handleEditNotification}
+        loading={loadingSolicitante}
       />
 
       {/* Full History - only when requested */}
@@ -42,62 +62,6 @@ export const NotificationManager: React.FC<NotificationManagerProps> = ({
           solicitudId={solicitudId}
           empresaId={empresaId}
         />
-      )}
-
-      {/* Edit Modal - shows when editing a notification */}
-      {showEditModal && selectedNotification && (
-        <Modal
-          isOpen={showEditModal}
-          onClose={handleCloseEditModal}
-          title="Editar Notificación desde Panel"
-        >
-          <div className="p-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mb-4">
-              <p className="text-blue-700 text-sm">
-                Para editar esta notificación completamente, ve a la sección de detalles del cliente correspondiente.
-              </p>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Título</label>
-                <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedNotification.titulo}</p>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Mensaje</label>
-                <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedNotification.mensaje}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Prioridad</label>
-                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded capitalize">{selectedNotification.prioridad}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded capitalize">{selectedNotification.estado}</p>
-                </div>
-              </div>
-              
-              {selectedNotification.solicitud_id && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">ID de Solicitud</label>
-                  <p className="text-sm text-gray-900 bg-gray-50 p-2 rounded">{selectedNotification.solicitud_id}</p>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={handleCloseEditModal}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </Modal>
       )}
     </>
   );

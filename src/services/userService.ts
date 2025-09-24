@@ -2,18 +2,37 @@ import { User, UserInfoExtra } from '../types/user';
 import { buildApiUrl } from '../config/constants';
 
 export const userService = {
-  // Listar todos los usuarios de una empresa
-  async getUsers(empresaId?: number): Promise<User[]> {
+  // Listar usuarios de una empresa.
+  // Por defecto envía X-User-Id y X-Empresa-Id para que el backend aplique el filtrado por rol
+  // (p.ej., supervisor ve solo su equipo, asesor se ve a sí mismo). Para usos internos que
+  // requieren el universo completo (p.ej., búsqueda de banqueros), se puede desactivar
+  // enviando { includeIdentityHeaders: false }.
+  async getUsers(
+    empresaId?: number,
+    options?: { includeIdentityHeaders?: boolean }
+  ): Promise<User[]> {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const includeIdentityHeaders = options?.includeIdentityHeaders !== false; // default true
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+      };
+
+      // Enviar headers de identidad para que el backend filtre por rol
+      if (includeIdentityHeaders) {
+        const empresaHeader = (empresaIdToUse || localStorage.getItem('empresa_id')) + '';
+        const userIdHeader = localStorage.getItem('user_id');
+        headers['X-Empresa-Id'] = empresaHeader;
+        if (userIdHeader) headers['X-User-Id'] = userIdHeader;
+      }
+
       const response = await fetch(
         buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
         {
           method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
+          headers
         }
       );
 
@@ -36,26 +55,11 @@ export const userService = {
   },
 
   // Obtener solo los supervisores de una empresa
+  // Importante: pedimos el universo completo (sin headers de identidad) y filtramos en frontend
+  // para que funcione incluso si el usuario logueado es asesor o supervisor.
   async getSupervisors(empresaId?: number): Promise<User[]> {
     try {
-      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
-      const response = await fetch(
-        buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Error al obtener supervisores: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      const users = result.data || result || [];
+      const users = await this.getUsers(empresaId, { includeIdentityHeaders: false });
 
       // Filtrar solo usuarios con rol "supervisor"
       const supervisors = users.filter((user: User) => user.rol === 'supervisor');
@@ -327,8 +331,8 @@ export const userService = {
         empresaId: empresaIdToUse
       });
 
-      // Obtener todos los usuarios de la empresa
-      const users = await this.getUsers(empresaIdToUse);
+      // Obtener todos los usuarios de la empresa sin restricción por rol del solicitante
+      const users = await this.getUsers(empresaIdToUse, { includeIdentityHeaders: false });
       console.log('👥 Total usuarios obtenidos:', users.length);
 
       // Filtrar usuarios con rol 'banco'

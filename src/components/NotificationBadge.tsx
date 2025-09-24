@@ -7,11 +7,13 @@ import { Notification } from '../types/notification';
 interface NotificationBadgeProps {
   empresaId: number;
   onEditNotification?: (notification: Notification) => void;
+  loading?: boolean;
 }
 
 export const NotificationBadge: React.FC<NotificationBadgeProps> = ({ 
   empresaId, 
-  onEditNotification 
+  onEditNotification,
+  loading = false
 }) => {
   const { notifications, loadPendingNotifications } = useNotifications(empresaId);
   const [pendingCount, setPendingCount] = useState(0);
@@ -39,13 +41,19 @@ export const NotificationBadge: React.FC<NotificationBadgeProps> = ({
       <div className="relative inline-block">
         <button
           onClick={handleBellClick}
-          className="relative p-2 hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          title="Ver notificaciones"
+          disabled={loading}
+          className="relative p-2 hover:bg-gray-700 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 sidebar-notification-button"
+          title={loading ? "Cargando..." : "Ver notificaciones"}
         >
           <Bell className={`w-5 h-5 ${pendingCount > 0 ? 'text-yellow-400' : 'text-gray-400'}`} />
-          {pendingCount > 0 && (
+          {pendingCount > 0 && !loading && (
             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
               {pendingCount > 99 ? '99+' : pendingCount}
+            </span>
+          )}
+          {loading && (
+            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+              ...
             </span>
           )}
         </button>

@@ -229,7 +229,7 @@ const NotificationForm: React.FC<{
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Tipo de Notificación
@@ -252,21 +252,21 @@ const NotificationForm: React.FC<{
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Prioridad
             </label>
-                                                   <select
-                value={formData.prioridad}
-                onChange={(e) => setFormData({ ...formData, prioridad: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {notificationConfig.prioridades.map(priority => (
-                  <option key={priority} value={priority}>
-                    {getPriorityLabel(priority)}
-                  </option>
-                ))}
-              </select>
+            <select
+              value={formData.prioridad}
+              onChange={(e) => setFormData({ ...formData, prioridad: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {notificationConfig.prioridades.map(priority => (
+                <option key={priority} value={priority}>
+                  {getPriorityLabel(priority)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Estado
@@ -302,7 +302,7 @@ const NotificationForm: React.FC<{
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Fecha Recordatorio
@@ -381,12 +381,13 @@ const NotificationForm: React.FC<{
           )}
         </div>
 
-        <div className="flex justify-end space-x-3 pt-4">
+        <div className="flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 pt-4">
           <Button
             type="button"
             variant="secondary"
             onClick={onClose}
             disabled={loading}
+            className="w-full sm:w-auto"
           >
             Cancelar
           </Button>
@@ -394,6 +395,7 @@ const NotificationForm: React.FC<{
             type="submit"
             variant="primary"
             disabled={loading}
+            className="w-full sm:w-auto"
           >
             {loading ? 'Guardando...' : (notification ? 'Actualizar' : 'Crear')}
           </Button>
@@ -545,12 +547,12 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                  .map((notification) => (
                 <div
                   key={notification.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors notification-card-mobile"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{notification.titulo}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{notification.mensaje}</p>
+                      <h4 className="font-medium text-gray-900 text-left">{notification.titulo}</h4>
+                      <p className="text-sm text-gray-600 mt-1 text-left">{notification.mensaje}</p>
                     </div>
                                          <div className="flex space-x-2 ml-4">
                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(notification.prioridad)}`}>
@@ -562,7 +564,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-500 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-500 mb-3">
                     <div>
                       <span className="font-medium">Recordatorio:</span>
                       <br />
@@ -575,16 +577,17 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                     </div>
                   </div>
 
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
                     <div className="text-xs text-gray-400">
                       Creada: {formatDate(notification.created_at)}
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2 notification-actions-mobile">
                       {notification.estado === 'pendiente' && (
                         <Button
                           size="sm"
                           variant="secondary"
                           onClick={() => handleMarkAsRead(notification.id)}
+                          className="text-xs"
                         >
                           Marcar Leída
                         </Button>
@@ -593,6 +596,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                         size="sm"
                         variant="secondary"
                         onClick={() => handleEdit(notification)}
+                        className="text-xs"
                       >
                         Editar
                       </Button>
@@ -600,6 +604,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                         size="sm"
                         variant="danger"
                         onClick={() => handleDelete(notification.id)}
+                        className="text-xs"
                       >
                         Eliminar
                       </Button>

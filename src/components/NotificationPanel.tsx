@@ -119,10 +119,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-end pt-16 pr-4">
+    <div className="fixed inset-0 z-50 flex items-start justify-end pt-16 pr-2 sm:pr-4">
       <div
         ref={panelRef}
-        className="w-96 max-h-[80vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden flex flex-col"
+        className="w-full max-w-sm sm:w-96 max-h-[80vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden flex flex-col mx-2 sm:mx-0 notification-panel-mobile"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-slate-50">
@@ -139,7 +139,7 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {loading ? (
             <div className="p-6 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -173,23 +173,24 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                 .map((notification) => (
                   <div
                     key={notification.id}
-                    className={`p-4 border-l-4 ${getPriorityColor(notification.prioridad)} hover:bg-gray-50 transition-colors`}
+                    className={`p-4 border-l-4 ${getPriorityColor(notification.prioridad)} hover:bg-gray-50 transition-colors cursor-pointer`}
+                    onClick={() => onEditNotification?.(notification)}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-start space-x-2 flex-1">
                         {getPriorityIcon(notification.prioridad)}
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-medium text-gray-900 truncate">
+                          <h4 className="text-sm font-medium text-gray-900 truncate text-left">
                             {notification.titulo}
                           </h4>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-gray-500 mt-1 text-left">
                             {getTypeLabel(notification.tipo)}
                           </p>
                         </div>
                       </div>
                     </div>
 
-                    <p className="text-sm text-gray-700 mb-3 line-clamp-2">
+                    <p className="text-sm text-gray-700 mb-3 line-clamp-2 text-left">
                       {notification.mensaje}
                     </p>
 
@@ -216,14 +217,20 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                       </div>
                       <div className="flex space-x-1">
                         <button
-                          onClick={() => handleMarkAsRead(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsRead(notification.id);
+                          }}
                           className="p-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
                           title="Marcar como leída"
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => handleMarkAsCompleted(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleMarkAsCompleted(notification.id);
+                          }}
                           className="p-1 text-green-600 hover:bg-green-100 rounded transition-colors"
                           title="Marcar como completada"
                         >
@@ -231,7 +238,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                         </button>
                         {onEditNotification && (
                           <button
-                            onClick={() => onEditNotification(notification)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditNotification(notification);
+                            }}
                             className="p-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                             title="Editar"
                           >
@@ -239,7 +249,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({
                           </button>
                         )}
                         <button
-                          onClick={() => handleDelete(notification.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(notification.id);
+                          }}
                           className="p-1 text-red-600 hover:bg-red-100 rounded transition-colors"
                           title="Eliminar"
                         >
