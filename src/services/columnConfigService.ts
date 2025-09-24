@@ -65,6 +65,7 @@ export const detectAvailableColumns = (customerData: any[]): string[] => {
 const formatFieldName = (fieldName: string): string => {
   const fieldMappings: Record<string, string> = {
     'created_at': 'Fecha',
+    'created_time': 'Hora',
     'nombres': 'Nombre',
     'primer_apellido': 'Nombre',
     'segundo_apellido': 'Nombre',
@@ -379,6 +380,12 @@ export const getColumnValue = (customer: any, columnName: string): any => {
 
     case normalize('Estado'):
       return customer.estado || customer.estado_solicitud;
+
+    case normalize('Fecha'):
+      return customer.created_at;
+
+    case normalize('Hora'):
+      return customer.created_time;
 
     case normalize('Fecha Nacimiento'):
       return customer.fecha_nacimiento;

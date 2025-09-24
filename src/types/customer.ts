@@ -67,8 +67,9 @@ export interface Customer {
 
   // Metadatos
   created_at?: string;
+  created_time?: string;
   archivos?: string;
   asesor_usuario?: string;
   estado?: string;
-  informacion_producto?: string;
+  informacion_item?: string;
 }

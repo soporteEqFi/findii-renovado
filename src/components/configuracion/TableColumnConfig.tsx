@@ -92,6 +92,7 @@ const AVAILABLE_FIELDS = {
 
   // Campos del sistema
   'created_at': 'Fecha',
+  'created_time': 'Hora',
   'created_by_user_name': 'Creado por',
   'created_by_supervisor_name': 'Supervisor'
 };
