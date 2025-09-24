@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     `}>
       <div className="flex justify-center mt-4 lg:mt-6">
         {user?.imagen_aliado && (
-          <img src={user.imagen_aliado} alt="Logo del aliado" className="logo h-14 object-contain md:h-12 lg:h-20" />
+          <img src={user.imagen_aliado} alt="Logo del aliado" className="logo h-14 object-contain md:h-12 lg:h-20 rounded-full" />
         )}
       </div>
       <div className="flex flex-col items-center p-3 md:p-3 lg:p-6">
