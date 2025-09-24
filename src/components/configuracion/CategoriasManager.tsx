@@ -72,24 +72,20 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
 
       // Procesar la configuración para extraer solo los valores
       let processedConfig = categoriaData.configuracion;
-      console.log('🔍 Configuración original del servidor:', processedConfig);
 
       // Si viene como objeto con estructura {categoria, total, valores}, extraer solo valores
       if (processedConfig && typeof processedConfig === 'object' && !Array.isArray(processedConfig)) {
         if (processedConfig.valores && Array.isArray(processedConfig.valores)) {
           processedConfig = processedConfig.valores;
-          console.log('🔍 Extraídos valores del objeto:', processedConfig);
         }
       }
 
       // Si es array, procesar strings concatenados
       if (Array.isArray(processedConfig)) {
         processedConfig = processedConfig.flatMap(item => {
-          console.log('🔍 Procesando item:', item, 'tipo:', typeof item, 'contiene comas:', typeof item === 'string' && item.includes(','));
           if (typeof item === 'string' && item.includes(',')) {
             // Es un string concatenado, separarlo por comas
             const separated = item.split(',').map(city => city.trim()).filter(city => city.length > 0);
-            console.log('🔍 Item separado:', separated);
             return separated;
           }
           return [item];

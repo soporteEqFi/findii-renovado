@@ -19,18 +19,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   onSubmit,
   onCancel
 }) => {
-  // 🔍 DEBUG: Verificar qué información tenemos en localStorage
-  React.useEffect(() => {
-    console.log('🔍 === DEBUG LOCALSTORAGE ===');
-    console.log('user:', localStorage.getItem('user'));
-    console.log('user_id:', localStorage.getItem('user_id'));
-    console.log('user_name:', localStorage.getItem('user_name'));
-    console.log('user_email:', localStorage.getItem('user_email'));
-    console.log('cedula:', localStorage.getItem('cedula'));
-    console.log('empresa_id:', localStorage.getItem('empresa_id'));
-    console.log('access_token:', localStorage.getItem('access_token') ? 'EXISTE' : 'NO EXISTE');
-    console.log('='.repeat(50));
-  }, []);
   // Estados para todos los campos (base + dinámicos) - INICIALMENTE VACÍO
   const [datosFormulario, setDatosFormulario] = useState<Record<string, any>>({});
   const [errores, setErrores] = useState<Record<string, string>>({});
@@ -42,19 +30,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
   const [referencias, setReferencias] = useState<Array<Record<string, any>>>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Log cuando cambian los archivos seleccionados
-  React.useEffect(() => {
-    selectedFiles.forEach((file, index) => {
-      console.log(`📄 Archivo ${index + 1}:`, {
-        nombre: file.name,
-        tamaño: `${(file.size / 1024).toFixed(2)} KB`,
-        tipo: file.type
-      });
-    });
-  }, [selectedFiles]);
-
-
 
   // Configuración de esquemas completos - consultar campos fijos + dinámicos
   const esquemasConfig = [
@@ -245,10 +220,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
     if (camposNuevos > camposOriginales) {
       setDatosFormulario(nuevosValores);
-      console.log('🚀 Auto-llenado completado con datos de prueba:', nuevosValores);
-      console.log(`📊 Campos agregados: ${camposNuevos - camposOriginales} (total: ${camposNuevos})`);
-    } else {
-      console.log('✅ Todos los campos ya están llenos o el formulario está limpio');
     }
   };
 
@@ -347,9 +318,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   React.useEffect(() => {
     const obtenerInformacionAsesor = async () => {
       try {
-        console.log('🚀 Iniciando obtención de información del asesor...');
         const currentUser = await userService.getCurrentUserInfo();
-        console.log('📋 Información del usuario obtenida:', currentUser);
 
         setDatosFormulario(prev => {
           const newData = {
@@ -540,7 +509,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
       // Mostrar cada sección
       Object.entries(datosPorSeccion).forEach(([seccion, datos]) => {
-        console.log(`\n📂 ${seccion}:`);
         Object.entries(datos).forEach(([campo, valor]) => {
           if (valor !== undefined && valor !== null && valor !== '') {
             console.log(`  ✅ ${campo}:`, valor);
@@ -551,27 +519,13 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       });
 
       // Mostrar TODOS los datos tal como están
-      console.log('\n📦 DATOS COMPLETOS (tal como están en el formulario):');
       console.log(JSON.stringify(datosFormulario, null, 2));
 
-      console.log('\n📋 Esquemas disponibles:', esquemas);
-      console.log('='.repeat(80));
 
       // Crear registro completo usando endpoint unificado
-      console.log('🚀 CREANDO REGISTRO COMPLETO UNIFICADO');
 
       // No incluir referencias en el payload unificado. Se gestionan con endpoints dedicados.
       const datosParaEnviar = { ...datosFormulario };
-
-      // 🏦 LOG ESPECÍFICO PARA CAMPOS DE ASESOR Y BANQUERO
-      console.log('\n🏦 === CAMPOS DE ASESOR Y BANQUERO ===');
-      console.log('📋 Campos que se enviarán en el JSON/form a la API:');
-      console.log('  🧑‍💼 nombre_asesor:', datosParaEnviar.nombre_asesor || '(NO DEFINIDO)');
-      console.log('  📧 correo_asesor:', datosParaEnviar.correo_asesor || '(NO DEFINIDO)');
-      console.log('  🏦 nombre_banco_usuario:', datosParaEnviar.nombre_banco_usuario || '(NO DEFINIDO)');
-      console.log('  📧 correo_banco_usuario:', datosParaEnviar.correo_banco_usuario || '(NO DEFINIDO)');
-      console.log('🔍 Estos campos se incluyen automáticamente en el payload completo que se envía a la API');
-      console.log('='.repeat(80));
 
       const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
@@ -580,33 +534,18 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         empresaId
       );
 
-      console.log('🎉 PROCESO COMPLETADO EXITOSAMENTE');
-      console.log('📊 Resultado:', resultado);
-
       // Extraer solicitante_id del registro creado en la respuesta del API
       let solicitanteId = null;
-
-      console.log('🔍 === EXTRACCIÓN DE SOLICITANTE_ID ===');
-      console.log('📊 Resultado completo:', resultado);
-      console.log('📊 Estructura de data:', resultado?.data);
-
       // El solicitante_id debe estar en resultado.data donde se almacenan los registros creados
       if (resultado?.data?.solicitante_id) {
         solicitanteId = resultado.data.solicitante_id;
-        console.log('✅ Solicitante ID encontrado en data.solicitante_id:', solicitanteId);
       } else if (resultado?.data?.solicitante?.id) {
         solicitanteId = resultado.data.solicitante.id;
-        console.log('✅ Solicitante ID encontrado en data.solicitante.id:', solicitanteId);
       } else if (resultado?.data?.id) {
         solicitanteId = resultado.data.id;
-        console.log('✅ Solicitante ID encontrado en data.id:', solicitanteId);
       } else {
         console.error('❌ No se pudo encontrar solicitante_id en la respuesta');
-        console.log('🔍 Claves disponibles en data:', Object.keys(resultado?.data || {}));
       }
-
-      console.log('🆔 Solicitante ID final:', solicitanteId);
-
       // Agregar referencias usando el endpoint POST /referencias/agregar
       try {
         const referenciasCandidatas = (Array.isArray(referencias) ? referencias : [])

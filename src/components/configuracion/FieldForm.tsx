@@ -67,7 +67,6 @@ const NestedArrayConfiguration: React.FC<{
 
   // Actualizar el valor local cuando cambia el prop value
   useEffect(() => {
-    console.log('🔄 useEffect triggered, updating localValue:', value);
     setLocalValue(value.join('\n'));
   }, [value]);
 
@@ -105,18 +104,10 @@ const NestedArrayConfiguration: React.FC<{
   };
 
   const handleAddOption = () => {
-    console.log('🔍 handleAddOption called:', { newOption, currentValue: value });
     if (newOption.trim() && !value.includes(newOption.trim())) {
       const newValue = [...value, newOption.trim()];
-      console.log('✅ Adding new option:', newValue);
       onChange(newValue);
       setNewOption('');
-      console.log('🧹 Cleared newOption input');
-    } else {
-      console.log('❌ Cannot add option:', {
-        isEmpty: !newOption.trim(),
-        alreadyExists: value.includes(newOption.trim())
-      });
     }
   };
 
@@ -414,10 +405,8 @@ const ObjectConfiguration: React.FC<{
               <NestedArrayConfiguration
                 value={field.arrayOptions || []}
                 onChange={(options) => {
-                  console.log('🔄 NestedArrayConfiguration onChange called:', { options, fieldIndex: index });
                   const newStructure = [...structure];
                   newStructure[index].arrayOptions = options;
-                  console.log('📝 New structure before onChange:', newStructure);
                   onChange(newStructure);
                 }}
               />
@@ -1322,7 +1311,6 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                  return field;
                });
 
-               console.log('🔄 Transformed structure:', transformedStructure);
                setForm(prev => ({
                  ...prev,
                  list_values: { ...prev.list_values, object_structure: transformedStructure }

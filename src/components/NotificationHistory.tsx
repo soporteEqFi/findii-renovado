@@ -97,7 +97,6 @@ const NotificationForm: React.FC<{
         try {
           const config = await notificationService.getNotificationConfig(empresaId);
           setNotificationConfig(config);
-          console.log('📋 Configuración de notificaciones cargada:', config);
         } catch (error) {
           console.error('Error al cargar configuración de notificaciones:', error);
         }

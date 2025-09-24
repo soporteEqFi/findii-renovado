@@ -67,6 +67,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
   const { estados, loading: loadingEstados } = useEstados(empresaId);
 
+
   // Además, algunos componentes consumen estos hooks puntuales
   useEsquemaCompleto('solicitud', parseInt(localStorage.getItem('empresa_id') || '1', 10));
   useEsquemaCompleto('actividad_economica', parseInt(localStorage.getItem('empresa_id') || '1', 10));
@@ -91,11 +92,11 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         const currentUser = await userService.getCurrentUserInfo();
         if (editedData) {
           const newData = JSON.parse(JSON.stringify(editedData));
-          
+
           // Asegurar estructura de solicitudes
           if (!newData.solicitudes) newData.solicitudes = [{}];
           if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
-          
+
           // Solo añadir información del asesor si no existe
           if (!newData.solicitudes[0].nombre_asesor) {
             newData.solicitudes[0].nombre_asesor = currentUser.nombre;
@@ -103,7 +104,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           if (!newData.solicitudes[0].correo_asesor) {
             newData.solicitudes[0].correo_asesor = currentUser.correo;
           }
-          
+
           setEditedData(newData);
           console.log('🧑‍💼 Información del asesor cargada (Edit):', {
             nombre: currentUser.nombre,
@@ -322,24 +323,24 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     try {
       // Obtener información del usuario logueado (asesor)
       const currentUser = await userService.getCurrentUserInfo();
-      
+
       // Buscar banquero por criterios
       const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
-      
+
       // Actualizar formulario con la información obtenida
       if (!editedData) return;
       const newData = JSON.parse(JSON.stringify(editedData));
-      
+
       // Asegurar estructura de solicitudes
       if (!newData.solicitudes) newData.solicitudes = [{}];
       if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
-      
+
       // Añadir campos de asesor y banquero
       newData.solicitudes[0].nombre_asesor = currentUser.nombre;
       newData.solicitudes[0].correo_asesor = currentUser.correo;
       newData.solicitudes[0].nombre_banco_usuario = banker?.nombre || '';
       newData.solicitudes[0].correo_banco_usuario = banker?.correo || '';
-      
+
       setEditedData(newData);
 
       console.log('🏦 Información de asesor y banquero obtenida (Edit):', {
@@ -360,15 +361,15 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         const currentUser = await userService.getCurrentUserInfo();
         if (!editedData) return;
         const newData = JSON.parse(JSON.stringify(editedData));
-        
+
         if (!newData.solicitudes) newData.solicitudes = [{}];
         if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
-        
+
         newData.solicitudes[0].nombre_asesor = currentUser.nombre;
         newData.solicitudes[0].correo_asesor = currentUser.correo;
         newData.solicitudes[0].nombre_banco_usuario = '';
         newData.solicitudes[0].correo_banco_usuario = '';
-        
+
         setEditedData(newData);
       } catch (asesorError) {
         console.error('Error obteniendo información del asesor:', asesorError);
@@ -469,7 +470,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // Obtener valores actuales considerando el cambio
       let bancoNombre = '';
       let ciudadSolicitud = '';
-      
+
       if (key === 'banco_nombre') {
         bancoNombre = value;
         ciudadSolicitud = editedData?.solicitudes?.[0]?.ciudad_solicitud || '';
@@ -477,7 +478,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         bancoNombre = editedData?.solicitudes?.[0]?.banco_nombre || '';
         ciudadSolicitud = value;
       }
-      
+
       // Solo ejecutar si ambos campos tienen valor
       if (bancoNombre && ciudadSolicitud) {
         obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud);

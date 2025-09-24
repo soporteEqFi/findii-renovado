@@ -70,14 +70,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas
   const getNestedValue = (key: string): any => {
-    // DEBUG: Log para campos SELECT problemáticos
-    // if (key.includes('ciudad') || key.includes('departamento') || key.includes('tipo_vivienda') || key.includes('correspondencia')) {
-    //   // console.log(`🔍 getNestedValue para ${key}:`, {
-    //   //   valorDirecto: valores?.[key],
-    //   //   ubicaciones: valores?.ubicaciones?.[0]?.[key],
-    //   //   detalleDireccion: valores?.ubicaciones?.[0]?.detalle_direccion?.[key]
-    //   // });
-    // }
     // Aliases comunes entre esquemas/valores
     if (key === 'tipo_referencia' && valores && valores['tipo'] !== undefined) {
       return valores['tipo'];
@@ -189,7 +181,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // Primero agregar todos los campos fijos (ordenados) manteniendo su posición original
   const camposFijosOrdenados = ordenarCampos(camposFijosVisibles);
-  
+
   // Identificar campos dinámicos por su campo activador
   const camposDinamicosPorActivador = new Map<string, any[]>();
   camposDinamicosVisibles.forEach(campoDinamico => {
@@ -204,32 +196,32 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
   // LÓGICA ESPECIAL: Asegurar que tipo_credito aparezca en su posición correcta
   // independientemente de si está clasificado como fijo o dinámico
-  const campoTipoCredito = camposFijosVisibles.find(c => c.key === 'tipo_credito') || 
+  const campoTipoCredito = camposFijosVisibles.find(c => c.key === 'tipo_credito') ||
                            camposDinamicosVisibles.find(c => c.key === 'tipo_credito');
-  
+
   if (campoTipoCredito && titulo === 'Información del Crédito') {
     console.log('🔧 Aplicando lógica especial para tipo_credito:', campoTipoCredito);
-    
+
     // Remover tipo_credito de las listas originales si existe
     const camposFijosSinTipoCredito = camposFijosOrdenados.filter(c => c.key !== 'tipo_credito');
     const camposDinamicosSinTipoCredito = camposDinamicosVisibles.filter(c => c.key !== 'tipo_credito');
-    
+
     // Encontrar la posición correcta para tipo_credito (después de banco_nombre y ciudad_solicitud)
     const camposAntesDeCredito = ['banco_nombre', 'ciudad_solicitud'];
     let posicionInsercion = 0;
-    
+
     for (let i = 0; i < camposFijosSinTipoCredito.length; i++) {
       if (camposAntesDeCredito.includes(camposFijosSinTipoCredito[i].key)) {
         posicionInsercion = i + 1;
       }
     }
-    
+
     // Insertar tipo_credito en la posición correcta
     camposFijosSinTipoCredito.splice(posicionInsercion, 0, campoTipoCredito);
-    
+
     // Agregar todos los campos fijos (incluyendo tipo_credito en su posición correcta)
     todosLosCampos.push(...camposFijosSinTipoCredito);
-    
+
     // Actualizar la lista de campos dinámicos para el procesamiento posterior
     camposDinamicosVisibles.length = 0;
     camposDinamicosVisibles.push(...camposDinamicosSinTipoCredito);
@@ -239,20 +231,20 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   }
 
   // Procesar campos dinámicos activados por tipo_credito
-  const camposDinamicosActivadosPorTipoCredito = camposDinamicosVisibles.filter(c => 
+  const camposDinamicosActivadosPorTipoCredito = camposDinamicosVisibles.filter(c =>
     c.conditional_on?.field === 'tipo_credito'
   );
-  
+
   // Agregar campos dinámicos activados por tipo_credito inmediatamente después
   if (camposDinamicosActivadosPorTipoCredito.length > 0) {
     todosLosCampos.push(...ordenarCampos(camposDinamicosActivadosPorTipoCredito));
   }
 
   // Agregar el resto de campos dinámicos al final
-  const otrosCamposDinamicos = camposDinamicosVisibles.filter(c => 
+  const otrosCamposDinamicos = camposDinamicosVisibles.filter(c =>
     c.conditional_on?.field !== 'tipo_credito'
   );
-  
+
   todosLosCampos.push(...ordenarCampos(otrosCamposDinamicos));
 
   return (

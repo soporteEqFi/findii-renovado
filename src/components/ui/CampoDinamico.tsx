@@ -24,6 +24,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   getValue,
   estadosDisponibles = []
 }) => {
+
   // Usar default_value si value es null/undefined/empty
   // EXCEPCIÓN: para 'tipo_referencia' no aplicamos default del esquema para evitar seleccionar 'personal' implícitamente
   const efectiveValue = (() => {
@@ -361,6 +362,10 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
     // Campos con opciones predefinidas
     if (campo.key === 'estado') {
+      console.log('🎯 === RENDERIZANDO CAMPO ESTADO ===');
+      console.log('📋 Campo key:', campo.key);
+      console.log('📋 Estados disponibles recibidos:', estadosDisponibles);
+
       // Usar estados dinámicos si están disponibles, sino usar estados por defecto
       const estados = estadosDisponibles.length > 0 ? estadosDisponibles : [
         'Pendiente',
@@ -372,6 +377,8 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         'Negado',
         'Desistido'
       ];
+
+      console.log('📋 Estados finales a usar:', estados);
 
       return (
         <select

@@ -11,8 +11,8 @@ export const useEstados = (empresaId: number) => {
       try {
         setLoading(true);
         setError(null);
-        const estadosDisponibles = await estadosService.getEstadosDisponibles(empresaId);
-        setEstados(estadosDisponibles);
+    const estadosDisponibles = await estadosService.getEstadosDisponibles(empresaId);
+    setEstados(estadosDisponibles);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Error al cargar estados');
         console.error('Error al cargar estados:', err);

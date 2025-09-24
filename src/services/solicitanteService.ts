@@ -95,6 +95,10 @@ export const solicitanteService = {
     try {
 
       const url = buildApiUrl(`${API_CONFIG.ENDPOINTS.TRAER_TODOS_REGISTROS}/${solicitanteId}/traer-todos-registros?empresa_id=${empresaId}`);
+      console.log('🔍 === ENDPOINT LLAMADO PARA CARGAR FORMULARIO ===');
+      console.log('📡 URL:', url);
+      console.log('📋 Solicitante ID:', solicitanteId);
+      console.log('📋 Empresa ID:', empresaId);
 
       const response = await fetch(url, {
         method: 'GET',

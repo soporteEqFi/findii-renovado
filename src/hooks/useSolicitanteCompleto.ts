@@ -32,11 +32,12 @@ export const useSolicitanteCompleto = (
 
     try {
 
-      const response = await solicitanteService.traerTodosLosRegistros(solicitanteId, empresaId);
-      setDatos(response);
-      // Mapear datos para UI
-      const mapeados = solicitanteService.mapearDatosParaUI(response);
-      setDatosMapeados(mapeados);
+    const response = await solicitanteService.traerTodosLosRegistros(solicitanteId, empresaId);
+    setDatos(response);
+
+    // Mapear datos para UI
+    const mapeados = solicitanteService.mapearDatosParaUI(response);
+    setDatosMapeados(mapeados);
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Error desconocido';

@@ -56,8 +56,7 @@ export const useCustomers = () => {
         throw new Error(errorData.message || 'Failed to fetch customers');
       }
 
-      const responseData: ApiResponse = await response.json();
-      console.log('📋 Datos recibidos de /dashboard/tabla:', responseData.data);
+    const responseData: ApiResponse = await response.json();
 
       // Handle the response structure
       if (!responseData.data || !Array.isArray(responseData.data)) {
