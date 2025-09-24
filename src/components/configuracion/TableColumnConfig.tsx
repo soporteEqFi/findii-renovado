@@ -91,7 +91,9 @@ const AVAILABLE_FIELDS = {
   'tipo_referencia': 'Tipo Referencia',
 
   // Campos del sistema
-  'created_by_user_name': 'Creado por'
+  'created_at': 'Fecha',
+  'created_by_user_name': 'Creado por',
+  'created_by_supervisor_name': 'Supervisor'
 };
 
 export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId, onConfigurationChange }) => {

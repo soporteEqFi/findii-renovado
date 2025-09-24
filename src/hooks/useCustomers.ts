@@ -57,6 +57,7 @@ export const useCustomers = () => {
       }
 
       const responseData: ApiResponse = await response.json();
+      console.log('📋 Datos recibidos de /dashboard/tabla:', responseData.data);
 
       // Handle the response structure
       if (!responseData.data || !Array.isArray(responseData.data)) {
@@ -143,7 +144,25 @@ export const useCustomers = () => {
           informacion_producto: '',
           cuota_inicial: 0,
           porcentaje_financiar: 0,
-          segundo_titular: ''
+          segundo_titular: '',
+          // Campo "Creado por" - buscar en diferentes ubicaciones posibles
+          created_by_user_name: s.created_by_user_name ||
+                               directFields.created_by_user_name ||
+                               item.created_by_user_name ||
+                               sol.created_by_user_name ||
+                               item.usuario_creacion?.nombre ||
+                               item.user_created?.nombre ||
+                               item.created_by?.nombre ||
+                               '',
+          // Campo "Supervisor" - buscar en diferentes ubicaciones posibles
+          created_by_supervisor_name: s.created_by_supervisor_name ||
+                                     directFields.created_by_supervisor_name ||
+                                     item.created_by_supervisor_name ||
+                                     sol.created_by_supervisor_name ||
+                                     item.supervisor_creacion?.nombre ||
+                                     item.supervisor_created?.nombre ||
+                                     item.created_by_supervisor?.nombre ||
+                                     ''
         } as Customer;
 
 

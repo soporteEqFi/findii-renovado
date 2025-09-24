@@ -227,7 +227,8 @@ export const getColumnFieldMapping = (): Record<string, string> => {
     [normalize('Egresos Mensuales')]: 'total_egresos_mensuales',
     [normalize('Total Activos')]: 'total_activos',
     [normalize('Total Pasivos')]: 'total_pasivos',
-    [normalize('Creado por')]: 'created_by_user_name'
+    [normalize('Creado por')]: 'created_by_user_name',
+    [normalize('Supervisor')]: 'created_by_supervisor_name'
   };
 };
 
@@ -327,7 +328,8 @@ const getFieldEquivalences = (): Record<string, string> => {
     'Total Egresos Mensuales': 'total_egresos_mensuales',
     'Nacionalidad': 'nacionalidad',
     'Personas A Cargo': 'personas_a_cargo',
-    'Creado por': 'created_by_user_name'
+    'Creado por': 'created_by_user_name',
+    'Supervisor': 'created_by_supervisor_name'
   };
 };
 
@@ -413,6 +415,9 @@ export const getColumnValue = (customer: any, columnName: string): any => {
 
     case normalize('Creado por'):
       return customer.created_by_user_name;
+
+    case normalize('Supervisor'):
+      return customer.created_by_supervisor_name;
 
     default:
       // Usar búsqueda recursiva con equivalencias

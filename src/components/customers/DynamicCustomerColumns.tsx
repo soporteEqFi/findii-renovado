@@ -288,6 +288,14 @@ export const createDynamicColumns = (columnNames: string[], estados: string[] = 
           enableColumnFilter: true,
         });
 
+      // case 'Supervisor':
+      //   return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+      //     id: 'created_by_supervisor_name',
+      //     header: columnName,
+      //     cell: (info) => <span className="font-medium text-blue-700">{String(info.getValue() || '')}</span>,
+      //     enableColumnFilter: true,
+      //   });
+
       default:
         // Columna genérica para cualquier otro campo
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {

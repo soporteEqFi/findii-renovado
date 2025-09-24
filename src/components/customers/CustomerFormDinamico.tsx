@@ -357,17 +357,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             nombre_asesor: currentUser.nombre,
             correo_asesor: currentUser.correo
           };
-          console.log('✅ Datos del formulario actualizados con asesor:', {
-            nombre_asesor: newData.nombre_asesor,
-            correo_asesor: newData.correo_asesor
-          });
           return newData;
         });
 
-        console.log('🧑‍💼 Información del asesor cargada exitosamente:', {
-          nombre: currentUser.nombre,
-          correo: currentUser.correo
-        });
       } catch (error) {
         console.error('❌ Error obteniendo información del asesor:', error);
       }
@@ -379,18 +371,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   // Función para obtener información del asesor y banquero
   const obtenerInformacionAsesorYBanquero = async (bancoNombre: string, ciudadSolicitud: string) => {
     try {
-      console.log('🚀 Iniciando búsqueda de asesor y banquero...', {
-        banco: bancoNombre,
-        ciudad: ciudadSolicitud
-      });
-
       // Obtener información del usuario logueado (asesor)
       const currentUser = await userService.getCurrentUserInfo();
-      console.log('👤 Asesor obtenido:', currentUser);
 
       // Buscar banquero por criterios
       const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
-      console.log('🏦 Resultado búsqueda banquero:', banker);
 
       // Actualizar formulario con la información obtenida
       setDatosFormulario(prev => {
@@ -402,26 +387,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           correo_banco_usuario: banker?.correo || ''
         };
 
-        console.log('📝 Actualizando formulario con:', {
-          nombre_asesor: newData.nombre_asesor,
-          correo_asesor: newData.correo_asesor,
-          nombre_banco_usuario: newData.nombre_banco_usuario,
-          correo_banco_usuario: newData.correo_banco_usuario
-        });
 
         return newData;
       });
 
-      console.log('✅ Información de asesor y banquero obtenida exitosamente:', {
-        asesor: {
-          nombre: currentUser.nombre,
-          correo: currentUser.correo
-        },
-        banquero: banker ? {
-          nombre: banker.nombre,
-          correo: banker.correo
-        } : 'No encontrado'
-      });
+
 
     } catch (error) {
       console.error('❌ Error obteniendo información de asesor y banquero:', error);
@@ -435,7 +405,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           nombre_banco_usuario: '',
           correo_banco_usuario: ''
         }));
-        console.log('⚠️ Solo se pudo obtener información del asesor');
       } catch (asesorError) {
         console.error('❌ Error crítico obteniendo información del asesor:', asesorError);
       }
@@ -499,12 +468,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
     setIsSubmitting(true);
     try {
-      console.log('🚀 INICIANDO PROCESO DE CREACIÓN DE REGISTRO');
-      console.log('='.repeat(80));
 
       // 📋 RESUMEN DE DATOS A ENVIAR
-      console.log('📊 RESUMEN DE TODOS LOS DATOS DEL FORMULARIO:');
-      console.log('📊 Total de campos:', Object.keys(datosFormulario).length);
 
       // Organizar datos por sección para mejor visualización
       const datosPorSeccion = {
