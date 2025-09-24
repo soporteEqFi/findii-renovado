@@ -19,7 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const menuItems = [
     { icon: Users, label: 'Inicio', path: '/' },
     { icon: BarChart3, label: 'Estadísticas', path: '/statistics' },
-    { icon: GraduationCap, label: 'Academia', path: 'https://drive.google.com/drive/folders/1MzDWIZUnS3L-3oQvleyCe9n3v7opmJA1?usp=drive_link', external: true },
+    { icon: GraduationCap, label: 'Academia', path: 'https://drive.google.com/drive/folders/1jvqpFn5aad7_So20lwKaWrlG2wMXpPES?usp=drive_link', external: true },
     { icon: User, label: 'Perfil', path: '/profile' },
     // { icon: Settings, label: 'Test', path: '/test' }, // Ocultado
   ];
