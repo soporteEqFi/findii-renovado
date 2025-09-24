@@ -97,7 +97,6 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
         processedConfig = [];
       }
 
-      console.log('🔍 Configuración procesada final:', processedConfig);
 
       setFormData({
         configuracion: processedConfig,
