@@ -325,13 +325,13 @@ const ConfiguracionAdmin: React.FC = () => {
 
           console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API (UPDATE - NORMAL):');
           console.log('Campo individual:', updates);
-          // await fieldConfigService.updateField(editing.id, updates);
+          await fieldConfigService.updateField(editing.id, updates);
         }
 
         toast.success('Campo actualizado');
       } else {
         // Si es un campo nuevo, usar upsert
-        // await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
+        await fieldConfigService.upsert(targetGroup.entity, targetGroup.jsonColumn, [payload]);
         toast.success('Campo creado');
       }
 
