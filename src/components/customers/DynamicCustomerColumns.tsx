@@ -29,6 +29,17 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
+// Función auxiliar para formatear solo la hora
+const formatTime = (dateString: string) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return dateString; // Si no es una fecha válida, devolver el string original
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  const seconds = date.getSeconds().toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`;
+};
+
 // Componente para el estado con dropdown
 const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -171,6 +182,33 @@ export const createDynamicColumns = (columnNames: string[], estados: string[] = 
             const fechaA = parseFecha(rowA.getValue(columnId));
             const fechaB = parseFecha(rowB.getValue(columnId));
             return fechaA < fechaB ? -1 : fechaA > fechaB ? 1 : 0;
+          },
+          enableSorting: true,
+        });
+
+      case 'Hora':
+        return columnHelper.accessor((row) => getColumnValue(row, columnName), {
+          id: 'hora',
+          header: ({ column }) => (
+            <div
+              className="cursor-pointer flex items-center space-x-1"
+              onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            >
+              <span>Hora</span>
+              {column.getIsSorted() === 'asc' ? ' ↑' : column.getIsSorted() === 'desc' ? ' ↓' : ''}
+            </div>
+          ),
+          cell: (info) => formatTime(String(info.getValue() || '')),
+          sortingFn: (rowA, rowB, columnId) => {
+            // Función para parsear horas desde timestamp ISO
+            const parseHora = (horaStr: string) => {
+              if (!horaStr) return 0;
+              const date = new Date(horaStr);
+              return isNaN(date.getTime()) ? 0 : date.getTime();
+            };
+            const horaA = parseHora(rowA.getValue(columnId));
+            const horaB = parseHora(rowB.getValue(columnId));
+            return horaA < horaB ? -1 : horaA > horaB ? 1 : 0;
           },
           enableSorting: true,
         });
