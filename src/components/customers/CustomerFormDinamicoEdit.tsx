@@ -79,9 +79,82 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   // 4) Inicializar datos editables al cargar datosCompletos
   React.useEffect(() => {
     if (datosCompletos) {
-      setEditedData(JSON.parse(JSON.stringify(datosCompletos)));
+      const datosClonados = JSON.parse(JSON.stringify(datosCompletos));
+      
+      // DEBUG: Verificar tipo_credito en los datos cargados ANTES de cualquier modificación
+      console.log('🔍 CustomerFormDinamicoEdit - Datos cargados RAW:', {
+        tipoCreditoDirecto: datosCompletos?.tipo_credito,
+        tipoCreditoEnSolicitud: datosCompletos?.solicitudes?.[0]?.tipo_credito,
+        tipoCreditoEnDetalle: datosCompletos?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
+        solicitudCompleta: datosCompletos?.solicitudes?.[0],
+        datosCompletosKeys: Object.keys(datosCompletos),
+        solicitudesKeys: datosCompletos?.solicitudes?.[0] ? Object.keys(datosCompletos.solicitudes[0]) : [],
+        detalleCreditoKeys: datosCompletos?.solicitudes?.[0]?.detalle_credito ? Object.keys(datosCompletos.solicitudes[0].detalle_credito) : [],
+        detalleCreditoCompleto: datosCompletos?.solicitudes?.[0]?.detalle_credito
+      });
+      
+      // IMPORTANTE: Buscar tipo_credito en TODAS las ubicaciones posibles
+      let tipoCreditoEncontrado = null;
+      
+      // Buscar en orden de prioridad
+      if (datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito) {
+        tipoCreditoEncontrado = datosClonados.solicitudes[0].detalle_credito.tipo_credito;
+        console.log('✅ tipo_credito encontrado en detalle_credito:', tipoCreditoEncontrado);
+      } else if (datosClonados?.solicitudes?.[0]?.tipo_credito) {
+        tipoCreditoEncontrado = datosClonados.solicitudes[0].tipo_credito;
+        console.log('✅ tipo_credito encontrado en solicitud:', tipoCreditoEncontrado);
+      } else if (datosClonados?.tipo_credito) {
+        tipoCreditoEncontrado = datosClonados.tipo_credito;
+        console.log('✅ tipo_credito encontrado en raíz:', tipoCreditoEncontrado);
+      } else {
+        // Buscar dentro de todos los campos de detalle_credito por si tiene otro nombre
+        const detalle = datosClonados?.solicitudes?.[0]?.detalle_credito;
+        if (detalle && typeof detalle === 'object') {
+          const keys = Object.keys(detalle);
+          console.log('🔍 Buscando tipo_credito en keys de detalle_credito:', keys);
+          
+          // Buscar variaciones del nombre
+          const posiblesNombres = ['tipo_credito', 'tipo_de_credito', 'tipoCredito', 'tipo'];
+          for (const nombre of posiblesNombres) {
+            if (detalle[nombre]) {
+              tipoCreditoEncontrado = detalle[nombre];
+              console.log(`✅ tipo_credito encontrado como "${nombre}":`, tipoCreditoEncontrado);
+              break;
+            }
+          }
+        }
+      }
+      
+      // Si encontramos el valor, propagarlo a TODAS las ubicaciones
+      if (tipoCreditoEncontrado) {
+        // Asegurar estructura de solicitudes
+        if (!datosClonados.solicitudes) datosClonados.solicitudes = [{}];
+        if (!datosClonados.solicitudes[0]) datosClonados.solicitudes[0] = {};
+        if (!datosClonados.solicitudes[0].detalle_credito) {
+          datosClonados.solicitudes[0].detalle_credito = {};
+        }
+        
+        // Propagar a todas las ubicaciones
+        datosClonados.solicitudes[0].tipo_credito = tipoCreditoEncontrado;
+        datosClonados.solicitudes[0].detalle_credito.tipo_credito = tipoCreditoEncontrado;
+        datosClonados.tipo_credito = tipoCreditoEncontrado;
+        
+        console.log('✅ tipo_credito propagado a TODAS las ubicaciones:', tipoCreditoEncontrado);
+      } else {
+        console.warn('⚠️ NO se encontró tipo_credito en ninguna ubicación');
+      }
+      
+      setEditedData(datosClonados);
       const originalBank = (datosCompletos?.solicitudes?.[0] as any)?.banco_nombre || '';
       setOriginalBankValue(originalBank);
+      
+      // DEBUG: Verificar tipo_credito DESPUÉS de la propagación
+      console.log('🔍 CustomerFormDinamicoEdit - Datos después de propagación:', {
+        tipoCreditoDirecto: datosClonados?.tipo_credito,
+        tipoCreditoEnSolicitud: datosClonados?.solicitudes?.[0]?.tipo_credito,
+        tipoCreditoEnDetalle: datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
+        valorFinal: tipoCreditoEncontrado
+      });
     }
   }, [datosCompletos]);
 
@@ -554,16 +627,60 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           nombre_banco_usuario: solicitud.nombre_banco_usuario,
           correo_banco_usuario: solicitud.correo_banco_usuario,
         };
-        if (solicitud.detalle_credito) {
-          if (solicitud.detalle_credito.tipo_credito) {
-            solicitudData.tipo_credito = solicitud.detalle_credito.tipo_credito;
-          }
+
+        // 🔧 Procesar tipo_credito como campo fijo (normalizar nombre)
+        const tipoCreditoValue = solicitud.tipo_credito || solicitud.tipo_de_credito || solicitud.detalle_credito?.tipo_credito;
+        if (tipoCreditoValue) {
+          solicitudData.tipo_credito = tipoCreditoValue;
+        }
+        
+        // 🔧 IMPORTANTE: NO incluir tipo_de_credito (debe ser tipo_credito)
+        // Si existe tipo_de_credito, ya lo convertimos a tipo_credito arriba
+
+        // 🔧 Procesar detalle_credito y objetos anidados de crédito
+        if (solicitud.detalle_credito && typeof solicitud.detalle_credito === 'object') {
+          // Crear objeto detalle_credito limpio
+          const detalleCredito: any = {};
+
+          // Copiar todos los campos del detalle_credito (excepto tipo_de_credito)
           Object.keys(solicitud.detalle_credito).forEach((key) => {
-            if (key !== 'tipo_credito' && typeof solicitud.detalle_credito[key] === 'object' && solicitud.detalle_credito[key] !== null) {
-              solicitudData[key] = solicitud.detalle_credito[key];
+            // Saltar tipo_de_credito (debe ser tipo_credito como campo fijo)
+            if (key === 'tipo_de_credito') {
+              return;
+            }
+            const valor = solicitud.detalle_credito[key];
+            if (valor !== undefined && valor !== null && valor !== '') {
+              detalleCredito[key] = valor;
             }
           });
+
+          // Buscar objetos de crédito específicos (credito_vehicular, credito_hipotecario, etc.)
+          // MANTENER la estructura anidada, NO aplanar los campos
+          const creditoKeys = ['credito_vehicular', 'credito_hipotecario', 'credito_libre_inversion', 'credito_consumo'];
+          creditoKeys.forEach(creditoKey => {
+            if (solicitud.detalle_credito[creditoKey] && typeof solicitud.detalle_credito[creditoKey] === 'object') {
+              // Mantener el objeto anidado completo
+              const creditoObjeto: any = {};
+              Object.keys(solicitud.detalle_credito[creditoKey]).forEach(subKey => {
+                const subValor = solicitud.detalle_credito[creditoKey][subKey];
+                if (subValor !== undefined && subValor !== null && subValor !== '' && subValor !== 0) {
+                  creditoObjeto[subKey] = subValor;
+                }
+              });
+              
+              // Solo agregar el objeto si tiene contenido
+              if (Object.keys(creditoObjeto).length > 0) {
+                detalleCredito[creditoKey] = creditoObjeto;
+              }
+            }
+          });
+
+          // Solo agregar detalle_credito si tiene contenido
+          if (Object.keys(detalleCredito).length > 0) {
+            solicitudData.detalle_credito = detalleCredito;
+          }
         }
+
         return solicitudData;
       });
     }
@@ -828,6 +945,14 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   const valores = React.useMemo(() => {
     // En este enfoque, los keys de esquema deben coincidir con keys/paths de editedData para updateNestedData.
     // Si necesitas un mapeo más complejo, aquí es el lugar para transformarlo.
+    console.log('🔍 CustomerFormDinamicoEdit - useMemo valores actualizado:', {
+      tipoCreditoDirecto: editedData?.tipo_credito,
+      tipoCreditoEnSolicitud: editedData?.solicitudes?.[0]?.tipo_credito,
+      tipoCreditoEnDetalle: editedData?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
+      solicitudKeys: editedData?.solicitudes?.[0] ? Object.keys(editedData.solicitudes[0]) : [],
+      detalleCreditoKeys: editedData?.solicitudes?.[0]?.detalle_credito ? Object.keys(editedData.solicitudes[0].detalle_credito) : [],
+      detalleCreditoCompleto: editedData?.solicitudes?.[0]?.detalle_credito
+    });
     return editedData || {};
   }, [editedData]);
 
@@ -1099,14 +1224,25 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       )}
 
       {esquemas.solicitud?.esquema && (
-        <FormularioCompleto
-          esquemaCompleto={esquemas.solicitud.esquema}
-          valores={valores}
-          onChange={handleFieldChange}
-          errores={validationErrors}
-          titulo="Información del Crédito"
-          estadosDisponibles={estados}
-        />
+        <>
+          {/* DEBUG: Verificar campos del esquema de solicitud */}
+          {(() => {
+            console.log('🔍 === ESQUEMA DE SOLICITUD ===');
+            console.log('Campos fijos:', esquemas.solicitud.esquema.campos_fijos?.map(c => ({ key: c.key, description: c.description, type: c.type })));
+            console.log('Campos dinámicos:', esquemas.solicitud.esquema.campos_dinamicos?.map(c => ({ key: c.key, description: c.description, type: c.type, list_values: c.list_values })));
+            console.log('¿Tiene tipo_credito en fijos?', esquemas.solicitud.esquema.campos_fijos?.find(c => c.key === 'tipo_credito'));
+            console.log('¿Tiene tipo_credito en dinámicos?', esquemas.solicitud.esquema.campos_dinamicos?.find(c => c.key === 'tipo_credito'));
+            return null;
+          })()}
+          <FormularioCompleto
+            esquemaCompleto={esquemas.solicitud.esquema}
+            valores={valores}
+            onChange={handleFieldChange}
+            errores={validationErrors}
+            titulo="Información del Crédito"
+            estadosDisponibles={estados}
+          />
+        </>
       )}
 
       {/* Archivos adjuntos */}

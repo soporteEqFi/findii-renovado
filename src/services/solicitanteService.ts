@@ -59,6 +59,9 @@ export interface SolicitudCompleta {
   estado: string;
   created_by_user_id: number;
   assigned_to_user_id: number;
+  tipo_credito?: string; // Campo tipo_credito puede estar aquí o en detalle_credito
+  banco_nombre?: string;
+  ciudad_solicitud?: string;
   detalle_credito?: Record<string, any>;
   observaciones?: Observacion[]; // Campo para historial de observaciones
 }
@@ -87,6 +90,7 @@ export interface TodosLosRegistrosResponse {
   referencias: ReferenciaCompleta[];
   solicitudes: SolicitudCompleta[];
   resumen: ResumenRegistros;
+  tipo_credito?: string; // Campo propagado para compatibilidad
 }
 
 export const solicitanteService = {

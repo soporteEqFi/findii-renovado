@@ -551,11 +551,21 @@ export const esquemaService = {
     if (esquema.campos_fijos && Array.isArray(esquema.campos_fijos)) {
       console.log(`📋 Procesando ${esquema.campos_fijos.length} campos fijos para ${entidad}:`, esquema.campos_fijos.map((c: any) => c.key));
       esquema.campos_fijos.forEach((campo: any) => {
-        if (formData[campo.key] !== undefined && formData[campo.key] !== null && formData[campo.key] !== '') {
-          datos[campo.key] = formData[campo.key];
-          console.log(`✅ Campo fijo agregado: ${campo.key} = ${formData[campo.key]}`);
+        // 🔧 NORMALIZACIÓN: Convertir tipo_de_credito a tipo_credito
+        let fieldKey = campo.key;
+        let fieldValue = formData[campo.key];
+        
+        if (entidad === 'solicitud' && campo.key === 'tipo_de_credito') {
+          fieldKey = 'tipo_credito';
+          fieldValue = formData.tipo_de_credito || formData.tipo_credito;
+          console.log(`🔧 Normalizando: tipo_de_credito → tipo_credito`);
+        }
+        
+        if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
+          datos[fieldKey] = fieldValue;
+          console.log(`✅ Campo fijo agregado: ${fieldKey} = ${fieldValue}`);
         } else {
-          console.log(`❌ Campo fijo vacío: ${campo.key} = ${formData[campo.key]}`);
+          console.log(`❌ Campo fijo vacío: ${fieldKey} = ${fieldValue}`);
         }
       });
     } else {
@@ -599,6 +609,47 @@ export const esquemaService = {
           }
         }
       });
+
+      // 🔧 CASO ESPECIAL: Para solicitud, procesar objetos anidados de crédito
+      if (entidad === 'solicitud') {
+        // Buscar objetos de crédito específicos en formData (credito_vehicular, credito_hipotecario, etc.)
+        const creditoKeys = ['credito_vehicular', 'credito_hipotecario', 'credito_libre_inversion', 'credito_consumo'];
+        creditoKeys.forEach(creditoKey => {
+          if (formData[creditoKey] && typeof formData[creditoKey] === 'object' && !Array.isArray(formData[creditoKey])) {
+            // Asegurar que datos[jsonObjectName] existe
+            if (!datos[jsonObjectName]) {
+              datos[jsonObjectName] = {};
+            }
+            
+            // Mantener la estructura anidada: detalle_credito.credito_hipotecario = { ... }
+            // NO aplanar los campos al nivel de detalle_credito
+            const creditoObjeto: Record<string, any> = {};
+            Object.keys(formData[creditoKey]).forEach(subKey => {
+              const subValor = formData[creditoKey][subKey];
+              // Solo copiar valores que realmente tienen contenido
+              if (subValor !== undefined && subValor !== null && subValor !== '' && subValor !== 0) {
+                creditoObjeto[subKey] = subValor;
+              }
+            });
+            
+            // Solo agregar el objeto si tiene contenido
+            if (Object.keys(creditoObjeto).length > 0) {
+              datos[jsonObjectName][creditoKey] = creditoObjeto;
+              console.log(`✅ Objeto ${creditoKey} agregado a detalle_credito con ${Object.keys(creditoObjeto).length} campos`);
+            }
+          }
+        });
+
+        // También asegurar que tipo_credito esté en detalle_credito si existe
+        if (formData.tipo_credito && formData.tipo_credito !== '') {
+          // Asegurar que datos[jsonObjectName] existe
+          if (!datos[jsonObjectName]) {
+            datos[jsonObjectName] = {};
+          }
+          datos[jsonObjectName].tipo_credito = formData.tipo_credito;
+          console.log(`✅ tipo_credito copiado a detalle_credito: ${formData.tipo_credito}`);
+        }
+      }
 
       // Solo incluir el objeto JSON si tiene campos
       if (Object.keys(datos[jsonObjectName]).length === 0) {
@@ -644,7 +695,21 @@ export const esquemaService = {
         console.log('🔧 Campo fijo forzado: banco_nombre =', formData.banco_nombre);
       }
 
-      // Remover estos campos del detalle_credito si existen
+      // 🔧 CORRECCIÓN: Asegurar que tipo_credito sea campo fijo, NO en detalle_credito
+      // Buscar en formData con diferentes nombres posibles
+      const tipoCreditoValue = formData.tipo_credito || formData.tipo_de_credito;
+      if (tipoCreditoValue && tipoCreditoValue !== '') {
+        datos.tipo_credito = tipoCreditoValue;
+        console.log('🔧 Campo fijo forzado: tipo_credito =', tipoCreditoValue);
+      }
+
+      // 🔧 IMPORTANTE: Remover tipo_de_credito si existe (debe ser tipo_credito)
+      if (datos.tipo_de_credito) {
+        delete datos.tipo_de_credito;
+        console.log('🗑️ Removido tipo_de_credito (debe ser tipo_credito)');
+      }
+
+      // Remover estos campos del detalle_credito si existen (deben ser campos fijos)
       if (datos.detalle_credito) {
         if (datos.detalle_credito.ciudad_solicitud) {
           delete datos.detalle_credito.ciudad_solicitud;
@@ -654,6 +719,12 @@ export const esquemaService = {
           delete datos.detalle_credito.banco_nombre;
           console.log('🗑️ Removido banco_nombre de detalle_credito');
         }
+        // Remover tipo_de_credito del detalle_credito si existe
+        if (datos.detalle_credito.tipo_de_credito) {
+          delete datos.detalle_credito.tipo_de_credito;
+          console.log('🗑️ Removido tipo_de_credito de detalle_credito');
+        }
+        // NO remover tipo_credito de detalle_credito porque puede haber un tipo_credito específico del crédito
       }
 
       console.log('📊 Datos finales corregidos:', datos);

@@ -14,7 +14,7 @@ import { useEditModal } from '../contexts/EditModalContext';
 const Customers = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const { refreshTrigger } = useTableConfig();
-  const { openModal } = useEditModal();
+  const { openModal, setOnSaved } = useEditModal();
   const {
     customers,
     isLoading,
@@ -46,13 +46,17 @@ const Customers = () => {
   const handleRowClick = (customer: Customer) => {
     const idNum = customer.id != null ? Number(customer.id) : null;
     if (Number.isFinite(idNum as number)) {
+      // Configurar el callback para recargar la página después de guardar
+      setOnSaved(() => () => {
+        window.location.reload();
+      });
       openModal(idNum as number, 'Editar Registro');
     }
   };
 
   // Eliminados handlers específicos del modal legacy
 
-    const handleStatusChange = async (customer: Customer, newStatus: string) => {
+  const handleStatusChange = async (customer: Customer, newStatus: string) => {
     try {
       const success = await updateStatus(customer, newStatus);
 
@@ -194,7 +198,8 @@ const Customers = () => {
       >
         <CustomerFormDinamico
           onSubmit={async () => {
-            // Solo quitar el reinicio, mantener el modal abierto
+            // Recargar la página después de crear un nuevo cliente
+            window.location.reload();
           }}
           onCancel={() => setIsNewCustomerModalOpen(false)}
         />

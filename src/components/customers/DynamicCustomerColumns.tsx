@@ -29,15 +29,26 @@ const formatDate = (dateString: string) => {
   return `${day}/${month}/${year}`;
 };
 
-// Función auxiliar para formatear solo la hora
+// Función auxiliar para formatear solo la hora en formato 12 horas
 const formatTime = (dateString: string) => {
   if (!dateString) return '';
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return dateString; // Si no es una fecha válida, devolver el string original
-  const hours = date.getHours().toString().padStart(2, '0');
+  
+  let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, '0');
   const seconds = date.getSeconds().toString().padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`;
+  
+  // Determinar AM/PM
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  
+  // Convertir a formato 12 horas
+  hours = hours % 12;
+  hours = hours ? hours : 12; // la hora '0' debe ser '12'
+  
+  const formattedHours = hours.toString().padStart(2, '0');
+  
+  return `${formattedHours}:${minutes}:${seconds} ${ampm}`;
 };
 
 // Componente para el estado con dropdown

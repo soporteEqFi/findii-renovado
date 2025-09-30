@@ -33,6 +33,24 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     return campo.default_value ?? '';
   })();
 
+  // DEBUG: Log para tipo_credito
+  if (campo.key === 'tipo_credito') {
+    console.log('🔍 CampoDinamico - tipo_credito:', {
+      key: campo.key,
+      valueProp: value,
+      efectiveValue: efectiveValue,
+      campoType: campo.type,
+      campoListValues: campo.list_values,
+      opcionesDisponibles: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values 
+        ? (campo.list_values as { enum: string[] }).enum 
+        : (Array.isArray(campo.list_values) ? campo.list_values : 'No hay opciones'),
+      valorCoincide: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
+        ? (campo.list_values as { enum: string[] }).enum.includes(efectiveValue)
+        : 'N/A',
+      campoCompleto: campo
+    });
+  }
+
   // Cargar configuraciones para campos específicos
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
   const { ciudades, bancos, loading: loadingConfiguraciones } = useConfiguraciones(empresaId);
@@ -651,6 +669,57 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
           <option value="Viajes">Viajes</option>
           <option value="Salud">Salud</option>
           <option value="Otro">Otro</option>
+        </select>
+      );
+    }
+
+    // CASO ESPECIAL: tipo_credito - Manejar como string aunque el esquema diga array
+    if (campo.key === 'tipo_credito') {
+      // Extraer opciones del list_values (puede ser enum en object o array directo)
+      let opciones: string[] = [];
+      
+      console.log('🔧 tipo_credito - INICIO:', {
+        campoKey: campo.key,
+        campoType: campo.type,
+        listValues: campo.list_values,
+        listValuesType: typeof campo.list_values,
+        isArray: Array.isArray(campo.list_values),
+        hasEnum: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
+      });
+      
+      if (campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values) {
+        opciones = (campo.list_values as { enum: string[] }).enum;
+        console.log('✅ Opciones extraídas de enum:', opciones);
+      } else if (Array.isArray(campo.list_values)) {
+        opciones = campo.list_values;
+        console.log('✅ Opciones extraídas de array:', opciones);
+      } else {
+        console.warn('⚠️ No se pudieron extraer opciones de list_values');
+      }
+      
+      console.log('🔧 tipo_credito - Renderizando SELECT:', {
+        opciones,
+        opcionesLength: opciones.length,
+        efectiveValue,
+        efectiveValueType: typeof efectiveValue,
+        valorEnOpciones: opciones.includes(efectiveValue),
+        todasLasOpciones: opciones.map(o => ({ valor: o, coincide: o === efectiveValue }))
+      });
+      
+      return (
+        <select
+          value={efectiveValue || ''}
+          onChange={(e) => handleChange(e.target.value)}
+          className={baseClasses}
+          required={campo.required}
+          disabled={disabled}
+        >
+          <option value="">Seleccionar tipo de crédito...</option>
+          {opciones.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
         </select>
       );
     }

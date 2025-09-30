@@ -57,15 +57,38 @@ const validarEsquema = (esquema: EsquemaCampo[]): EsquemaCampo[] => {
   });
 };
 
+// Función auxiliar para validar que las credenciales estén disponibles
+const validarCredenciales = (): boolean => {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('access_token');
+  const empresaId = localStorage.getItem('empresa_id');
+  
+  return !!(userId && token && empresaId);
+};
+
+// Función auxiliar para esperar con delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsquemaCompletoReturn => {
   const [esquema, setEsquema] = useState<EsquemaCompleto | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const cargarEsquemaCompleto = async () => {
+  const cargarEsquemaCompleto = async (intentoActual: number = 0) => {
     try {
       setLoading(true);
       setError(null);
+
+      // Validar que las credenciales estén disponibles antes de hacer la petición
+      if (!validarCredenciales()) {
+        console.warn(`⏳ Credenciales no disponibles aún para ${entidad}, esperando...`);
+        await delay(300); // Esperar 300ms
+        
+        // Verificar nuevamente después del delay
+        if (!validarCredenciales()) {
+          throw new Error('Credenciales no disponibles');
+        }
+      }
 
       // ✅ USAR EL ENDPOINT CORRECTO: /schema/{entidad} que devuelve campos fijos + dinámicos
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
@@ -188,10 +211,21 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
 
     } catch (error) {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+      
+      // Implementar retry logic con backoff exponencial (máximo 3 intentos)
+      if (intentoActual < 3 && (errorMsg.includes('404') || errorMsg.includes('Credenciales no disponibles'))) {
+        const delayMs = Math.min(1000 * Math.pow(2, intentoActual), 3000); // 1s, 2s, 3s max
+        console.warn(`⚠️ Error cargando esquema ${entidad}, reintentando en ${delayMs}ms (intento ${intentoActual + 1}/3)`);
+        
+        await delay(delayMs);
+        return cargarEsquemaCompleto(intentoActual + 1);
+      }
+      
       console.error(`❌ Error cargando esquema para ${entidad}:`, error);
       console.error(`🏢 Empresa ID usado: ${empresaIdToUse}`);
       console.error(`📡 URL intentada: /schema/${entidad}?empresa_id=${empresaIdToUse}`);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
+      setError(errorMsg);
 
       // En caso de error, crear un esquema básico con campos fijos por defecto
       const esquemaBasico: EsquemaCompleto = {
@@ -324,7 +358,12 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
   };
 
   useEffect(() => {
-    cargarEsquemaCompleto();
+    // Pequeño delay inicial para asegurar que el contexto esté listo
+    const timer = setTimeout(() => {
+      cargarEsquemaCompleto(0);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [entidad, empresaId]);
 
   // Listen for field configuration changes and refresh schema

@@ -63,7 +63,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       numero_documento: '12345678',
       fecha_nacimiento: '1990-05-15',
       genero: 'M',
-      correo: 'juan.perez@email.com',
+      correo: 'equitisoporte@gmail.com',
       telefono: '3001234567',
       estado_civil: 'Soltero',
       personas_a_cargo: 0,

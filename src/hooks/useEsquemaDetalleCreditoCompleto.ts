@@ -2,6 +2,18 @@ import { useState, useEffect } from 'react';
 import { buildApiUrl } from '../config/constants';
 import { EsquemaCampo } from '../types/esquemas';
 
+// Función auxiliar para validar que las credenciales estén disponibles
+const validarCredenciales = (): boolean => {
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('access_token');
+  const empresaId = localStorage.getItem('empresa_id');
+  
+  return !!(userId && token && empresaId);
+};
+
+// Función auxiliar para esperar con delay
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Hook específico para obtener el esquema completo de detalle_credito
 // que incluye los campos condicionales basados en tipo_credito
 export interface EsquemaDetalleCreditoCompleto {
@@ -23,14 +35,26 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const cargarEsquemaDetalle = async () => {
+  const cargarEsquemaDetalle = async (intentoActual: number = 0) => {
     try {
       setLoading(true);
       setError(null);
 
+      // Validar que las credenciales estén disponibles antes de hacer la petición
+      if (!validarCredenciales()) {
+        console.warn('⏳ Credenciales no disponibles aún para detalle_credito, esperando...');
+        await delay(300); // Esperar 300ms
+        
+        // Verificar nuevamente después del delay
+        if (!validarCredenciales()) {
+          throw new Error('Credenciales no disponibles');
+        }
+      }
+
       // Usar el endpoint específico para obtener el schema de detalle_credito
+      const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const response = await fetch(
-        buildApiUrl(`/json/schema/solicitudes/detalle_credito?empresa_id=${empresaId}`),
+        buildApiUrl(`/json/schema/solicitudes/detalle_credito?empresa_id=${empresaIdToUse}`),
         {
           headers: {
             'X-User-Id': localStorage.getItem('user_id') || '1',
@@ -100,8 +124,19 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
       }
 
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+      
+      // Implementar retry logic con backoff exponencial (máximo 3 intentos)
+      if (intentoActual < 3 && (errorMsg.includes('404') || errorMsg.includes('Credenciales no disponibles'))) {
+        const delayMs = Math.min(1000 * Math.pow(2, intentoActual), 3000); // 1s, 2s, 3s max
+        console.warn(`⚠️ Error cargando esquema detalle_credito, reintentando en ${delayMs}ms (intento ${intentoActual + 1}/3)`);
+        
+        await delay(delayMs);
+        return cargarEsquemaDetalle(intentoActual + 1);
+      }
+      
       console.error('❌ Error cargando esquema detalle crédito:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
+      setError(errorMsg);
 
       // Esquema básico en caso de error
       setEsquema({
@@ -120,7 +155,12 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
   };
 
   useEffect(() => {
-    cargarEsquemaDetalle();
+    // Pequeño delay inicial para asegurar que el contexto esté listo
+    const timer = setTimeout(() => {
+      cargarEsquemaDetalle(0);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [empresaId]);
 
   return { esquema, loading, error, refetch };

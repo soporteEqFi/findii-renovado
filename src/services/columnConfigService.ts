@@ -363,7 +363,26 @@ export const getColumnValue = (customer: any, columnName: string): any => {
       return customer.celular || customer.numero_celular || customer.telefono;
 
     case normalize('Tipo Credito'):
-      return customer.tipo_credito || customer.tipo_de_credito;
+      const tipoCreditoRaw = customer.tipo_credito || customer.tipo_de_credito;
+      // Normalizar valores antiguos que no tienen el prefijo "Crédito"
+      if (tipoCreditoRaw) {
+        const normalized = tipoCreditoRaw.toLowerCase();
+        if (normalized === 'hipotecario' || normalized === 'vivienda') {
+          return 'Crédito hipotecario';
+        }
+        if (normalized === 'vehicular' || normalized === 'vehiculo' || normalized === 'vehículo') {
+          return 'Crédito vehicular';
+        }
+        if (normalized === 'libre inversion' || normalized === 'libre inversión') {
+          return 'Crédito de libre inversión';
+        }
+        if (normalized === 'consumo') {
+          return 'Crédito de consumo';
+        }
+        // Si ya tiene el formato correcto, retornarlo tal cual
+        return tipoCreditoRaw;
+      }
+      return '';
 
     case normalize('Tipo Actividad Economica'):
       // Buscar en la estructura anidada de actividad_economica
