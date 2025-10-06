@@ -68,7 +68,6 @@ export const API_CONFIG = {
     CONFIGURACIONES: '/configuraciones', // GET /configuraciones/{categoria}?empresa_id={id}
 
     // Endpoints para estadísticas
-    ESTADISTICAS_GENERALES: '/estadisticas/generales',
     ESTADISTICAS_RENDIMIENTO: '/estadisticas/rendimiento',
     ESTADISTICAS_FINANCIERAS: '/estadisticas/financieras',
     ESTADISTICAS_COMPLETAS: '/estadisticas/completas',
@@ -77,6 +76,9 @@ export const API_CONFIG = {
     // Endpoint para reordenar campos dinámicos
     REORDENAR_CAMPOS: '/json/definitions/{entity}/{json_field}/reorder',
     ORDEN_CAMPOS_FORMULARIO: '/json/definitions/{entity}/{json_field}/reorder',
+
+    // Endpoint para descargar ventas
+    DESCARGAR_VENTAS: '/solicitantes/descargar-ventas',
   }
 };
 

@@ -7,7 +7,7 @@ import { CustomerFormDinamico } from '../components/customers/CustomerFormDinami
 import { CustomerTable } from '../components/customers/CustomerTable';
 import { Customer } from '../types/customer';
 import { usePermissions } from '../utils/permissions';
-import { buildApiUrl } from '../config/constants';
+import { buildApiUrl, API_CONFIG } from '../config/constants';
 import { useTableConfig } from '../contexts/TableConfigContext';
 import { useEditModal } from '../contexts/EditModalContext';
 
@@ -79,15 +79,11 @@ const Customers = () => {
       }
 
       const empresaId = localStorage.getItem('empresa_id') || '1';
-      const response = await fetch(buildApiUrl(`/descargar-ventas/?empresa_id=${empresaId}`), {
-        method: 'POST',
+      const response = await fetch(buildApiUrl(`${API_CONFIG.ENDPOINTS.DESCARGAR_VENTAS}?empresa_id=${empresaId}`), {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-        },
-        body: JSON.stringify({
-          cedula: cedula
-        })
+        }
       });
 
       if (!response.ok) {
@@ -97,13 +93,26 @@ const Customers = () => {
       // Obtener el blob de la respuesta
       const blob = await response.blob();
 
+      // Detectar el tipo de archivo basado en el Content-Type
+      const contentType = response.headers.get('content-type') || '';
+      let fileName = 'ventas_realizadas';
+      let fileExtension = '.csv';
+
+      if (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')) {
+        fileExtension = '.xlsx';
+      } else if (contentType.includes('application/vnd.ms-excel')) {
+        fileExtension = '.xls';
+      } else if (contentType.includes('text/csv')) {
+        fileExtension = '.csv';
+      }
+
       // Crear URL del blob
       const url = window.URL.createObjectURL(blob);
 
       // Crear elemento anchor temporal
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'ventas_realizadas.csv'; // Nombre del archivo a descargar
+      a.download = fileName + fileExtension;
 
       // Añadir al DOM, hacer clic y remover
       document.body.appendChild(a);

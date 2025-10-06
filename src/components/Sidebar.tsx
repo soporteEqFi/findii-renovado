@@ -7,13 +7,13 @@ interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
-
 const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAdmin = user && (user.rol === 'admin' || user.rol === 'supervisor');
+  const isAdmin = user && user.rol === 'admin';
+  const isSupervisorOrAdmin = user && (user.rol === 'admin' || user.rol === 'supervisor');
 
   // Definir elementos de menú basados en el rol
   const menuItems = [
@@ -27,6 +27,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   // Agregar elementos solo para administradores
   const adminMenuItems = [
     { icon: Settings, label: 'Configuración', path: '/config' },
+  ];
+
+  // Agregar elementos para supervisores y administradores
+  const supervisorMenuItems = [
     { icon: UserCog, label: 'Usuarios', path: '/users' },
   ];
 
@@ -98,6 +102,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
 
         {/* Elementos de menú solo para administradores */}
         {isAdmin && adminMenuItems.map((item) => (
+          <li key={item.path}>
+            <Link
+              to={item.path}
+              onClick={onClose}
+              className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
+                location.pathname === item.path
+                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
+                  : 'text-gray-300'
+              }`}
+              title={item.label}
+            >
+              <item.icon className="menu-icon w-4 h-4 mr-3 md:mr-0 lg:mr-3 lg:w-5 lg:h-5" />
+              <span className="menu-text text-sm lg:text-base">{item.label}</span>
+            </Link>
+          </li>
+        ))}
+
+        {/* Elementos de menú para supervisores y administradores */}
+        {isSupervisorOrAdmin && supervisorMenuItems.map((item) => (
           <li key={item.path}>
             <Link
               to={item.path}
