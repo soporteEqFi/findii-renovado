@@ -18,7 +18,16 @@ export const useCustomers = () => {
       setIsLoading(true);
       setError(null);
 
-      const empresaId = localStorage.getItem('empresa_id') || '1';
+      // Verificar que tenemos los datos necesarios antes de hacer la petición
+      const empresaId = localStorage.getItem('empresa_id');
+      const accessToken = localStorage.getItem('access_token');
+      
+      if (!empresaId || !accessToken) {
+        console.warn('⚠️ Faltan datos de autenticación, esperando...');
+        setIsLoading(false);
+        return;
+      }
+
       let userId = localStorage.getItem('user_id') || '';
       let userRole = '';
 
@@ -47,7 +56,8 @@ export const useCustomers = () => {
 
       const response = await fetch(url, {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
         }
       });
 
@@ -175,6 +185,7 @@ export const useCustomers = () => {
         return dateB.getTime() - dateA.getTime();
       });
 
+      console.log(`✅ Datos cargados exitosamente: ${sortedCustomers.length} registros`);
       setCustomers(sortedCustomers);
       setTotalRecords(sortedCustomers.length);
       setError(null);

@@ -139,6 +139,22 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
     // 7) Solicitudes (primera) y detalle_credito
     const sol0 = valores?.solicitudes?.[0];
     
+    // EXCEPCIÓN: Campos que están en el nivel de solicitud (no en detalle_credito)
+    // Estos campos deben buscarse primero en el nivel de solicitud
+    const camposNivelSolicitud = ['banco_nombre', 'ciudad_solicitud', 'estado', 'nombre_asesor', 'correo_asesor', 'nombre_banco_usuario', 'correo_banco_usuario'];
+    if (camposNivelSolicitud.includes(key)) {
+      const vSol = tryObj(sol0);
+      if (key === 'banco_nombre') {
+        console.log('🔍 getNestedValue para banco_nombre:', {
+          key: key,
+          sol0: sol0,
+          valorEncontrado: vSol,
+          solicitudesCompletas: valores?.solicitudes
+        });
+      }
+      if (vSol !== undefined) return vSol;
+    }
+    
     // IMPORTANTE: Para campos de solicitud, buscar primero en detalle_credito antes que en el nivel superior
     // Esto es especialmente importante para tipo_credito que está en detalle_credito.tipo_credito
     const detCred = sol0?.detalle_credito;
@@ -156,7 +172,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       }
     }
     
-    // Luego buscar en el nivel de solicitud
+    // Luego buscar en el nivel de solicitud (para campos que no están en la excepción)
     const vSol = tryObj(sol0);
     if (vSol !== undefined) return vSol;
 

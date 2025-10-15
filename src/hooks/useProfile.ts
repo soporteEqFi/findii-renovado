@@ -44,7 +44,7 @@ export const useProfile = () => {
     }
   }, [user]);
 
-  const updateProfile = async (updatedInfo: Partial<UserInfo>) => {
+  const updateProfile = async (updatedInfo: Partial<UserInfo> & { contraseña?: string }) => {
     try {
       setLoading(true);
       setError(null);
@@ -54,7 +54,7 @@ export const useProfile = () => {
       }
 
       // Preparar datos para actualizar
-      const updateData = {
+      const updateData: any = {
         nombre: updatedInfo.nombre,
         cedula: updatedInfo.cedula,
         correo: updatedInfo.correo,
@@ -62,16 +62,36 @@ export const useProfile = () => {
         info_extra: updatedInfo.info_extra
       };
 
+      // Incluir contraseña solo si se proporcionó
+      if (updatedInfo.contraseña) {
+        updateData.contraseña = updatedInfo.contraseña;
+        console.log('🔐 Actualizando contraseña del usuario');
+      }
+
       // Usar el servicio de usuarios para actualizar
       const updatedUser = await userService.updateUser(user.id, updateData);
 
       // Actualizar el estado local
-      setUserInfo(prev => prev ? {
-        ...prev,
+      const newUserInfo = {
+        ...userInfo,
         ...updatedUser,
-        empresa: updatedUser.empresa || prev.empresa,
-        imagen_aliado: updatedUser.imagen_aliado || prev.imagen_aliado
-      } : null);
+        empresa: updatedUser.empresa || userInfo?.empresa,
+        imagen_aliado: updatedUser.imagen_aliado || userInfo?.imagen_aliado
+      };
+
+      setUserInfo(newUserInfo);
+
+      // Actualizar también el localStorage para persistir los cambios
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        const updatedStoredUser = {
+          ...parsedUser,
+          ...newUserInfo
+        };
+        localStorage.setItem('user', JSON.stringify(updatedStoredUser));
+        console.log('✅ Usuario actualizado en localStorage');
+      }
 
       return true;
     } catch (err) {

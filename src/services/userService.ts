@@ -170,18 +170,27 @@ export const userService = {
   ): Promise<User> {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
+      
       // Limpiar info_extra si está presente
       const cleanUpdateData = {
         ...updateData,
         info_extra: updateData.info_extra ? this.cleanInfoExtra(updateData.info_extra) : undefined
       };
 
+      console.log('📤 Enviando actualización de usuario:', {
+        userId,
+        empresaId: empresaIdToUse,
+        data: cleanUpdateData,
+        tieneContraseña: !!updateData.contraseña
+      });
+
       const response = await fetch(
-        buildApiUrl(`/usuarios/${userId}?empresa_id=${empresaIdToUse}`),
+        buildApiUrl(`/usuarios/${userId}`),
         {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
+            'X-Empresa-Id': empresaIdToUse.toString(),
             'Authorization': `Bearer ${localStorage.getItem('access_token')}`
           },
           body: JSON.stringify(cleanUpdateData)
@@ -196,12 +205,14 @@ export const userService = {
       const result = await response.json();
       const user = result.data || result;
 
+      console.log('✅ Usuario actualizado exitosamente:', user);
+
       return {
         ...user,
         info_extra: this.processInfoExtra(user.info_extra)
       };
     } catch (error) {
-      console.error('Error actualizando usuario:', error);
+      console.error('❌ Error actualizando usuario:', error);
       throw error;
     }
   },

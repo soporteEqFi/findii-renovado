@@ -72,24 +72,19 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
       try {
         setIsLoadingColumns(true);
 
-        // Solo proceder si tenemos datos de clientes
-        if (!customers || customers.length === 0) {
-          console.log('No hay datos de clientes, usando columnas por defecto');
-          const defaultColumnNames = getDefaultColumns();
-          const dynamicColumns = createDynamicColumns(defaultColumnNames, estados);
-          setColumns(dynamicColumns);
-          return;
-        }
-
-
         // Primero intentar obtener columnas desde la API de configuración
         let columnNames;
         try {
           columnNames = await fetchColumnConfig(empresaId, customers);
         } catch (configError) {
           console.warn('Error obteniendo configuración de columnas, detectando automáticamente:', configError);
-          // Si falla la configuración, detectar automáticamente desde los datos procesados
-          columnNames = detectAvailableColumns(customers);
+          // Si falla la configuración y tenemos datos, detectar automáticamente
+          if (customers && customers.length > 0) {
+            columnNames = detectAvailableColumns(customers);
+          } else {
+            // Si no hay datos aún, usar columnas por defecto
+            columnNames = getDefaultColumns();
+          }
         }
 
         const dynamicColumns = createDynamicColumns(columnNames, estados);
@@ -105,8 +100,11 @@ export const CustomerTable: React.FC<CustomerTableProps> = ({
       }
     };
 
-    loadColumnConfig();
-  }, [empresaId, customers, refreshTrigger, estados]);
+    // Solo cargar columnas si los estados ya están disponibles
+    if (!loadingEstados) {
+      loadColumnConfig();
+    }
+  }, [empresaId, customers, refreshTrigger, estados, loadingEstados]);
 
   const filteredData = useMemo(() => {
     return customers.filter(customer => {

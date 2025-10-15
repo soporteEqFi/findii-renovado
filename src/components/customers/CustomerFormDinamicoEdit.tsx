@@ -81,17 +81,20 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     if (datosCompletos) {
       const datosClonados = JSON.parse(JSON.stringify(datosCompletos));
       
-      // DEBUG: Verificar tipo_credito en los datos cargados ANTES de cualquier modificación
-      console.log('🔍 CustomerFormDinamicoEdit - Datos cargados RAW:', {
-        tipoCreditoDirecto: datosCompletos?.tipo_credito,
-        tipoCreditoEnSolicitud: datosCompletos?.solicitudes?.[0]?.tipo_credito,
-        tipoCreditoEnDetalle: datosCompletos?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
-        solicitudCompleta: datosCompletos?.solicitudes?.[0],
-        datosCompletosKeys: Object.keys(datosCompletos),
-        solicitudesKeys: datosCompletos?.solicitudes?.[0] ? Object.keys(datosCompletos.solicitudes[0]) : [],
-        detalleCreditoKeys: datosCompletos?.solicitudes?.[0]?.detalle_credito ? Object.keys(datosCompletos.solicitudes[0].detalle_credito) : [],
-        detalleCreditoCompleto: datosCompletos?.solicitudes?.[0]?.detalle_credito
-      });
+      // DEBUG: Verificar TODA la estructura de datos cargados
+      console.log('🔍 ========== DATOS CARGADOS RAW ==========');
+      console.log('📦 Estructura completa:', datosCompletos);
+      console.log('👤 Solicitante:', datosCompletos?.solicitante);
+      console.log('📍 Ubicaciones:', datosCompletos?.ubicaciones);
+      console.log('💼 Actividad económica:', datosCompletos?.actividad_economica);
+      console.log('💰 Información financiera:', datosCompletos?.informacion_financiera);
+      console.log('👥 Referencias:', datosCompletos?.referencias);
+      console.log('📄 Solicitudes:', datosCompletos?.solicitudes);
+      console.log('🏦 Solicitud[0] completa:', datosCompletos?.solicitudes?.[0]);
+      console.log('💳 Detalle crédito:', datosCompletos?.solicitudes?.[0]?.detalle_credito);
+      console.log('🔑 Keys de solicitud[0]:', datosCompletos?.solicitudes?.[0] ? Object.keys(datosCompletos.solicitudes[0]) : []);
+      console.log('🔑 Keys de detalle_credito:', datosCompletos?.solicitudes?.[0]?.detalle_credito ? Object.keys(datosCompletos.solicitudes[0].detalle_credito) : []);
+      console.log('========================================');
       
       // IMPORTANTE: Buscar tipo_credito en TODAS las ubicaciones posibles
       let tipoCreditoEncontrado = null;
@@ -148,12 +151,16 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const originalBank = (datosCompletos?.solicitudes?.[0] as any)?.banco_nombre || '';
       setOriginalBankValue(originalBank);
       
-      // DEBUG: Verificar tipo_credito DESPUÉS de la propagación
+      // DEBUG: Verificar tipo_credito Y banco_nombre DESPUÉS de la propagación
       console.log('🔍 CustomerFormDinamicoEdit - Datos después de propagación:', {
         tipoCreditoDirecto: datosClonados?.tipo_credito,
         tipoCreditoEnSolicitud: datosClonados?.solicitudes?.[0]?.tipo_credito,
         tipoCreditoEnDetalle: datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
-        valorFinal: tipoCreditoEncontrado
+        valorFinal: tipoCreditoEncontrado,
+        // DEBUG banco_nombre
+        bancoNombreEnSolicitud: datosClonados?.solicitudes?.[0]?.banco_nombre,
+        bancoNombreOriginal: originalBank,
+        solicitudCompleta: datosClonados?.solicitudes?.[0]
       });
     }
   }, [datosCompletos]);
@@ -461,20 +468,31 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
       if (!newData.solicitudes[0].detalle_credito) newData.solicitudes[0].detalle_credito = {};
 
+      const tipoActual = newData.solicitudes[0].tipo_credito || newData.solicitudes[0].detalle_credito.tipo_credito;
+      const targetKey = detailKeyForTipoCredito(String(value || ''));
+      const dc = newData.solicitudes[0].detalle_credito;
+
+      console.log('🔄 Cambio de tipo_credito:', {
+        tipoAnterior: tipoActual,
+        tipoNuevo: value,
+        targetKey: targetKey,
+        detalleCreditoActual: Object.keys(dc),
+        objetosPreservados: Object.keys(dc).filter(k => k !== 'tipo_credito' && typeof dc[k] === 'object')
+      });
+
       // Escribir el tipo en ambos lugares para compatibilidad con esquemas
       newData.solicitudes[0].tipo_credito = value;
       newData.solicitudes[0].detalle_credito.tipo_credito = value;
 
-      // Crear/ajustar sub-objeto del tipo seleccionado y limpiar otros
-      const targetKey = detailKeyForTipoCredito(String(value || ''));
-      const dc = newData.solicitudes[0].detalle_credito;
-      // Preservar el objeto del tipo objetivo si existe; limpiar otros objetos de detalle
-      Object.keys(dc).forEach((k) => {
-        if (k !== 'tipo_credito' && k !== targetKey && typeof dc[k] === 'object') {
-          delete dc[k];
-        }
-      });
-      if (!dc[targetKey]) dc[targetKey] = {};
+      // ✅ CRÍTICO: NO ELIMINAR NINGÚN OBJETO DE DETALLE DE CRÉDITO
+      // Solo asegurar que el objeto del tipo objetivo existe
+      // Esto permite cambiar entre tipos sin perder datos
+      if (!dc[targetKey]) {
+        dc[targetKey] = {};
+        console.log(`✅ Creando objeto vacío para ${targetKey}`);
+      } else {
+        console.log(`✅ Preservando objeto existente de ${targetKey}:`, dc[targetKey]);
+      }
 
       setEditedData(newData);
       return;
@@ -649,29 +667,32 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
               return;
             }
             const valor = solicitud.detalle_credito[key];
-            if (valor !== undefined && valor !== null && valor !== '') {
+            // ✅ Preservar todos los valores excepto undefined
+            if (valor !== undefined) {
               detalleCredito[key] = valor;
             }
           });
 
           // Buscar objetos de crédito específicos (credito_vehicular, credito_hipotecario, etc.)
           // MANTENER la estructura anidada, NO aplanar los campos
+          // ✅ CRÍTICO: Preservar TODOS los objetos de crédito, incluso si están vacíos o tienen valores en 0
           const creditoKeys = ['credito_vehicular', 'credito_hipotecario', 'credito_libre_inversion', 'credito_consumo'];
           creditoKeys.forEach(creditoKey => {
             if (solicitud.detalle_credito[creditoKey] && typeof solicitud.detalle_credito[creditoKey] === 'object') {
-              // Mantener el objeto anidado completo
+              // Mantener el objeto anidado completo CON TODOS SUS VALORES
               const creditoObjeto: any = {};
               Object.keys(solicitud.detalle_credito[creditoKey]).forEach(subKey => {
                 const subValor = solicitud.detalle_credito[creditoKey][subKey];
-                if (subValor !== undefined && subValor !== null && subValor !== '' && subValor !== 0) {
+                // ✅ Incluir TODOS los valores, incluso vacíos, null, 0, etc.
+                // Solo excluir undefined para evitar campos no definidos
+                if (subValor !== undefined) {
                   creditoObjeto[subKey] = subValor;
                 }
               });
               
-              // Solo agregar el objeto si tiene contenido
-              if (Object.keys(creditoObjeto).length > 0) {
-                detalleCredito[creditoKey] = creditoObjeto;
-              }
+              // ✅ Agregar el objeto SIEMPRE, incluso si está vacío
+              // Esto preserva la estructura para todos los tipos de crédito
+              detalleCredito[creditoKey] = creditoObjeto;
             }
           });
 
@@ -949,6 +970,10 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       tipoCreditoDirecto: editedData?.tipo_credito,
       tipoCreditoEnSolicitud: editedData?.solicitudes?.[0]?.tipo_credito,
       tipoCreditoEnDetalle: editedData?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
+      // DEBUG banco_nombre
+      bancoNombreEnSolicitud: editedData?.solicitudes?.[0]?.banco_nombre,
+      ciudadSolicitud: editedData?.solicitudes?.[0]?.ciudad_solicitud,
+      estadoSolicitud: editedData?.solicitudes?.[0]?.estado,
       solicitudKeys: editedData?.solicitudes?.[0] ? Object.keys(editedData.solicitudes[0]) : [],
       detalleCreditoKeys: editedData?.solicitudes?.[0]?.detalle_credito ? Object.keys(editedData.solicitudes[0].detalle_credito) : [],
       detalleCreditoCompleto: editedData?.solicitudes?.[0]?.detalle_credito

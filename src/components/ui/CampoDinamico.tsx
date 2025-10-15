@@ -33,21 +33,22 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     return campo.default_value ?? '';
   })();
 
-  // DEBUG: Log para tipo_credito
-  if (campo.key === 'tipo_credito') {
-    console.log('🔍 CampoDinamico - tipo_credito:', {
+  // DEBUG: Log para campos problemáticos
+  if (campo.key === 'tipo_credito' || campo.key === 'banco_nombre') {
+    console.log(`🔍 CampoDinamico - ${campo.key}:`, {
       key: campo.key,
       valueProp: value,
       efectiveValue: efectiveValue,
       campoType: campo.type,
+      campoDescription: campo.description,
+      campoRequired: campo.required,
       campoListValues: campo.list_values,
       opcionesDisponibles: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values 
         ? (campo.list_values as { enum: string[] }).enum 
         : (Array.isArray(campo.list_values) ? campo.list_values : 'No hay opciones'),
       valorCoincide: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
         ? (campo.list_values as { enum: string[] }).enum.includes(efectiveValue)
-        : 'N/A',
-      campoCompleto: campo
+        : 'N/A'
     });
   }
 

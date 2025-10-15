@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { loginUser, validateToken } from '../services/authService';
+import { loginUser } from '../services/authService';
 import { User } from '../types/user';
 
 // Define context type
@@ -20,7 +20,6 @@ type AuthProviderProps = {
   children: ReactNode;
 };
 
-// Auth provider component
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,21 +34,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUser = localStorage.getItem('user');
 
         if (storedToken && storedUser) {
+          // Establecer el usuario inmediatamente desde localStorage
+          const parsedUser = JSON.parse(storedUser);
+          setToken(storedToken);
+          setUser(parsedUser);
+          
           // Desactivar validación de token temporalmente
           // const isValid = await validateToken();
-
-          // Asumir que el token es válido si existe
-          const isValid = true;
-
-          if (isValid) {
-            const parsedUser = JSON.parse(storedUser);
-            setToken(storedToken);
-            setUser(parsedUser);
-          } else {
-            // Token is invalid, clear storage
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user');
-          }
+          // Si en el futuro se activa la validación, se puede hacer en segundo plano
+        } else {
+          // No hay datos de autenticación
+          setUser(null);
+          setToken(null);
         }
       } catch (error) {
         console.error('Authentication error:', error);

@@ -17,7 +17,7 @@ const Customers = () => {
   const { openModal, setOnSaved } = useEditModal();
   const {
     customers,
-    isLoading,
+    isLoading: customersLoading,
     // error,
     loadCustomers,
     // deleteCustomer,
@@ -34,10 +34,10 @@ const Customers = () => {
   const tableKey = 0;
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !authLoading) {
       loadCustomers();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, authLoading, loadCustomers]);
 
   // Usar el sistema de permisos centralizado
   // Permisos disponibles: canEditCustomer, canDeleteCustomer (no usados directamente aquí)
@@ -128,10 +128,11 @@ const Customers = () => {
   };
 
   // Renderizado condicional para estados de carga y autenticación
-  if (authLoading || isLoading) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        <span className="ml-2 text-gray-600">Verificando autenticación...</span>
       </div>
     );
   }
@@ -185,14 +186,21 @@ const Customers = () => {
         </div>
 
         {/* Tabla de Clientes */}
-        <CustomerTable
-          key={tableKey}
-          customers={customers}
-          onRowClick={handleRowClick}
-          onStatusChange={handleStatusChange}
-          empresaId={1}
-          refreshTrigger={refreshTrigger}
-        />
+        {customersLoading && customers.length === 0 ? (
+          <div className="flex items-center justify-center p-8">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-2" />
+            <span className="text-gray-600">Cargando datos...</span>
+          </div>
+        ) : (
+          <CustomerTable
+            key={tableKey}
+            customers={customers}
+            onRowClick={handleRowClick}
+            onStatusChange={handleStatusChange}
+            empresaId={1}
+            refreshTrigger={refreshTrigger}
+          />
+        )}
       </div>
 
       {/* Modal legacy CustomerDetails eliminado */}

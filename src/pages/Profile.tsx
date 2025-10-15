@@ -16,7 +16,13 @@ const Profile = () => {
     try {
       await updateProfile(updatedInfo);
       setIsModalOpen(false);
-      toast.success('Perfil actualizado correctamente');
+      
+      // Mensaje diferente si se cambió la contraseña
+      if (updatedInfo.contraseña) {
+        toast.success('Perfil y contraseña actualizados correctamente');
+      } else {
+        toast.success('Perfil actualizado correctamente');
+      }
     } catch (err) {
       toast.error('Error al actualizar la información del usuario');
     }
