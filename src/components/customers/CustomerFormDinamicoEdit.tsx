@@ -81,20 +81,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     if (datosCompletos) {
       const datosClonados = JSON.parse(JSON.stringify(datosCompletos));
 
-      // DEBUG: Verificar TODA la estructura de datos cargados
-      console.log('🔍 ========== DATOS CARGADOS RAW ==========');
-      console.log('📦 Estructura completa:', datosCompletos);
-      console.log('👤 Solicitante:', datosCompletos?.solicitante);
-      console.log('📍 Ubicaciones:', datosCompletos?.ubicaciones);
-      console.log('💼 Actividad económica:', datosCompletos?.actividad_economica);
-      console.log('💰 Información financiera:', datosCompletos?.informacion_financiera);
-      console.log('👥 Referencias:', datosCompletos?.referencias);
-      console.log('📄 Solicitudes:', datosCompletos?.solicitudes);
-      console.log('🏦 Solicitud[0] completa:', datosCompletos?.solicitudes?.[0]);
-      console.log('💳 Detalle crédito:', datosCompletos?.solicitudes?.[0]?.detalle_credito);
-      console.log('🔑 Keys de solicitud[0]:', datosCompletos?.solicitudes?.[0] ? Object.keys(datosCompletos.solicitudes[0]) : []);
-      console.log('🔑 Keys de detalle_credito:', datosCompletos?.solicitudes?.[0]?.detalle_credito ? Object.keys(datosCompletos.solicitudes[0].detalle_credito) : []);
-      console.log('========================================');
 
       // IMPORTANTE: Buscar tipo_credito en TODAS las ubicaciones posibles
       let tipoCreditoEncontrado = null;
@@ -145,6 +131,18 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         console.log('✅ tipo_credito propagado a TODAS las ubicaciones:', tipoCreditoEncontrado);
       } else {
         console.warn('⚠️ NO se encontró tipo_credito en ninguna ubicación');
+      }
+
+      // 🔧 PROCESAR INFO_EXTRA: Asegurar que se mantenga como objeto
+      if (datosClonados?.solicitante?.info_extra) {
+        // Si es string, parsearlo
+        if (typeof datosClonados.solicitante.info_extra === 'string') {
+          try {
+            datosClonados.solicitante.info_extra = JSON.parse(datosClonados.solicitante.info_extra);
+          } catch (error) {
+            // Mantener como string si no se puede parsear
+          }
+        }
       }
 
       setEditedData(datosClonados);
@@ -458,7 +456,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   };
 
   const handleFieldChange = (key: string, value: any) => {
-
     // Caso especial: cambio de tipo_credito
     if (key === 'tipo_credito') {
       if (!editedData) return;
@@ -593,7 +590,28 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         genero: data.solicitante.genero,
       };
       if (data.solicitante.info_extra) {
-        requestData.solicitante.info_extra = data.solicitante.info_extra;
+        let infoExtraToSend = data.solicitante.info_extra;
+
+        // Si es un string JSON, parsearlo
+        if (typeof data.solicitante.info_extra === 'string') {
+          try {
+            infoExtraToSend = JSON.parse(data.solicitante.info_extra);
+          } catch (error) {
+            infoExtraToSend = {};
+          }
+        }
+
+        // 🔧 VALIDACIÓN FINAL: Asegurar que no se envíen objetos corruptos
+        if (typeof infoExtraToSend === 'object' && infoExtraToSend !== null) {
+          const keys = Object.keys(infoExtraToSend);
+          const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+          if (hasNumericKeys) {
+            infoExtraToSend = {}; // Limpiar completamente
+          }
+        }
+
+        requestData.solicitante.info_extra = infoExtraToSend;
       }
     }
 
