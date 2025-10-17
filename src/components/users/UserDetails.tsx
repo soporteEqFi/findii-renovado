@@ -56,7 +56,34 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   const handleInfoExtraChange = (field: string, value: string) => {
     if (!editedUser) return;
 
-    const currentInfoExtra = editedUser.info_extra || {};
+    let currentInfoExtra = editedUser.info_extra || {};
+
+    // 🔧 VALIDACIÓN: Detectar objetos corruptos con claves numéricas
+    if (typeof currentInfoExtra === 'object' && currentInfoExtra !== null) {
+      const keys = Object.keys(currentInfoExtra);
+      const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+      if (hasNumericKeys) {
+        // Intentar reconstruir el JSON válido a partir de las claves numéricas
+        try {
+          const reconstructedJson = Object.values(currentInfoExtra).join('');
+          const parsedJson = JSON.parse(reconstructedJson);
+          currentInfoExtra = parsedJson;
+        } catch (error) {
+          currentInfoExtra = {}; // Solo si no se puede reconstruir
+        }
+      }
+    }
+
+    // Si es string, parsearlo
+    if (typeof currentInfoExtra === 'string') {
+      try {
+        currentInfoExtra = JSON.parse(currentInfoExtra);
+      } catch (error) {
+        currentInfoExtra = {};
+      }
+    }
+
     const newInfoExtra = {
       ...currentInfoExtra,
       [field]: value
@@ -73,9 +100,27 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   // Función para obtener el valor de info_extra de forma segura
   const getInfoExtraValue = (field: string, userData: User) => {
     try {
-      const infoExtra = typeof userData.info_extra === 'string'
+      let infoExtra = typeof userData.info_extra === 'string'
         ? JSON.parse(userData.info_extra)
         : userData.info_extra;
+
+      // 🔧 VALIDACIÓN: Detectar objetos corruptos con claves numéricas
+      if (typeof infoExtra === 'object' && infoExtra !== null) {
+        const keys = Object.keys(infoExtra);
+        const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+        if (hasNumericKeys) {
+          // Intentar reconstruir el JSON válido a partir de las claves numéricas
+          try {
+            const reconstructedJson = Object.values(infoExtra).join('');
+            const parsedJson = JSON.parse(reconstructedJson);
+            return parsedJson?.[field] || '';
+          } catch (error) {
+            return '';
+          }
+        }
+      }
+
       return infoExtra?.[field] || '';
     } catch {
       return '';
