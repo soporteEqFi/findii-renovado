@@ -80,7 +80,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   React.useEffect(() => {
     if (datosCompletos) {
       const datosClonados = JSON.parse(JSON.stringify(datosCompletos));
-      
+
       // DEBUG: Verificar TODA la estructura de datos cargados
       console.log('🔍 ========== DATOS CARGADOS RAW ==========');
       console.log('📦 Estructura completa:', datosCompletos);
@@ -95,10 +95,10 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       console.log('🔑 Keys de solicitud[0]:', datosCompletos?.solicitudes?.[0] ? Object.keys(datosCompletos.solicitudes[0]) : []);
       console.log('🔑 Keys de detalle_credito:', datosCompletos?.solicitudes?.[0]?.detalle_credito ? Object.keys(datosCompletos.solicitudes[0].detalle_credito) : []);
       console.log('========================================');
-      
+
       // IMPORTANTE: Buscar tipo_credito en TODAS las ubicaciones posibles
       let tipoCreditoEncontrado = null;
-      
+
       // Buscar en orden de prioridad
       if (datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito) {
         tipoCreditoEncontrado = datosClonados.solicitudes[0].detalle_credito.tipo_credito;
@@ -115,7 +115,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         if (detalle && typeof detalle === 'object') {
           const keys = Object.keys(detalle);
           console.log('🔍 Buscando tipo_credito en keys de detalle_credito:', keys);
-          
+
           // Buscar variaciones del nombre
           const posiblesNombres = ['tipo_credito', 'tipo_de_credito', 'tipoCredito', 'tipo'];
           for (const nombre of posiblesNombres) {
@@ -127,7 +127,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           }
         }
       }
-      
+
       // Si encontramos el valor, propagarlo a TODAS las ubicaciones
       if (tipoCreditoEncontrado) {
         // Asegurar estructura de solicitudes
@@ -136,21 +136,21 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         if (!datosClonados.solicitudes[0].detalle_credito) {
           datosClonados.solicitudes[0].detalle_credito = {};
         }
-        
+
         // Propagar a todas las ubicaciones
         datosClonados.solicitudes[0].tipo_credito = tipoCreditoEncontrado;
         datosClonados.solicitudes[0].detalle_credito.tipo_credito = tipoCreditoEncontrado;
         datosClonados.tipo_credito = tipoCreditoEncontrado;
-        
+
         console.log('✅ tipo_credito propagado a TODAS las ubicaciones:', tipoCreditoEncontrado);
       } else {
         console.warn('⚠️ NO se encontró tipo_credito en ninguna ubicación');
       }
-      
+
       setEditedData(datosClonados);
       const originalBank = (datosCompletos?.solicitudes?.[0] as any)?.banco_nombre || '';
       setOriginalBankValue(originalBank);
-      
+
       // DEBUG: Verificar tipo_credito Y banco_nombre DESPUÉS de la propagación
       console.log('🔍 CustomerFormDinamicoEdit - Datos después de propagación:', {
         tipoCreditoDirecto: datosClonados?.tipo_credito,
@@ -651,7 +651,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         if (tipoCreditoValue) {
           solicitudData.tipo_credito = tipoCreditoValue;
         }
-        
+
         // 🔧 IMPORTANTE: NO incluir tipo_de_credito (debe ser tipo_credito)
         // Si existe tipo_de_credito, ya lo convertimos a tipo_credito arriba
 
@@ -689,7 +689,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                   creditoObjeto[subKey] = subValor;
                 }
               });
-              
+
               // ✅ Agregar el objeto SIEMPRE, incluso si está vacío
               // Esto preserva la estructura para todos los tipos de crédito
               detalleCredito[creditoKey] = creditoObjeto;
@@ -1038,6 +1038,10 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
                   <span className="text-xs font-medium">Tipo crédito:</span>
                   <span className="font-semibold">{getTipoCreditoValue(editedData) || '—'}</span>
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+                  <span className="text-xs font-medium">Estado:</span>
+                  <span className="font-semibold">{editedData?.solicitudes?.[0]?.estado || '—'}</span>
                 </span>
               </div>
             </div>
