@@ -65,7 +65,28 @@ const Users = () => {
       if (editedUser.correo !== selectedUser?.correo) updateData.correo = editedUser.correo;
       if (editedUser.rol !== selectedUser?.rol) updateData.rol = editedUser.rol;
       if (editedUser.reports_to_id !== selectedUser?.reports_to_id) updateData.reports_to_id = editedUser.reports_to_id;
-      if (editedUser.info_extra !== selectedUser?.info_extra) updateData.info_extra = editedUser.info_extra;
+      if (editedUser.info_extra !== selectedUser?.info_extra) {
+        // Validación final antes de enviar
+        if (typeof editedUser.info_extra === 'object' && editedUser.info_extra !== null) {
+          const keys = Object.keys(editedUser.info_extra);
+          const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+          if (hasNumericKeys) {
+            // Intentar reconstruir el JSON válido a partir de las claves numéricas
+            try {
+              const reconstructedJson = Object.values(editedUser.info_extra).join('');
+              const validJson = JSON.parse(reconstructedJson);
+              updateData.info_extra = validJson;
+            } catch (error) {
+              updateData.info_extra = {}; // Solo si no se puede reconstruir
+            }
+          } else {
+            updateData.info_extra = editedUser.info_extra;
+          }
+        } else {
+          updateData.info_extra = editedUser.info_extra;
+        }
+      }
 
       const updatedUser = await updateUser(editedUser.id, updateData, empresaId);
       setSelectedUser(updatedUser);
@@ -95,6 +116,42 @@ const Users = () => {
 
   const handleInputChange = (field: keyof User, value: string | number | null) => {
     if (!editedUser) return;
+
+    // 🔧 VALIDACIÓN ESPECIAL PARA INFO_EXTRA
+    if (field === 'info_extra' && typeof value === 'string') {
+      try {
+        // Intentar parsear el JSON string
+        const parsedValue = JSON.parse(value);
+
+        // Validar que no sea un objeto corrupto con claves numéricas
+        if (typeof parsedValue === 'object' && parsedValue !== null) {
+          const keys = Object.keys(parsedValue);
+          const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+          if (hasNumericKeys) {
+            // Intentar reconstruir el JSON válido a partir de las claves numéricas
+            try {
+              const reconstructedJson = Object.values(parsedValue).join('');
+              const validJson = JSON.parse(reconstructedJson);
+              setEditedUser({ ...editedUser, [field]: validJson });
+              return;
+            } catch (error) {
+              setEditedUser({ ...editedUser, [field]: {} });
+              return;
+            }
+          }
+        }
+
+        // Asignar el objeto parseado en lugar del string
+        setEditedUser({ ...editedUser, [field]: parsedValue });
+        return;
+      } catch (error) {
+        // Si no se puede parsear, asignar objeto vacío
+        setEditedUser({ ...editedUser, [field]: {} });
+        return;
+      }
+    }
+
     setEditedUser({ ...editedUser, [field]: value });
   };
 
