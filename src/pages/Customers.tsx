@@ -13,7 +13,7 @@ import { useEditModal } from '../contexts/EditModalContext';
 
 const Customers = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { refreshTrigger } = useTableConfig();
+  const { refreshTrigger, triggerRefresh } = useTableConfig();
   const { openModal, setOnSaved } = useEditModal();
   const {
     customers,
@@ -215,8 +215,8 @@ const Customers = () => {
       >
         <CustomerFormDinamico
           onSubmit={async () => {
-            // Recargar la página después de crear un nuevo cliente
-            window.location.reload();
+            // Solo refrescar la tabla sin cerrar el modal ni recargar la página
+            triggerRefresh();
           }}
           onCancel={() => setIsNewCustomerModalOpen(false)}
         />
