@@ -13,6 +13,7 @@ import { emailService } from '../../services/emailService';
 import { referenciaService } from '../../services/referenciaService';
 import { documentService } from '../../services/documentService';
 import { userService } from '../../services/userService';
+import { esquemaService } from '../../services/esquemaService';
 import { NotificationHistory } from '../NotificationHistory';
 import { ObservacionesSolicitud } from './ObservacionesSolicitud';
 
@@ -953,7 +954,232 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     }
   };
 
-  // 10.b) Eliminar registro (usa el id de la solicitud como en CustomerDetails)
+  // 10.b) Guardar como nuevo registro
+  const handleSaveAsNew = async () => {
+    if (!editedData) return;
+    const errors = validateData(editedData);
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      toast.error('Por favor corrige los errores antes de continuar');
+      return;
+    }
+
+    setLoadingSave(true);
+    try {
+      const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+
+      // 🔍 LOG: Ver qué datos están disponibles en editedData
+      console.log('🔍 DATOS DISPONIBLES EN editedData:', JSON.stringify(editedData, null, 2));
+
+      // Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
+      const datosPlanos = convertirDatosAFormatoPlano(editedData);
+
+      // Limpiar IDs para crear como nuevo registro
+      if (datosPlanos.id) delete datosPlanos.id;
+      if (datosPlanos.solicitante_id) delete datosPlanos.solicitante_id;
+
+      // Limpiar IDs de referencias para crear como nuevas
+      if (datosPlanos.referencias) {
+        datosPlanos.referencias = datosPlanos.referencias.map((ref: any) => {
+          const newRef = { ...ref };
+          if (newRef.id) delete newRef.id;
+          if (newRef.referencia_id) delete newRef.referencia_id;
+          return newRef;
+        });
+      }
+
+      // 🔍 LOG: Ver qué datos se envían
+      console.log('📤 DATOS ENVIADOS EN GUARDAR COMO NUEVO:', JSON.stringify(datosPlanos, null, 2));
+
+      // Crear nuevo registro usando el mismo servicio que el formulario de creación
+      await esquemaService.crearRegistroCompletoUnificado(
+        datosPlanos,
+        esquemas,
+        empresaId
+      );
+
+      toast.success('Nuevo registro creado correctamente');
+      if (onSaved) onSaved();
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || 'Error al crear el nuevo registro');
+    } finally {
+      setLoadingSave(false);
+    }
+  };
+
+  // Función para convertir datos estructurados a formato plano
+  const convertirDatosAFormatoPlano = (data: any) => {
+    const datosPlanos: any = {};
+
+    // Datos del solicitante
+    if (data?.solicitante) {
+      datosPlanos.nombres = data.solicitante.nombres;
+      datosPlanos.primer_apellido = data.solicitante.primer_apellido;
+      datosPlanos.segundo_apellido = data.solicitante.segundo_apellido;
+      datosPlanos.correo = data.solicitante.correo;
+      datosPlanos.numero_documento = data.solicitante.numero_documento;
+      datosPlanos.tipo_identificacion = data.solicitante.tipo_identificacion;
+      datosPlanos.fecha_nacimiento = data.solicitante.fecha_nacimiento;
+      datosPlanos.genero = data.solicitante.genero;
+      datosPlanos.telefono = data.solicitante.telefono;
+
+      // Info extra del solicitante
+      if (data.solicitante.info_extra) {
+        let infoExtra = data.solicitante.info_extra;
+        if (typeof infoExtra === 'string') {
+          try {
+            infoExtra = JSON.parse(infoExtra);
+          } catch (error) {
+            infoExtra = {};
+          }
+        }
+        // Agregar campos dinámicos del solicitante
+        Object.assign(datosPlanos, infoExtra);
+      }
+    }
+
+    // Datos de ubicación
+    if (data?.ubicaciones) {
+      const ubicacion = Array.isArray(data.ubicaciones) ? data.ubicaciones[0] : data.ubicaciones;
+      if (ubicacion) {
+        datosPlanos.direccion = ubicacion.detalle_direccion?.direccion_residencia || ubicacion.direccion;
+        datosPlanos.ciudad_residencia = ubicacion.ciudad_residencia || ubicacion.ciudad;
+        datosPlanos.departamento_residencia = ubicacion.departamento_residencia || ubicacion.departamento;
+        datosPlanos.barrio = ubicacion.barrio;
+        datosPlanos.estrato = ubicacion.estrato;
+        datosPlanos.tipo_direccion = ubicacion.tipo_direccion;
+        datosPlanos.tipo_vivienda = ubicacion.detalle_direccion?.tipo_vivienda;
+        datosPlanos.recibir_correspondencia = ubicacion.detalle_direccion?.recibir_correspondencia;
+
+        // Info extra de ubicación
+        if (ubicacion.info_extra) {
+          let infoExtra = ubicacion.info_extra;
+          if (typeof infoExtra === 'string') {
+            try {
+              infoExtra = JSON.parse(infoExtra);
+            } catch (error) {
+              infoExtra = {};
+            }
+          }
+          Object.assign(datosPlanos, infoExtra);
+        }
+      }
+    }
+
+    // Datos de actividad económica
+    if (data?.actividad_economica) {
+      const actividad = Array.isArray(data.actividad_economica) ? data.actividad_economica[0] : data.actividad_economica;
+      if (actividad) {
+        datosPlanos.empresa = actividad.empresa;
+        datosPlanos.cargo = actividad.cargo;
+        datosPlanos.tipo_contrato = actividad.tipo_contrato;
+        datosPlanos.salario_base = actividad.salario_base;
+        datosPlanos.tipo_actividad = actividad.detalle_actividad?.tipo_actividad_economica || actividad.tipo_actividad;
+        datosPlanos.sector_economico = actividad.sector_economico;
+        datosPlanos.codigo_ciuu = actividad.codigo_ciuu;
+        datosPlanos.departamento_empresa = actividad.departamento_empresa;
+        datosPlanos.ciudad_empresa = actividad.ciudad_empresa;
+        datosPlanos.telefono_empresa = actividad.telefono_empresa;
+        datosPlanos.correo_empresa = actividad.correo_empresa;
+        datosPlanos.nit_empresa = actividad.nit_empresa;
+
+        // Info extra de actividad económica
+        if (actividad.info_extra) {
+          let infoExtra = actividad.info_extra;
+          if (typeof infoExtra === 'string') {
+            try {
+              infoExtra = JSON.parse(infoExtra);
+            } catch (error) {
+              infoExtra = {};
+            }
+          }
+          Object.assign(datosPlanos, infoExtra);
+        }
+      }
+    }
+
+    // Datos de información financiera
+    if (data?.informacion_financiera) {
+      const financiera = Array.isArray(data.informacion_financiera) ? data.informacion_financiera[0] : data.informacion_financiera;
+      if (financiera) {
+        datosPlanos.ingresos_mensuales = financiera.detalle_financiera?.ingreso_basico_mensual || financiera.ingresos_mensuales;
+        datosPlanos.gastos_mensuales = financiera.detalle_financiera?.gastos_personales_mensuales || financiera.gastos_mensuales;
+        datosPlanos.otros_ingresos = financiera.detalle_financiera?.otros_ingresos_mensuales || financiera.otros_ingresos;
+        datosPlanos.total_ingresos_mensuales = financiera.detalle_financiera?.tota_ingresos_mensuales || financiera.total_ingresos_mensuales;
+        datosPlanos.total_egresos_mensuales = financiera.total_egresos_mensuales;
+        datosPlanos.total_activos = financiera.total_activos;
+        datosPlanos.total_pasivos = financiera.total_pasivos;
+        datosPlanos.gastos_financieros_mensuales = financiera.detalle_financiera?.gastos_financieros_mensuales;
+        datosPlanos.declara_renta = financiera.detalle_financiera?.declara_renta;
+
+        // Info extra de información financiera
+        if (financiera.info_extra) {
+          let infoExtra = financiera.info_extra;
+          if (typeof infoExtra === 'string') {
+            try {
+              infoExtra = JSON.parse(infoExtra);
+            } catch (error) {
+              infoExtra = {};
+            }
+          }
+          Object.assign(datosPlanos, infoExtra);
+        }
+      }
+    }
+
+    // Datos de solicitud
+    if (data?.solicitudes && data.solicitudes.length > 0) {
+      const solicitud = data.solicitudes[0];
+      datosPlanos.monto_solicitado = solicitud.detalle_credito?.credito_vehicular?.monto_solicitado || solicitud.monto_solicitado;
+      datosPlanos.plazo_meses = solicitud.detalle_credito?.credito_vehicular?.plazo_meses || solicitud.plazo_meses;
+      datosPlanos.tipo_credito_id = solicitud.tipo_credito_id;
+      datosPlanos.destino_credito = solicitud.destino_credito;
+      datosPlanos.cuota_inicial = solicitud.detalle_credito?.credito_vehicular?.cuota_inicial || solicitud.cuota_inicial;
+      datosPlanos.ciudad_solicitud = solicitud.ciudad_solicitud;
+      datosPlanos.banco_nombre = solicitud.banco_nombre;
+      datosPlanos.nombre_asesor = solicitud.nombre_asesor;
+      datosPlanos.correo_asesor = solicitud.correo_asesor;
+      datosPlanos.nombre_banco_usuario = solicitud.nombre_banco_usuario;
+      datosPlanos.correo_banco_usuario = solicitud.correo_banco_usuario;
+      datosPlanos.tipo_credito = solicitud.tipo_credito;
+
+      // Datos específicos del crédito vehicular
+      if (solicitud.detalle_credito?.credito_vehicular) {
+        const creditoVehicular = solicitud.detalle_credito.credito_vehicular;
+        datosPlanos.valor_vehiculo = creditoVehicular.valor_vehiculo;
+        datosPlanos.estado_vehiculo = creditoVehicular.estado_vehiculo;
+        datosPlanos.tipo_credito_vehicular = creditoVehicular.tipo_credito;
+      }
+
+      // Info extra de solicitud
+      if (solicitud.info_extra) {
+        let infoExtra = solicitud.info_extra;
+        if (typeof infoExtra === 'string') {
+          try {
+            infoExtra = JSON.parse(infoExtra);
+          } catch (error) {
+            infoExtra = {};
+          }
+        }
+        Object.assign(datosPlanos, infoExtra);
+      }
+    }
+
+    // Referencias
+    if (data?.referencias && data.referencias.length > 0) {
+      datosPlanos.referencias = data.referencias.map((ref: any) => ({
+        nombre_completo: ref.nombre_completo || '',
+        telefono_referencia: ref.telefono_referencia || '',
+        tipo_referencia: ref.tipo_referencia || 'personal',
+        parentesco: ref.parentesco || ''
+      }));
+    }
+
+    return datosPlanos;
+  };
+
+  // 10.c) Eliminar registro (usa el id de la solicitud como en CustomerDetails)
   const handleDelete = async () => {
     try {
       const empresaId = localStorage.getItem('empresa_id') || '1';
@@ -1367,14 +1593,22 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 w-1/2"
+          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 w-1/3"
         >
           Cancelar
         </button>
         <button
           type="button"
+          onClick={handleSaveAsNew}
+          className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 w-1/3"
+          disabled={loadingSave}
+        >
+          {loadingSave ? 'Creando...' : 'Guardar como nuevo'}
+        </button>
+        <button
+          type="button"
           onClick={handleSave}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 w-1/2"
+          className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60 w-1/3"
           disabled={loadingSave}
         >
           {loadingSave ? 'Guardando...' : 'Guardar'}
@@ -1396,6 +1630,14 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           className="px-3 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
         >
           Eliminar
+        </button>
+        <button
+          type="button"
+          onClick={handleSaveAsNew}
+          className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+          disabled={loadingSave}
+        >
+          {loadingSave ? 'Creando...' : 'Guardar como nuevo'}
         </button>
         <button
           type="button"
