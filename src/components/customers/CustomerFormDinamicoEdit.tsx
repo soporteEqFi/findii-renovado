@@ -89,26 +89,26 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // Buscar en orden de prioridad
       if (datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito) {
         tipoCreditoEncontrado = datosClonados.solicitudes[0].detalle_credito.tipo_credito;
-        console.log('✅ tipo_credito encontrado en detalle_credito:', tipoCreditoEncontrado);
+        // console.log('✅ tipo_credito encontrado en detalle_credito:', tipoCreditoEncontrado);
       } else if (datosClonados?.solicitudes?.[0]?.tipo_credito) {
         tipoCreditoEncontrado = datosClonados.solicitudes[0].tipo_credito;
-        console.log('✅ tipo_credito encontrado en solicitud:', tipoCreditoEncontrado);
+        // console.log('✅ tipo_credito encontrado en solicitud:', tipoCreditoEncontrado);
       } else if (datosClonados?.tipo_credito) {
         tipoCreditoEncontrado = datosClonados.tipo_credito;
-        console.log('✅ tipo_credito encontrado en raíz:', tipoCreditoEncontrado);
+        // console.log('✅ tipo_credito encontrado en raíz:', tipoCreditoEncontrado);
       } else {
         // Buscar dentro de todos los campos de detalle_credito por si tiene otro nombre
         const detalle = datosClonados?.solicitudes?.[0]?.detalle_credito;
         if (detalle && typeof detalle === 'object') {
           const keys = Object.keys(detalle);
-          console.log('🔍 Buscando tipo_credito en keys de detalle_credito:', keys);
+          // console.log('🔍 Buscando tipo_credito en keys de detalle_credito:', keys);
 
           // Buscar variaciones del nombre
           const posiblesNombres = ['tipo_credito', 'tipo_de_credito', 'tipoCredito', 'tipo'];
           for (const nombre of posiblesNombres) {
             if (detalle[nombre]) {
               tipoCreditoEncontrado = detalle[nombre];
-              console.log(`✅ tipo_credito encontrado como "${nombre}":`, tipoCreditoEncontrado);
+              // console.log(`✅ tipo_credito encontrado como "${nombre}":`, tipoCreditoEncontrado);
               break;
             }
           }
@@ -129,7 +129,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         datosClonados.solicitudes[0].detalle_credito.tipo_credito = tipoCreditoEncontrado;
         datosClonados.tipo_credito = tipoCreditoEncontrado;
 
-        console.log('✅ tipo_credito propagado a TODAS las ubicaciones:', tipoCreditoEncontrado);
+        // console.log('✅ tipo_credito propagado a TODAS las ubicaciones:', tipoCreditoEncontrado);
       } else {
         console.warn('⚠️ NO se encontró tipo_credito en ninguna ubicación');
       }
@@ -974,6 +974,8 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
       const datosPlanos = convertirDatosAFormatoPlano(editedData);
 
+      console.log('📤 DATOS ENVIADOS EN GUARDAR COMO NUEVO:', JSON.stringify(datosPlanos, null, 2));
+
       // Limpiar IDs para crear como nuevo registro
       if (datosPlanos.id) delete datosPlanos.id;
       if (datosPlanos.solicitante_id) delete datosPlanos.solicitante_id;
@@ -1067,22 +1069,27 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
-    // Datos de actividad económica
+    // Datos de actividad económica - MAPEO DINÁMICO
     if (data?.actividad_economica) {
       const actividad = Array.isArray(data.actividad_economica) ? data.actividad_economica[0] : data.actividad_economica;
       if (actividad) {
-        datosPlanos.empresa = actividad.empresa;
-        datosPlanos.cargo = actividad.cargo;
-        datosPlanos.tipo_contrato = actividad.tipo_contrato;
-        datosPlanos.salario_base = actividad.salario_base;
-        datosPlanos.tipo_actividad = actividad.detalle_actividad?.tipo_actividad_economica || actividad.tipo_actividad;
-        datosPlanos.sector_economico = actividad.sector_economico;
-        datosPlanos.codigo_ciuu = actividad.codigo_ciuu;
-        datosPlanos.departamento_empresa = actividad.departamento_empresa;
-        datosPlanos.ciudad_empresa = actividad.ciudad_empresa;
-        datosPlanos.telefono_empresa = actividad.telefono_empresa;
-        datosPlanos.correo_empresa = actividad.correo_empresa;
-        datosPlanos.nit_empresa = actividad.nit_empresa;
+        // Mapear todos los campos de actividad económica
+        Object.keys(actividad).forEach(key => {
+          const valor = actividad[key];
+          if (valor !== null && valor !== undefined && valor !== '') {
+            datosPlanos[key] = valor;
+          }
+        });
+
+        // Mapear campos de detalle_actividad si existe
+        if (actividad.detalle_actividad) {
+          Object.keys(actividad.detalle_actividad).forEach(key => {
+            const valor = actividad.detalle_actividad[key];
+            if (valor !== null && valor !== undefined && valor !== '') {
+              datosPlanos[key] = valor;
+            }
+          });
+        }
 
         // Info extra de actividad económica
         if (actividad.info_extra) {
@@ -1099,19 +1106,27 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
-    // Datos de información financiera
+    // Datos de información financiera - MAPEO DINÁMICO
     if (data?.informacion_financiera) {
       const financiera = Array.isArray(data.informacion_financiera) ? data.informacion_financiera[0] : data.informacion_financiera;
       if (financiera) {
-        datosPlanos.ingresos_mensuales = financiera.detalle_financiera?.ingreso_basico_mensual || financiera.ingresos_mensuales;
-        datosPlanos.gastos_mensuales = financiera.detalle_financiera?.gastos_personales_mensuales || financiera.gastos_mensuales;
-        datosPlanos.otros_ingresos = financiera.detalle_financiera?.otros_ingresos_mensuales || financiera.otros_ingresos;
-        datosPlanos.total_ingresos_mensuales = financiera.detalle_financiera?.tota_ingresos_mensuales || financiera.total_ingresos_mensuales;
-        datosPlanos.total_egresos_mensuales = financiera.total_egresos_mensuales;
-        datosPlanos.total_activos = financiera.total_activos;
-        datosPlanos.total_pasivos = financiera.total_pasivos;
-        datosPlanos.gastos_financieros_mensuales = financiera.detalle_financiera?.gastos_financieros_mensuales;
-        datosPlanos.declara_renta = financiera.detalle_financiera?.declara_renta;
+        // Mapear todos los campos de información financiera
+        Object.keys(financiera).forEach(key => {
+          const valor = financiera[key];
+          if (valor !== null && valor !== undefined && valor !== '') {
+            datosPlanos[key] = valor;
+          }
+        });
+
+        // Mapear campos de detalle_financiera si existe
+        if (financiera.detalle_financiera) {
+          Object.keys(financiera.detalle_financiera).forEach(key => {
+            const valor = financiera.detalle_financiera[key];
+            if (valor !== null && valor !== undefined && valor !== '') {
+              datosPlanos[key] = valor;
+            }
+          });
+        }
 
         // Info extra de información financiera
         if (financiera.info_extra) {
@@ -1131,11 +1146,8 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     // Datos de solicitud
     if (data?.solicitudes && data.solicitudes.length > 0) {
       const solicitud = data.solicitudes[0];
-      datosPlanos.monto_solicitado = solicitud.detalle_credito?.credito_vehicular?.monto_solicitado || solicitud.monto_solicitado;
-      datosPlanos.plazo_meses = solicitud.detalle_credito?.credito_vehicular?.plazo_meses || solicitud.plazo_meses;
-      datosPlanos.tipo_credito_id = solicitud.tipo_credito_id;
-      datosPlanos.destino_credito = solicitud.destino_credito;
-      datosPlanos.cuota_inicial = solicitud.detalle_credito?.credito_vehicular?.cuota_inicial || solicitud.cuota_inicial;
+
+      // Campos básicos de solicitud
       datosPlanos.ciudad_solicitud = solicitud.ciudad_solicitud;
       datosPlanos.banco_nombre = solicitud.banco_nombre;
       datosPlanos.nombre_asesor = solicitud.nombre_asesor;
@@ -1143,13 +1155,43 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       datosPlanos.nombre_banco_usuario = solicitud.nombre_banco_usuario;
       datosPlanos.correo_banco_usuario = solicitud.correo_banco_usuario;
       datosPlanos.tipo_credito = solicitud.tipo_credito;
+      datosPlanos.tipo_credito_id = solicitud.tipo_credito_id;
+      datosPlanos.destino_credito = solicitud.destino_credito;
 
-      // Datos específicos del crédito vehicular
-      if (solicitud.detalle_credito?.credito_vehicular) {
-        const creditoVehicular = solicitud.detalle_credito.credito_vehicular;
-        datosPlanos.valor_vehiculo = creditoVehicular.valor_vehiculo;
-        datosPlanos.estado_vehiculo = creditoVehicular.estado_vehiculo;
-        datosPlanos.tipo_credito_vehicular = creditoVehicular.tipo_credito;
+      // Mapear TODOS los campos del detalle_credito dinámicamente
+      if (solicitud.detalle_credito) {
+        const detalle = solicitud.detalle_credito;
+
+        // Mapear todos los campos de detalle_credito directamente
+        Object.keys(detalle).forEach(key => {
+          const valor = detalle[key];
+          if (valor !== null && valor !== undefined && valor !== '') {
+            // NO sobrescribir tipo_credito principal
+            if (key === 'tipo_credito') {
+              // No hacer nada, preservar el tipo_credito principal
+            } else {
+              datosPlanos[key] = valor;
+            }
+          }
+        });
+
+        // Si hay sub-objetos (como credito_vehicular), también mapearlos
+        Object.keys(detalle).forEach(key => {
+          const subObjeto = detalle[key];
+          if (subObjeto && typeof subObjeto === 'object' && !Array.isArray(subObjeto)) {
+            Object.keys(subObjeto).forEach(subKey => {
+              const subValor = subObjeto[subKey];
+              if (subValor !== null && subValor !== undefined && subValor !== '') {
+                // NO sobrescribir tipo_credito principal con el del sub-objeto
+                if (subKey === 'tipo_credito') {
+                  // No hacer nada, preservar el tipo_credito principal
+                } else {
+                  datosPlanos[subKey] = subValor;
+                }
+              }
+            });
+          }
+        });
       }
 
       // Info extra de solicitud
