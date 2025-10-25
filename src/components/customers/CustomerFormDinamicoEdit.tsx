@@ -28,18 +28,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   onSaved,
   onCancel,
 }) => {
-  // 🔍 DEBUG: Verificar qué información tenemos en localStorage
-  React.useEffect(() => {
-    console.log('🔍 === DEBUG LOCALSTORAGE (EDIT) ===');
-    console.log('user:', localStorage.getItem('user'));
-    console.log('user_id:', localStorage.getItem('user_id'));
-    console.log('user_name:', localStorage.getItem('user_name'));
-    console.log('user_email:', localStorage.getItem('user_email'));
-    console.log('cedula:', localStorage.getItem('cedula'));
-    console.log('empresa_id:', localStorage.getItem('empresa_id'));
-    console.log('access_token:', localStorage.getItem('access_token') ? 'EXISTE' : 'NO EXISTE');
-    console.log('='.repeat(50));
-  }, []);
   // 1) Cargar registro completo del solicitante
   const { datos: datosCompletos, loading: loadingCompletos, error: errorCompletos, refetch } = useSolicitanteCompleto(
     isNaN(solicitanteId) || solicitanteId <= 0 ? null : solicitanteId
@@ -150,17 +138,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const originalBank = (datosCompletos?.solicitudes?.[0] as any)?.banco_nombre || '';
       setOriginalBankValue(originalBank);
 
-      // DEBUG: Verificar tipo_credito Y banco_nombre DESPUÉS de la propagación
-      console.log('🔍 CustomerFormDinamicoEdit - Datos después de propagación:', {
-        tipoCreditoDirecto: datosClonados?.tipo_credito,
-        tipoCreditoEnSolicitud: datosClonados?.solicitudes?.[0]?.tipo_credito,
-        tipoCreditoEnDetalle: datosClonados?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
-        valorFinal: tipoCreditoEncontrado,
-        // DEBUG banco_nombre
-        bancoNombreEnSolicitud: datosClonados?.solicitudes?.[0]?.banco_nombre,
-        bancoNombreOriginal: originalBank,
-        solicitudCompleta: datosClonados?.solicitudes?.[0]
-      });
     }
   }, [datosCompletos]);
 
@@ -185,10 +162,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
           }
 
           setEditedData(newData);
-          console.log('🧑‍💼 Información del asesor cargada (Edit):', {
-            nombre: currentUser.nombre,
-            correo: currentUser.correo
-          });
         }
       } catch (error) {
         console.error('Error obteniendo información del asesor:', error);
@@ -422,16 +395,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
       setEditedData(newData);
 
-      console.log('🏦 Información de asesor y banquero obtenida (Edit):', {
-        asesor: {
-          nombre: currentUser.nombre,
-          correo: currentUser.correo
-        },
-        banquero: banker ? {
-          nombre: banker.nombre,
-          correo: banker.correo
-        } : 'No encontrado'
-      });
 
     } catch (error) {
       console.error('Error obteniendo información de asesor y banquero:', error);
@@ -470,13 +433,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const targetKey = detailKeyForTipoCredito(String(value || ''));
       const dc = newData.solicitudes[0].detalle_credito;
 
-      console.log('🔄 Cambio de tipo_credito:', {
-        tipoAnterior: tipoActual,
-        tipoNuevo: value,
-        targetKey: targetKey,
-        detalleCreditoActual: Object.keys(dc),
-        objetosPreservados: Object.keys(dc).filter(k => k !== 'tipo_credito' && typeof dc[k] === 'object')
-      });
 
       // Escribir el tipo en ambos lugares para compatibilidad con esquemas
       newData.solicitudes[0].tipo_credito = value;
@@ -487,9 +443,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // Esto permite cambiar entre tipos sin perder datos
       if (!dc[targetKey]) {
         dc[targetKey] = {};
-        console.log(`✅ Creando objeto vacío para ${targetKey}`);
       } else {
-        console.log(`✅ Preservando objeto existente de ${targetKey}:`, dc[targetKey]);
       }
 
       setEditedData(newData);
@@ -760,19 +714,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         if (requestData.referencias) delete requestData.referencias;
 
       // 🏦 LOG ESPECÍFICO PARA CAMPOS DE ASESOR Y BANQUERO EN EDICIÓN
-      console.log('\n🏦 === CAMPOS DE ASESOR Y BANQUERO (EDICIÓN) ===');
-      console.log('📋 Campos que se enviarán en el JSON/form a la API:');
-      const solicitudData = requestData.solicitudes?.[0];
-      if (solicitudData) {
-        console.log('  🧑‍💼 nombre_asesor:', solicitudData.nombre_asesor || '(NO DEFINIDO)');
-        console.log('  📧 correo_asesor:', solicitudData.correo_asesor || '(NO DEFINIDO)');
-        console.log('  🏦 nombre_banco_usuario:', solicitudData.nombre_banco_usuario || '(NO DEFINIDO)');
-        console.log('  📧 correo_banco_usuario:', solicitudData.correo_banco_usuario || '(NO DEFINIDO)');
-      } else {
-        console.log('  ⚠️ No se encontró solicitud en requestData');
-      }
-      console.log('🔍 Estos campos se incluyen automáticamente en el payload de edición que se envía a la API');
-      console.log('='.repeat(80));
 
 
         const endpoint = API_CONFIG.ENDPOINTS.EDITAR_REGISTRO_COMPLETO.replace('{id}', solicitanteIdNumber.toString());
@@ -969,39 +910,25 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
 
       // 🔍 LOG: Ver qué datos están disponibles en editedData
-      console.log('🔍 DATOS DISPONIBLES EN editedData:', JSON.stringify(editedData, null, 2));
-
       // Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
       const datosPlanos = convertirDatosAFormatoPlano(editedData);
 
-      console.log('📤 DATOS ENVIADOS EN GUARDAR COMO NUEVO:', JSON.stringify(datosPlanos, null, 2));
+      // Extraer referencias para enviar por separado (como en CustomerFormDinamico)
+      const referenciasParaEnviar = datosPlanos.referencias || [];
+      delete datosPlanos.referencias; // No incluir en el payload principal
 
       // Limpiar IDs para crear como nuevo registro
       if (datosPlanos.id) delete datosPlanos.id;
       if (datosPlanos.solicitante_id) delete datosPlanos.solicitante_id;
 
-      // Limpiar IDs de referencias para crear como nuevas
-      if (datosPlanos.referencias) {
-        datosPlanos.referencias = datosPlanos.referencias.map((ref: any) => {
-          const newRef = { ...ref };
-          if (newRef.id) delete newRef.id;
-          if (newRef.referencia_id) delete newRef.referencia_id;
-          return newRef;
-        });
-      }
-
-      // 🔍 LOG: Ver qué datos se envían
-      console.log('📤 DATOS ENVIADOS EN GUARDAR COMO NUEVO:', JSON.stringify(datosPlanos, null, 2));
-
       // Crear nuevo registro usando el mismo servicio que el formulario de creación
-      await esquemaService.crearRegistroCompletoUnificado(
+      const resultado = await esquemaService.crearRegistroCompletoUnificado(
         datosPlanos,
         esquemas,
         empresaId
       );
-
       toast.success('Nuevo registro creado correctamente');
-      if (onSaved) onSaved();
+      // if (onSaved) onSaved();
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || 'Error al crear el nuevo registro');
@@ -1041,18 +968,27 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
-    // Datos de ubicación
+    // Datos de ubicación - MAPEO DINÁMICO
     if (data?.ubicaciones) {
       const ubicacion = Array.isArray(data.ubicaciones) ? data.ubicaciones[0] : data.ubicaciones;
       if (ubicacion) {
-        datosPlanos.direccion = ubicacion.detalle_direccion?.direccion_residencia || ubicacion.direccion;
-        datosPlanos.ciudad_residencia = ubicacion.ciudad_residencia || ubicacion.ciudad;
-        datosPlanos.departamento_residencia = ubicacion.departamento_residencia || ubicacion.departamento;
-        datosPlanos.barrio = ubicacion.barrio;
-        datosPlanos.estrato = ubicacion.estrato;
-        datosPlanos.tipo_direccion = ubicacion.tipo_direccion;
-        datosPlanos.tipo_vivienda = ubicacion.detalle_direccion?.tipo_vivienda;
-        datosPlanos.recibir_correspondencia = ubicacion.detalle_direccion?.recibir_correspondencia;
+        // Mapear todos los campos de ubicación
+        Object.keys(ubicacion).forEach(key => {
+          const valor = ubicacion[key];
+          if (valor !== null && valor !== undefined && valor !== '') {
+            datosPlanos[key] = valor;
+          }
+        });
+
+        // Mapear campos de detalle_direccion si existe
+        if (ubicacion.detalle_direccion) {
+          Object.keys(ubicacion.detalle_direccion).forEach(key => {
+            const valor = ubicacion.detalle_direccion[key];
+            if (valor !== null && valor !== undefined && valor !== '') {
+              datosPlanos[key] = valor;
+            }
+          });
+        }
 
         // Info extra de ubicación
         if (ubicacion.info_extra) {
@@ -1208,14 +1144,44 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
-    // Referencias
+    // Referencias - MAPEO DINÁMICO COMPLETO
     if (data?.referencias && data.referencias.length > 0) {
-      datosPlanos.referencias = data.referencias.map((ref: any) => ({
-        nombre_completo: ref.nombre_completo || '',
-        telefono_referencia: ref.telefono_referencia || '',
-        tipo_referencia: ref.tipo_referencia || 'personal',
-        parentesco: ref.parentesco || ''
-      }));
+      datosPlanos.referencias = data.referencias.map((ref: any) => {
+        // Los datos reales están en detalle_referencia.referencias[0]
+        const detalleRef = ref.detalle_referencia?.referencias?.[0];
+        if (detalleRef) {
+          // Mapear TODOS los campos dinámicamente
+          const referenciaMapeada: any = {};
+
+          // Mapear todos los campos del detalle_referencia.referencias[0]
+          Object.keys(detalleRef).forEach(key => {
+            const valor = detalleRef[key];
+            if (valor !== null && valor !== undefined && valor !== '') {
+              referenciaMapeada[key] = valor;
+            }
+          });
+
+          // Mapear campos específicos con nombres estándar si existen
+          if (detalleRef.nombre_referencia1) referenciaMapeada.nombre_completo = detalleRef.nombre_referencia1;
+          if (detalleRef.celular_referencia) referenciaMapeada.telefono_referencia = detalleRef.celular_referencia;
+          if (detalleRef.relacion_referencia1) referenciaMapeada.parentesco = detalleRef.relacion_referencia1;
+          if (detalleRef.direccion_referencia1) referenciaMapeada.direccion = detalleRef.direccion_referencia1;
+          if (detalleRef.ciudad_referencia) referenciaMapeada.ciudad = detalleRef.ciudad_referencia;
+
+          return referenciaMapeada;
+        }
+
+        // Fallback: mapear campos directos si no hay estructura anidada
+        const referenciaFallback: any = {};
+        Object.keys(ref).forEach(key => {
+          const valor = ref[key];
+          if (valor !== null && valor !== undefined && valor !== '') {
+            referenciaFallback[key] = valor;
+          }
+        });
+
+        return referenciaFallback;
+      });
     }
 
     return datosPlanos;
@@ -1252,18 +1218,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   const valores = React.useMemo(() => {
     // En este enfoque, los keys de esquema deben coincidir con keys/paths de editedData para updateNestedData.
     // Si necesitas un mapeo más complejo, aquí es el lugar para transformarlo.
-    console.log('🔍 CustomerFormDinamicoEdit - useMemo valores actualizado:', {
-      tipoCreditoDirecto: editedData?.tipo_credito,
-      tipoCreditoEnSolicitud: editedData?.solicitudes?.[0]?.tipo_credito,
-      tipoCreditoEnDetalle: editedData?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
-      // DEBUG banco_nombre
-      bancoNombreEnSolicitud: editedData?.solicitudes?.[0]?.banco_nombre,
-      ciudadSolicitud: editedData?.solicitudes?.[0]?.ciudad_solicitud,
-      estadoSolicitud: editedData?.solicitudes?.[0]?.estado,
-      solicitudKeys: editedData?.solicitudes?.[0] ? Object.keys(editedData.solicitudes[0]) : [],
-      detalleCreditoKeys: editedData?.solicitudes?.[0]?.detalle_credito ? Object.keys(editedData.solicitudes[0].detalle_credito) : [],
-      detalleCreditoCompleto: editedData?.solicitudes?.[0]?.detalle_credito
-    });
     return editedData || {};
   }, [editedData]);
 
@@ -1427,7 +1381,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
                             referencia_id: refId,
                           };
                           try {
-                            console.log('[PAYLOAD][REFERENCIAS_DELETE] =>', JSON.stringify(deleteBodyPreview));
                           } catch {}
                           await referenciaService.deleteReferencia(Number(solicitanteId), refId, empresaId, userId);
 
@@ -1542,11 +1495,6 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         <>
           {/* DEBUG: Verificar campos del esquema de solicitud */}
           {(() => {
-            console.log('🔍 === ESQUEMA DE SOLICITUD ===');
-            console.log('Campos fijos:', esquemas.solicitud.esquema.campos_fijos?.map(c => ({ key: c.key, description: c.description, type: c.type })));
-            console.log('Campos dinámicos:', esquemas.solicitud.esquema.campos_dinamicos?.map(c => ({ key: c.key, description: c.description, type: c.type, list_values: c.list_values })));
-            console.log('¿Tiene tipo_credito en fijos?', esquemas.solicitud.esquema.campos_fijos?.find(c => c.key === 'tipo_credito'));
-            console.log('¿Tiene tipo_credito en dinámicos?', esquemas.solicitud.esquema.campos_dinamicos?.find(c => c.key === 'tipo_credito'));
             return null;
           })()}
           <FormularioCompleto
