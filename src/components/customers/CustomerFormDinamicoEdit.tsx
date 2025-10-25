@@ -928,7 +928,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
         empresaId
       );
       toast.success('Nuevo registro creado correctamente');
-      // if (onSaved) onSaved();
+      if (onSaved) onSaved();
     } catch (e: any) {
       console.error(e);
       toast.error(e?.message || 'Error al crear el nuevo registro');
