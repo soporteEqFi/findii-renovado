@@ -7,7 +7,7 @@ const validarCredenciales = (): boolean => {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('access_token');
   const empresaId = localStorage.getItem('empresa_id');
-  
+
   return !!(userId && token && empresaId);
 };
 
@@ -44,7 +44,7 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
       if (!validarCredenciales()) {
         console.warn('⏳ Credenciales no disponibles aún para detalle_credito, esperando...');
         await delay(300); // Esperar 300ms
-        
+
         // Verificar nuevamente después del delay
         if (!validarCredenciales()) {
           throw new Error('Credenciales no disponibles');
@@ -107,13 +107,6 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
             campos_condicionales: camposCondicionales
           };
 
-          console.log('✅ Esquema detalle crédito cargado:', {
-            campos_dinamicos: esquemaFinal.campos_dinamicos.length,
-            tipos_credito: Object.keys(esquemaFinal.campos_condicionales),
-            campos_por_tipo: Object.entries(esquemaFinal.campos_condicionales).map(([tipo, campos]) =>
-              ({ tipo, cantidad: campos.length })
-            )
-          });
 
           setEsquema(esquemaFinal);
         } else {
@@ -125,16 +118,16 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
 
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
-      
+
       // Implementar retry logic con backoff exponencial (máximo 3 intentos)
       if (intentoActual < 3 && (errorMsg.includes('404') || errorMsg.includes('Credenciales no disponibles'))) {
         const delayMs = Math.min(1000 * Math.pow(2, intentoActual), 3000); // 1s, 2s, 3s max
         console.warn(`⚠️ Error cargando esquema detalle_credito, reintentando en ${delayMs}ms (intento ${intentoActual + 1}/3)`);
-        
+
         await delay(delayMs);
         return cargarEsquemaDetalle(intentoActual + 1);
       }
-      
+
       console.error('❌ Error cargando esquema detalle crédito:', error);
       setError(errorMsg);
 
@@ -159,7 +152,7 @@ export const useEsquemaDetalleCreditoCompleto = (empresaId?: number): UseEsquema
     const timer = setTimeout(() => {
       cargarEsquemaDetalle(0);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [empresaId]);
 

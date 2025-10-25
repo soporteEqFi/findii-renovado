@@ -62,7 +62,7 @@ const validarCredenciales = (): boolean => {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('access_token');
   const empresaId = localStorage.getItem('empresa_id');
-  
+
   return !!(userId && token && empresaId);
 };
 
@@ -83,7 +83,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
       if (!validarCredenciales()) {
         console.warn(`⏳ Credenciales no disponibles aún para ${entidad}, esperando...`);
         await delay(300); // Esperar 300ms
-        
+
         // Verificar nuevamente después del delay
         if (!validarCredenciales()) {
           throw new Error('Credenciales no disponibles');
@@ -159,12 +159,10 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
             return campos.map(campo => {
               // Asegurar que fecha_nacimiento siempre sea tipo date
               if (campo.key === 'fecha_nacimiento' && campo.type !== 'date') {
-                console.log(`🔧 Corrigiendo tipo de ${campo.key} de '${campo.type}' a 'date'`);
                 return { ...campo, type: 'date' };
               }
               // Corregir otros campos de fecha si es necesario
               if ((campo.key === 'fecha_expedicion' || campo.key === 'fecha_ingreso_empresa' || campo.key === 'fecha_vinculacion') && campo.type !== 'date') {
-                console.log(`🔧 Corrigiendo tipo de ${campo.key} de '${campo.type}' a 'date'`);
                 return { ...campo, type: 'date' };
               }
               return campo;
@@ -212,16 +210,16 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
     } catch (error) {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
-      
+
       // Implementar retry logic con backoff exponencial (máximo 3 intentos)
       if (intentoActual < 3 && (errorMsg.includes('404') || errorMsg.includes('Credenciales no disponibles'))) {
         const delayMs = Math.min(1000 * Math.pow(2, intentoActual), 3000); // 1s, 2s, 3s max
         console.warn(`⚠️ Error cargando esquema ${entidad}, reintentando en ${delayMs}ms (intento ${intentoActual + 1}/3)`);
-        
+
         await delay(delayMs);
         return cargarEsquemaCompleto(intentoActual + 1);
       }
-      
+
       console.error(`❌ Error cargando esquema para ${entidad}:`, error);
       console.error(`🏢 Empresa ID usado: ${empresaIdToUse}`);
       console.error(`📡 URL intentada: /schema/${entidad}?empresa_id=${empresaIdToUse}`);
@@ -362,7 +360,7 @@ export const useEsquemaCompleto = (entidad: string, empresaId?: number): UseEsqu
     const timer = setTimeout(() => {
       cargarEsquemaCompleto(0);
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [entidad, empresaId]);
 

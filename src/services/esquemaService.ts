@@ -438,28 +438,10 @@ export const esquemaService = {
     empresaId?: number
   ): Promise<any> {
     try {
-      // 🔍 LOG: Verificar campos de asesor y banquero en formData
-      console.log('🔍 === VERIFICANDO CAMPOS EN FORMDATA ===');
-      console.log('📋 nombre_asesor en formData:', formData.nombre_asesor);
-      console.log('📋 correo_asesor en formData:', formData.correo_asesor);
-      console.log('📋 nombre_banco_usuario en formData:', formData.nombre_banco_usuario);
-      console.log('📋 correo_banco_usuario en formData:', formData.correo_banco_usuario);
-      console.log('='.repeat(60));
 
       // Transformar datos del formulario plano a la estructura esperada por el backend
       const datosCompletos = this.transformarDatosFormulario(formData, esquemasCompletos);
 
-      // Datos transformados para el backend
-      console.log('🚀 === DATOS TRANSFORMADOS PARA EL BACKEND ===');
-      console.log('📊 Estructura completa:', JSON.stringify(datosCompletos, null, 2));
-
-      // Verificar específicamente los campos del solicitante
-      if (datosCompletos.solicitante) {
-        console.log('👤 === CAMPOS DEL SOLICITANTE ===');
-        console.log('📋 Campos fijos:', Object.keys(datosCompletos.solicitante).filter(key => key !== 'info_extra'));
-        console.log('📋 Campos en info_extra:', datosCompletos.solicitante.info_extra ? Object.keys(datosCompletos.solicitante.info_extra) : 'No hay info_extra');
-        console.log('📊 Datos completos del solicitante:', datosCompletos.solicitante);
-      }
 
       // Obtener datos del usuario actual
       const userData = localStorage.getItem('user');
@@ -483,7 +465,7 @@ export const esquemaService = {
         datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
         datosCompletos.solicitudes[0].estado = 'Pendiente';
         datosCompletos.solicitudes[0].created_by_user_email = userEmail; // Agregar correo del usuario
-        
+
         // 🏦 AÑADIR CAMPOS DE ASESOR Y BANQUERO
         if (formData.nombre_asesor) {
           datosCompletos.solicitudes[0].nombre_asesor = formData.nombre_asesor;
@@ -497,13 +479,7 @@ export const esquemaService = {
         if (formData.correo_banco_usuario) {
           datosCompletos.solicitudes[0].correo_banco_usuario = formData.correo_banco_usuario;
         }
-        
-        console.log('🏦 === CAMPOS DE ASESOR Y BANQUERO AÑADIDOS ===');
-        console.log('📋 nombre_asesor:', datosCompletos.solicitudes[0].nombre_asesor);
-        console.log('📋 correo_asesor:', datosCompletos.solicitudes[0].correo_asesor);
-        console.log('📋 nombre_banco_usuario:', datosCompletos.solicitudes[0].nombre_banco_usuario);
-        console.log('📋 correo_banco_usuario:', datosCompletos.solicitudes[0].correo_banco_usuario);
-        console.log('='.repeat(60));
+
       }
 
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
@@ -541,45 +517,27 @@ export const esquemaService = {
       return {};
     }
 
-    console.log(`🔍 === PROCESANDO ENTIDAD: ${entidad} ===`);
-    console.log('📋 Esquema recibido:', esquema);
-    console.log('📊 FormData recibido:', formData);
 
     const datos: Record<string, any> = {};
 
     // Extraer campos fijos (van directamente al objeto principal)
     if (esquema.campos_fijos && Array.isArray(esquema.campos_fijos)) {
-      console.log(`📋 Procesando ${esquema.campos_fijos.length} campos fijos para ${entidad}:`, esquema.campos_fijos.map((c: any) => c.key));
       esquema.campos_fijos.forEach((campo: any) => {
         // 🔧 NORMALIZACIÓN: Convertir tipo_de_credito a tipo_credito
         let fieldKey = campo.key;
         let fieldValue = formData[campo.key];
-        
+
         if (entidad === 'solicitud' && campo.key === 'tipo_de_credito') {
           fieldKey = 'tipo_credito';
           fieldValue = formData.tipo_de_credito || formData.tipo_credito;
-          console.log(`🔧 Normalizando: tipo_de_credito → tipo_credito`);
         }
-        
+
         if (fieldValue !== undefined && fieldValue !== null && fieldValue !== '') {
           datos[fieldKey] = fieldValue;
-          console.log(`✅ Campo fijo agregado: ${fieldKey} = ${fieldValue}`);
-        } else {
-          console.log(`❌ Campo fijo vacío: ${fieldKey} = ${fieldValue}`);
         }
       });
-    } else {
-      console.log(`⚠️ No hay campos fijos definidos para ${entidad}`);
     }
 
-    // Log específico para campos de solicitud
-    if (entidad === 'solicitud') {
-      console.log('🏦 === CAMPOS DE SOLICITUD ===');
-      console.log('🔍 Buscando ciudad_solicitud en formData:', formData.ciudad_solicitud);
-      console.log('🔍 Buscando banco_nombre en formData:', formData.banco_nombre);
-      console.log('📋 Campos fijos definidos:', esquema.campos_fijos?.map((c: any) => c.key));
-      console.log('📋 Campos dinámicos definidos:', esquema.campos_dinamicos?.map((c: any) => c.key));
-    }
 
     // Para referencias, NO crear por defecto una referencia vacía.
     // Solo establecer tipo_referencia si viene explícitamente en formData.
@@ -620,7 +578,7 @@ export const esquemaService = {
             if (!datos[jsonObjectName]) {
               datos[jsonObjectName] = {};
             }
-            
+
             // Mantener la estructura anidada: detalle_credito.credito_hipotecario = { ... }
             // NO aplanar los campos al nivel de detalle_credito
             const creditoObjeto: Record<string, any> = {};
@@ -631,11 +589,10 @@ export const esquemaService = {
                 creditoObjeto[subKey] = subValor;
               }
             });
-            
+
             // Solo agregar el objeto si tiene contenido
             if (Object.keys(creditoObjeto).length > 0) {
               datos[jsonObjectName][creditoKey] = creditoObjeto;
-              console.log(`✅ Objeto ${creditoKey} agregado a detalle_credito con ${Object.keys(creditoObjeto).length} campos`);
             }
           }
         });
@@ -647,7 +604,6 @@ export const esquemaService = {
             datos[jsonObjectName] = {};
           }
           datos[jsonObjectName].tipo_credito = formData.tipo_credito;
-          console.log(`✅ tipo_credito copiado a detalle_credito: ${formData.tipo_credito}`);
         }
       }
 
@@ -679,20 +635,15 @@ export const esquemaService = {
       return [this.extraerDatosEntidad(formData, esquema, 'ubicacion')];
     }
 
-    // Log final para ver qué datos se están enviando
+    // Correcciones manuales para campos de solicitud
     if (entidad === 'solicitud') {
-      console.log('📤 === DATOS FINALES DE SOLICITUD ===');
-      console.log('📊 Datos a enviar:', datos);
-
       // 🔧 CORRECCIÓN MANUAL: Asegurar que ciudad_solicitud y banco_nombre sean campos fijos
       if (formData.ciudad_solicitud && formData.ciudad_solicitud !== '') {
         datos.ciudad_solicitud = formData.ciudad_solicitud;
-        console.log('🔧 Campo fijo forzado: ciudad_solicitud =', formData.ciudad_solicitud);
       }
 
       if (formData.banco_nombre && formData.banco_nombre !== '') {
         datos.banco_nombre = formData.banco_nombre;
-        console.log('🔧 Campo fijo forzado: banco_nombre =', formData.banco_nombre);
       }
 
       // 🔧 CORRECCIÓN: Asegurar que tipo_credito sea campo fijo, NO en detalle_credito
@@ -700,34 +651,27 @@ export const esquemaService = {
       const tipoCreditoValue = formData.tipo_credito || formData.tipo_de_credito;
       if (tipoCreditoValue && tipoCreditoValue !== '') {
         datos.tipo_credito = tipoCreditoValue;
-        console.log('🔧 Campo fijo forzado: tipo_credito =', tipoCreditoValue);
       }
 
       // 🔧 IMPORTANTE: Remover tipo_de_credito si existe (debe ser tipo_credito)
       if (datos.tipo_de_credito) {
         delete datos.tipo_de_credito;
-        console.log('🗑️ Removido tipo_de_credito (debe ser tipo_credito)');
       }
 
       // Remover estos campos del detalle_credito si existen (deben ser campos fijos)
       if (datos.detalle_credito) {
         if (datos.detalle_credito.ciudad_solicitud) {
           delete datos.detalle_credito.ciudad_solicitud;
-          console.log('🗑️ Removido ciudad_solicitud de detalle_credito');
         }
         if (datos.detalle_credito.banco_nombre) {
           delete datos.detalle_credito.banco_nombre;
-          console.log('🗑️ Removido banco_nombre de detalle_credito');
         }
         // Remover tipo_de_credito del detalle_credito si existe
         if (datos.detalle_credito.tipo_de_credito) {
           delete datos.detalle_credito.tipo_de_credito;
-          console.log('🗑️ Removido tipo_de_credito de detalle_credito');
         }
         // NO remover tipo_credito de detalle_credito porque puede haber un tipo_credito específico del crédito
       }
-
-      console.log('📊 Datos finales corregidos:', datos);
     }
 
     return datos;

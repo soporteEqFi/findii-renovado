@@ -34,23 +34,23 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   })();
 
   // DEBUG: Log para campos problemáticos
-  if (campo.key === 'tipo_credito' || campo.key === 'banco_nombre') {
-    console.log(`🔍 CampoDinamico - ${campo.key}:`, {
-      key: campo.key,
-      valueProp: value,
-      efectiveValue: efectiveValue,
-      campoType: campo.type,
-      campoDescription: campo.description,
-      campoRequired: campo.required,
-      campoListValues: campo.list_values,
-      opcionesDisponibles: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values 
-        ? (campo.list_values as { enum: string[] }).enum 
-        : (Array.isArray(campo.list_values) ? campo.list_values : 'No hay opciones'),
-      valorCoincide: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
-        ? (campo.list_values as { enum: string[] }).enum.includes(efectiveValue)
-        : 'N/A'
-    });
-  }
+  // if (campo.key === 'tipo_credito' || campo.key === 'banco_nombre') {
+  //   console.log(`🔍 CampoDinamico - ${campo.key}:`, {
+  //     key: campo.key,
+  //     valueProp: value,
+  //     efectiveValue: efectiveValue,
+  //     campoType: campo.type,
+  //     campoDescription: campo.description,
+  //     campoRequired: campo.required,
+  //     campoListValues: campo.list_values,
+  //     opcionesDisponibles: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
+  //       ? (campo.list_values as { enum: string[] }).enum
+  //       : (Array.isArray(campo.list_values) ? campo.list_values : 'No hay opciones'),
+  //     valorCoincide: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
+  //       ? (campo.list_values as { enum: string[] }).enum.includes(efectiveValue)
+  //       : 'N/A'
+  //   });
+  // }
 
   // Cargar configuraciones para campos específicos
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
@@ -381,9 +381,6 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
     // Campos con opciones predefinidas
     if (campo.key === 'estado') {
-      console.log('🎯 === RENDERIZANDO CAMPO ESTADO ===');
-      console.log('📋 Campo key:', campo.key);
-      console.log('📋 Estados disponibles recibidos:', estadosDisponibles);
 
       // Usar estados dinámicos si están disponibles, sino usar estados por defecto
       const estados = estadosDisponibles.length > 0 ? estadosDisponibles : [
@@ -397,7 +394,6 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         'Desistido'
       ];
 
-      console.log('📋 Estados finales a usar:', estados);
 
       return (
         <select
@@ -678,35 +674,17 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     if (campo.key === 'tipo_credito') {
       // Extraer opciones del list_values (puede ser enum en object o array directo)
       let opciones: string[] = [];
-      
-      console.log('🔧 tipo_credito - INICIO:', {
-        campoKey: campo.key,
-        campoType: campo.type,
-        listValues: campo.list_values,
-        listValuesType: typeof campo.list_values,
-        isArray: Array.isArray(campo.list_values),
-        hasEnum: campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values
-      });
-      
+
+
       if (campo.list_values && typeof campo.list_values === 'object' && 'enum' in campo.list_values) {
         opciones = (campo.list_values as { enum: string[] }).enum;
-        console.log('✅ Opciones extraídas de enum:', opciones);
       } else if (Array.isArray(campo.list_values)) {
         opciones = campo.list_values;
-        console.log('✅ Opciones extraídas de array:', opciones);
       } else {
         console.warn('⚠️ No se pudieron extraer opciones de list_values');
       }
-      
-      console.log('🔧 tipo_credito - Renderizando SELECT:', {
-        opciones,
-        opcionesLength: opciones.length,
-        efectiveValue,
-        efectiveValueType: typeof efectiveValue,
-        valorEnOpciones: opciones.includes(efectiveValue),
-        todasLasOpciones: opciones.map(o => ({ valor: o, coincide: o === efectiveValue }))
-      });
-      
+
+
       return (
         <select
           value={efectiveValue || ''}

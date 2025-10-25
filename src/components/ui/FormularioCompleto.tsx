@@ -26,10 +26,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   estadosDisponibles = []
 }) => {
   const handleFieldChange = (key: string, value: any) => {
-    // DEBUG: Log para campos SELECT problemáticos
-    if (key.includes('ciudad') || key.includes('departamento') || key.includes('tipo_vivienda') || key.includes('correspondencia')) {
-      console.log(`🔄 handleFieldChange para ${key}:`, value);
-    }
 
     // Si es un campo activador (como tipo_actividad), limpiar campos condicionales
     if (key === 'tipo_actividad') {
@@ -51,7 +47,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
       // Solo limpiar si el nuevo valor no coincide con la condición del campo
       if (campo.conditional_on?.value !== nuevoValor) {
         onChange(campo.key, '');
-        console.log(`🧹 Limpiando campo condicional: ${campo.key} (dependía de ${campoActivador})`);
       }
     });
 
@@ -63,28 +58,26 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
     camposFijosDependientes.forEach(campo => {
       if (campo.conditional_on?.value !== nuevoValor) {
         onChange(campo.key, '');
-        console.log(`🧹 Limpiando campo fijo condicional: ${campo.key} (dependía de ${campoActivador})`);
       }
     });
   };
 
   // Obtiene un valor intentando múltiples ubicaciones comunes en estructuras anidadas
   const getNestedValue = (key: string): any => {
-    // CASO ESPECIAL: tipo_credito debe leerse desde solicitudes[0].detalle_credito.tipo_credito primero
-    // Este orden coincide con getTipoCreditoValue en CustomerFormDinamicoEdit
+    // CASO ESPECIAL: tipo_credito debe leerse desde el tipo PRINCIPAL primero
     if (key === 'tipo_credito') {
-      const tipoCreditoValue = 
-        valores?.solicitudes?.[0]?.detalle_credito?.tipo_credito ??
+      const tipoCreditoValue =
         valores?.solicitudes?.[0]?.tipo_credito ??
-        valores?.tipo_credito;
-      
-      console.log('🔍 getNestedValue para tipo_credito:', {
-        valor: tipoCreditoValue,
-        enDetalle: valores?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
-        enSolicitud: valores?.solicitudes?.[0]?.tipo_credito,
-        directo: valores?.tipo_credito
-      });
-      
+        valores?.tipo_credito ??
+        valores?.solicitudes?.[0]?.detalle_credito?.tipo_credito;
+
+      // console.log('🔍 getNestedValue para tipo_credito:', {
+      //   valor: tipoCreditoValue,
+      //   enDetalle: valores?.solicitudes?.[0]?.detalle_credito?.tipo_credito,
+      //   enSolicitud: valores?.solicitudes?.[0]?.tipo_credito,
+      //   directo: valores?.tipo_credito
+      // });
+
       if (tipoCreditoValue !== undefined && tipoCreditoValue !== null && tipoCreditoValue !== '') {
         return tipoCreditoValue;
       }
@@ -138,29 +131,29 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
     // 7) Solicitudes (primera) y detalle_credito
     const sol0 = valores?.solicitudes?.[0];
-    
+
     // EXCEPCIÓN: Campos que están en el nivel de solicitud (no en detalle_credito)
     // Estos campos deben buscarse primero en el nivel de solicitud
     const camposNivelSolicitud = ['banco_nombre', 'ciudad_solicitud', 'estado', 'nombre_asesor', 'correo_asesor', 'nombre_banco_usuario', 'correo_banco_usuario'];
     if (camposNivelSolicitud.includes(key)) {
       const vSol = tryObj(sol0);
-      if (key === 'banco_nombre') {
-        console.log('🔍 getNestedValue para banco_nombre:', {
-          key: key,
-          sol0: sol0,
-          valorEncontrado: vSol,
-          solicitudesCompletas: valores?.solicitudes
-        });
-      }
+      // if (key === 'banco_nombre') {
+      //   console.log('🔍 getNestedValue para banco_nombre:', {
+      //     key: key,
+      //     sol0: sol0,
+      //     valorEncontrado: vSol,
+      //     solicitudesCompletas: valores?.solicitudes
+      //   });
+      // }
       if (vSol !== undefined) return vSol;
     }
-    
+
     // IMPORTANTE: Para campos de solicitud, buscar primero en detalle_credito antes que en el nivel superior
     // Esto es especialmente importante para tipo_credito que está en detalle_credito.tipo_credito
     const detCred = sol0?.detalle_credito;
     const vDetCred = tryObj(detCred);
     if (vDetCred !== undefined) return vDetCred;
-    
+
     // Buscar dentro de sub-objetos del detalle de crédito (como credito_hipotecario, credito_vehicular, etc.)
     if (detCred && typeof detCred === 'object') {
       for (const subKey of Object.keys(detCred)) {
@@ -171,7 +164,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
         }
       }
     }
-    
+
     // Luego buscar en el nivel de solicitud (para campos que no están en la excepción)
     const vSol = tryObj(sol0);
     if (vSol !== undefined) return vSol;
@@ -185,6 +178,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
 
     const { field: triggerField, value: expectedValue } = campo.conditional_on;
     const actualValue = getNestedValue(triggerField);
+
 
     return actualValue === expectedValue;
   };
@@ -207,19 +201,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
     });
   };
 
-  // DEBUG: Log para identificar el problema con tipo_credito
-  if (titulo === 'Información del Crédito') {
-    const tipoCreditoValue = getNestedValue('tipo_credito');
-    console.log('🔍 FormularioCompleto DEBUG - Información del Crédito:', {
-      titulo,
-      camposFijos: camposFijosVisibles.map(c => ({ key: c.key, order_index: c.order_index })),
-      camposDinamicos: camposDinamicosVisibles.map(c => ({ key: c.key, order_index: c.order_index, conditional_on: c.conditional_on })),
-      tipoCreditoEnFijos: camposFijosVisibles.find(c => c.key === 'tipo_credito'),
-      tipoCreditoEnDinamicos: camposDinamicosVisibles.find(c => c.key === 'tipo_credito'),
-      tipoCreditoValue: tipoCreditoValue,
-      valoresCompletos: valores
-    });
-  }
 
   // Crear un array ordenado con lógica mejorada para preservar posiciones específicas
   const todosLosCampos: any[] = [];
@@ -245,7 +226,6 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
                            camposDinamicosVisibles.find(c => c.key === 'tipo_credito');
 
   if (campoTipoCredito && titulo === 'Información del Crédito') {
-    console.log('🔧 Aplicando lógica especial para tipo_credito:', campoTipoCredito);
 
     // Remover tipo_credito de las listas originales si existe
     const camposFijosSinTipoCredito = camposFijosOrdenados.filter(c => c.key !== 'tipo_credito');
@@ -305,29 +285,16 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {todosLosCampos.map(campo => {
             let valorCampo = getNestedValue(campo.key);
-            
+
             // CASO ESPECIAL: Forzar la lectura correcta de tipo_credito
             if (campo.key === 'tipo_credito' && !valorCampo) {
-              valorCampo = 
+              valorCampo =
                 valores?.solicitudes?.[0]?.detalle_credito?.tipo_credito ??
                 valores?.solicitudes?.[0]?.tipo_credito;
-              
-              console.log('🔍 FormularioCompleto - Forzando lectura de tipo_credito:', {
-                key: campo.key,
-                valorForzado: valorCampo,
-                valorOriginal: getNestedValue(campo.key)
-              });
+
             }
-            
-            // DEBUG: Log específico para tipo_credito
-            if (campo.key === 'tipo_credito') {
-              console.log('🔍 FormularioCompleto - Renderizando tipo_credito:', {
-                key: campo.key,
-                valorCampo: valorCampo,
-                valores: valores
-              });
-            }
-            
+
+
             return (
               <CampoDinamico
                 key={campo.key}

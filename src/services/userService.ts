@@ -170,19 +170,13 @@ export const userService = {
   ): Promise<User> {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
-      
+
       // Limpiar info_extra si está presente
       const cleanUpdateData = {
         ...updateData,
         info_extra: updateData.info_extra ? this.cleanInfoExtra(updateData.info_extra) : undefined
       };
 
-      console.log('📤 Enviando actualización de usuario:', {
-        userId,
-        empresaId: empresaIdToUse,
-        data: cleanUpdateData,
-        tieneContraseña: !!updateData.contraseña
-      });
 
       const response = await fetch(
         buildApiUrl(`/usuarios/${userId}`),
@@ -205,7 +199,6 @@ export const userService = {
       const result = await response.json();
       const user = result.data || result;
 
-      console.log('✅ Usuario actualizado exitosamente:', user);
 
       return {
         ...user,
@@ -285,7 +278,6 @@ export const userService = {
       const userData = localStorage.getItem('user');
       if (userData) {
         const userObj = JSON.parse(userData);
-        console.log('📋 Información del usuario desde localStorage:', userObj);
 
         return {
           id: userObj.id || parseInt(localStorage.getItem('user_id') || '0'),
@@ -298,7 +290,6 @@ export const userService = {
       }
 
       // Si no hay información en localStorage, intentar desde API
-      console.log('⚠️ No hay información en localStorage, intentando desde API...');
       const response = await fetch(buildApiUrl('/get-user-info'), {
         method: 'GET',
         headers: {
@@ -336,36 +327,17 @@ export const userService = {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
 
-      console.log('🔍 Buscando banquero con criterios:', {
-        banco: bancoNombre,
-        ciudad: ciudadSolicitud,
-        empresaId: empresaIdToUse
-      });
 
       // Obtener todos los usuarios de la empresa sin restricción por rol del solicitante
       const users = await this.getUsers(empresaIdToUse, { includeIdentityHeaders: false });
-      console.log('👥 Total usuarios obtenidos:', users.length);
-
       // Filtrar usuarios con rol 'banco'
       const bankUsers = users.filter(user => user.rol === 'banco');
-      console.log('🏦 Usuarios con rol banco:', bankUsers.length);
-
-      // Log de usuarios banco para debug
-      bankUsers.forEach((user, index) => {
-        const infoExtra = this.processInfoExtra(user.info_extra);
-        console.log(`🏦 Banquero ${index + 1}:`, {
-          nombre: user.nombre,
-          correo: user.correo,
-          info_extra: infoExtra
-        });
-      });
 
       // Buscar usuarios con rol 'banco' que tengan información adicional que coincida
       const banker = bankUsers.find(user => {
         // Verificar información adicional
         const infoExtra = this.processInfoExtra(user.info_extra);
         if (!infoExtra) {
-          console.log(`❌ Usuario ${user.nombre} no tiene información adicional`);
           return false;
         }
 
@@ -378,30 +350,17 @@ export const userService = {
         const hasBanco = infoString.includes(bancoLower);
         const hasCiudad = infoString.includes(ciudadLower);
 
-        console.log(`🔍 Verificando ${user.nombre}:`, {
-          infoString,
-          bancoLower,
-          ciudadLower,
-          hasBanco,
-          hasCiudad,
-          match: hasBanco && hasCiudad
-        });
 
         return hasBanco && hasCiudad;
       });
 
       if (banker) {
-        console.log('✅ Banquero encontrado:', {
-          nombre: banker.nombre,
-          correo: banker.correo
-        });
         return {
           nombre: banker.nombre,
           correo: banker.correo
         };
       }
 
-      console.log('❌ No se encontró banquero que coincida con los criterios');
       return null;
     } catch (error) {
       console.error('Error buscando banquero por criterios:', error);

@@ -50,13 +50,6 @@ export const apiCall = async <T>(
 
   const response = await fetch(url, config);
 
-  console.log('API Response Info:', {
-    status: response.status,
-    statusText: response.statusText,
-    url: response.url,
-    ok: response.ok,
-    contentType: response.headers.get('content-type')
-  });
 
   if (!response.ok) {
     const errorText = await response.text();

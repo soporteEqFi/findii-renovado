@@ -18,31 +18,13 @@ const getFormDataHeaders = (): HeadersInit => {
 export const uploadDocument = async (file: File, solicitanteId: number): Promise<any> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/`;
 
-  console.log('🌐 === INICIANDO SUBIDA DE DOCUMENTO INDIVIDUAL ===');
-  console.log('📍 URL de destino:', url);
-  console.log('📄 Archivo a subir:', {
-    nombre: file.name,
-    tamaño: `${(file.size / 1024).toFixed(2)} KB`,
-    tipo: file.type
-  });
-  console.log('🆔 Solicitante ID:', solicitanteId);
-  console.log('🔗 API_CONFIG.BASE_URL:', API_CONFIG.BASE_URL);
-  console.log('🔗 API_CONFIG.ENDPOINTS.DOCUMENTOS:', API_CONFIG.ENDPOINTS.DOCUMENTOS);
 
   // Crear FormData
   const formData = new FormData();
   formData.append('file', file);
   formData.append('solicitante_id', solicitanteId.toString());
 
-  console.log('📦 FormData creado con:');
-  console.log('  - file:', file.name);
-  console.log('  - solicitante_id:', solicitanteId.toString());
-
-  // Log de headers
   const headers = getFormDataHeaders();
-  console.log('📋 Headers de la petición:', headers);
-
-  console.log('🚀 Enviando petición POST...');
 
   try {
     const response = await fetch(url, {
@@ -51,12 +33,6 @@ export const uploadDocument = async (file: File, solicitanteId: number): Promise
       body: formData,
     });
 
-    console.log('📡 Respuesta recibida:', {
-      status: response.status,
-      statusText: response.statusText,
-      ok: response.ok,
-      headers: Object.fromEntries(response.headers.entries())
-    });
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -67,7 +43,6 @@ export const uploadDocument = async (file: File, solicitanteId: number): Promise
     }
 
     const result = await response.json();
-    console.log('✅ Documento subido exitosamente:', result);
     return result;
   } catch (error) {
     console.error('❌ Error en fetch:', error);
@@ -112,9 +87,6 @@ export const getDocuments = async (solicitanteId: number): Promise<Document[]> =
     }
 
     const result = await response.json();
-    console.log('✅ Documentos obtenidos exitosamente:', result);
-    console.log('✅ Tipo de resultado:', typeof result);
-    console.log('✅ Es array:', Array.isArray(result));
 
     // Procesar la respuesta y normalizar posibles nombres de campos
     let rawDocuments: any[] = [];
@@ -164,7 +136,6 @@ export const getDocuments = async (solicitanteId: number): Promise<Document[]> =
       // Filtrar solo los que tengan URL resoluble
       .filter((d: Document) => !!d.documento_url);
 
-    console.log('✅ Documentos normalizados:', normalized.length);
     return normalized;
   } catch (error) {
     console.error('❌ Error en fetch getDocuments:', error);
@@ -177,9 +148,6 @@ export const getDocuments = async (solicitanteId: number): Promise<Document[]> =
 export const deleteDocument = async (documentId: number): Promise<any> => {
   const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.DOCUMENTOS}/${documentId}`;
 
-  console.log('🗑️ === ELIMINANDO DOCUMENTO ===');
-  console.log('📍 URL de eliminación:', url);
-  console.log('🆔 Document ID:', documentId);
 
   const headers = getFormDataHeaders();
 
@@ -195,7 +163,6 @@ export const deleteDocument = async (documentId: number): Promise<any> => {
   }
 
   const result = await response.json();
-  console.log('✅ Documento eliminado exitosamente:', result);
   return result;
 };
 
