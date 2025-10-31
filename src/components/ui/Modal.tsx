@@ -93,20 +93,23 @@ const Modal: React.FC<ModalProps> = ({
 
         <div
           ref={modalRef}
-          className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle ${sizeClasses[size]} w-full`}
+          className={`inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle ${sizeClasses[size]} w-full relative`}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">{title}</h3>
-            <button
-              type="button"
-              className="text-gray-400 hover:text-gray-500 focus:outline-none"
-              onClick={onClose}
-            >
-              <X size={20} />
-            </button>
-          </div>
+          {/* Solo mostrar header si hay título y no está vacío */}
+          {title && title.trim() !== '' && (
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900">{title}</h3>
+              <button
+                type="button"
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+                onClick={onClose}
+              >
+                <X size={20} />
+              </button>
+            </div>
+          )}
 
-          <div className="px-6 py-4">{children}</div>
+          <div className={title && title.trim() !== '' ? 'px-6 py-4' : ''}>{children}</div>
 
           {footer && (
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">

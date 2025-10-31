@@ -259,7 +259,7 @@ const Users = () => {
           setIsModalOpen(false);
           setIsEditing(false);
         }}
-        title="Detalles del Usuario"
+        title=""
         size="xl"
       >
         {selectedUser && (
@@ -275,6 +275,10 @@ const Users = () => {
             onSave={handleSave}
             onDelete={handleDelete}
             onInputChange={handleInputChange}
+            onClose={() => {
+              setIsModalOpen(false);
+              setIsEditing(false);
+            }}
           />
         )}
       </Modal>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types/user';
-import { Loader2, MapPin, Building, CreditCard } from 'lucide-react';
+import { Loader2, MapPin, Building, CreditCard, Eye, EyeOff, X } from 'lucide-react';
 import { userService } from '../../services/userService';
 
 interface UserDetailsProps {
@@ -15,6 +15,7 @@ interface UserDetailsProps {
   onSave: () => void;
   onDelete: () => void;
   onInputChange: (field: keyof User, value: string | number | null) => void;
+  onClose?: () => void;
 }
 
 export const UserDetails: React.FC<UserDetailsProps> = ({
@@ -29,9 +30,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   onSave,
   onDelete,
   onInputChange,
+  onClose,
 }) => {
   const [supervisors, setSupervisors] = useState<User[]>([]);
   const [loadingSupervisors, setLoadingSupervisors] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Cargar supervisores al montar el componente
   useEffect(() => {
@@ -128,146 +131,177 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Avatar/Imagen */}
-      <div className="flex justify-center">
-        <div className="relative">
-          <img
-            src="https://via.placeholder.com/150"
-            alt={user.nombre}
-            className="w-24 h-24 rounded-full object-cover border-2 border-gray-200"
-          />
-        </div>
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+      {/* Header con fondo azul oscuro */}
+      <div className="px-8 py-6 bg-gradient-to-r from-slate-800 to-slate-900 relative">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-4 right-4 text-white hover:text-gray-200 focus:outline-none transition-colors"
+          >
+            <X size={24} />
+          </button>
+        )}
+        <h2 className="text-2xl font-bold text-white">Detalles del Usuario</h2>
+        <p className="text-slate-300 text-sm mt-1">
+          {isEditing ? 'Edita la información del usuario' : 'Información del usuario'}
+        </p>
       </div>
 
-      {/* Error message */}
-      {error && (
-        <div className="bg-red-50 p-4 rounded-md">
-          <p className="text-red-700">{error}</p>
-        </div>
-      )}
-
-      {/* User details form */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre</label>
-          {isEditing ? (
-            <input
-              type="text"
-              className="mt-1 p-2 block w-full rounded-md border-2 border-black-900 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-              value={editedUser.nombre}
-              onChange={(e) => onInputChange('nombre', e.target.value)}
+      <div className="px-8 py-6 space-y-6">
+        {/* Avatar/Imagen */}
+        <div className="flex justify-center mb-6">
+          <div className="relative">
+            <img
+              src="https://via.placeholder.com/150"
+              alt={user.nombre}
+              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
             />
-          ) : (
-            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.nombre}</p>
-          )}
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Correo</label>
-          {isEditing ? (
-            <input
-              type="email"
-              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-              value={editedUser.correo}
-              onChange={(e) => onInputChange('correo', e.target.value)}
-            />
-          ) : (
-            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.correo}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Cédula</label>
-          {isEditing ? (
-            <input
-              type="text"
-              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-              value={editedUser.cedula}
-              onChange={(e) => onInputChange('cedula', e.target.value)}
-            />
-          ) : (
-            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.cedula}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Rol</label>
-          {isEditing ? (
-            <select
-              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-              value={editedUser.rol}
-              onChange={(e) => onInputChange('rol', e.target.value)}
-            >
-              <option value="admin">Admin</option>
-              <option value="banco">Banco</option>
-              <option value="asesor">Asesor</option>
-              <option value="supervisor">Supervisor</option>
-            </select>
-          ) : (
-            <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.rol}</p>
-          )}
-        </div>
-
-        {/* Campo de Supervisor - Solo visible para asesores */}
-        {(editedUser.rol === 'asesor' || user.rol === 'asesor') && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Supervisor</label>
-            {isEditing ? (
-              <select
-                className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-                value={editedUser.reports_to_id || ''}
-                onChange={(e) => onInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
-                disabled={loadingSupervisors}
-              >
-                <option value="">Sin supervisor</option>
-                {supervisors.map((supervisor) => (
-                  <option key={supervisor.id} value={supervisor.id}>
-                    {supervisor.nombre}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">
-                {user.reports_to_id ?
-                  supervisors.find(s => s.id === user.reports_to_id)?.nombre || `ID: ${user.reports_to_id}`
-                  : 'Sin supervisor'
-                }
-              </p>
-            )}
-            {loadingSupervisors && (
-              <p className="mt-1 text-sm text-gray-500">Cargando supervisores...</p>
-            )}
+        {/* Error message */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 p-4 rounded-lg">
+            <p className="text-red-700 text-sm">{error}</p>
           </div>
         )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">ID</label>
-          <p className="mt-1 text-sm text-gray-900 p-2 bg-gray-50 rounded border">{user.id}</p>
+        {/* Información Personal */}
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+            Información Personal
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre <span className="text-red-500">*</span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  value={editedUser.nombre}
+                  onChange={(e) => onInputChange('nombre', e.target.value)}
+                />
+              ) : (
+                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.nombre}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Correo Electrónico <span className="text-red-500">*</span>
+              </label>
+              {isEditing ? (
+                <input
+                  type="email"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  value={editedUser.correo}
+                  onChange={(e) => onInputChange('correo', e.target.value)}
+                />
+              ) : (
+                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.correo}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Cédula</label>
+              {isEditing ? (
+                <input
+                  type="text"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  value={editedUser.cedula}
+                  onChange={(e) => onInputChange('cedula', e.target.value)}
+                />
+              ) : (
+                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.cedula}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+              {isEditing ? (
+                <select
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  value={editedUser.rol}
+                  onChange={(e) => onInputChange('rol', e.target.value)}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="banco">Banco</option>
+                  <option value="asesor">Asesor</option>
+                  <option value="supervisor">Supervisor</option>
+                </select>
+              ) : (
+                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.rol}</p>
+              )}
+            </div>
+
+            {/* Campo de Supervisor - Solo visible para asesores */}
+            {(editedUser.rol === 'asesor' || user.rol === 'asesor') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Supervisor</label>
+                {isEditing ? (
+                  <select
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+                    value={editedUser.reports_to_id || ''}
+                    onChange={(e) => onInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
+                    disabled={loadingSupervisors}
+                  >
+                    <option value="">Sin supervisor</option>
+                    {supervisors.map((supervisor) => (
+                      <option key={supervisor.id} value={supervisor.id}>
+                        {supervisor.nombre}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
+                    {user.reports_to_id ?
+                      supervisors.find(s => s.id === user.reports_to_id)?.nombre || `ID: ${user.reports_to_id}`
+                      : 'Sin supervisor'
+                    }
+                  </p>
+                )}
+                {loadingSupervisors && (
+                  <p className="mt-1 text-sm text-gray-500">Cargando supervisores...</p>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">ID</label>
+              <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.id}</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Creación</label>
+              <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
+                {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Fecha de Creación</label>
-          <p className="mt-1 text-sm text-gray-600 p-2 bg-gray-50 rounded border">
-            {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}
-          </p>
-        </div>
-      </div>
-
-      {/* Información adicional */}
-      {(user.info_extra || editedUser.info_extra) && (
-        <div className="border-t pt-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Información Adicional</h3>
+        {/* Información adicional */}
+        {(user.info_extra || editedUser.info_extra) && (
+          <div className="mb-6 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+              Información Adicional
+            </h3>
 
           {isEditing ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Ciudad</label>
-                <div className="mt-1 relative">
-                  <MapPin className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                <div className="relative">
+                  <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('ciudad', editedUser)}
                     onChange={(e) => handleInfoExtraChange('ciudad', e.target.value)}
                     placeholder="Ej: Barranquilla"
@@ -276,12 +310,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Banco</label>
-                <div className="mt-1 relative">
-                  <Building className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Banco</label>
+                <div className="relative">
+                  <Building className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('banco_nombre', editedUser)}
                     onChange={(e) => handleInfoExtraChange('banco_nombre', e.target.value)}
                     placeholder="Ej: Bancolombia"
@@ -290,11 +324,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">Línea de Crédito</label>
-                <div className="mt-1 relative">
-                  <CreditCard className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Línea de Crédito</label>
+                <div className="relative">
+                  <CreditCard className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <select
-                    className="pl-8 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('linea_credito', editedUser)}
                     onChange={(e) => handleInfoExtraChange('linea_credito', e.target.value)}
                   >
@@ -309,7 +343,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {getInfoExtraValue('ciudad', user) && (
                 <div className="flex items-center p-3 bg-gray-50 rounded-md">
                   <MapPin className="w-4 h-4 mr-2 text-gray-500" />
@@ -381,49 +415,68 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
         </div>
       )}
 
+      {/* Sección de cambio de contraseña */}
       {isEditing && (
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Contraseña</label>
-                      <input
-              type="password"
-              className="mt-1 p-2 block w-full rounded-md border-2 border-black-800 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 bg-white"
-              value={editedUser.contraseña || ''}
-              onChange={(e) => onInputChange('contraseña', e.target.value)}
-              placeholder="Dejar en blanco para mantener la actual"
-            />
+        <div className="mb-6 pt-6 border-t border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+            Cambiar Contraseña
+            <span className="ml-2 text-sm font-normal text-gray-500">(Opcional)</span>
+          </h3>
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nueva Contraseña
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                value={editedUser.contraseña || ''}
+                onChange={(e) => onInputChange('contraseña', e.target.value)}
+                placeholder="Dejar en blanco para no cambiar"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Actions */}
-      <div className="flex justify-end space-x-3 pt-4 border-t">
+      </div>
+
+      {/* Footer con botones */}
+      <div className="px-8 py-5 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
         {!isEditing && canEdit() && (
           <button
             type="button"
             onClick={onEdit}
-            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-6 py-2.5 text-gray-700 font-medium border border-gray-300 rounded-lg hover:bg-white hover:shadow-sm transition-all"
           >
             Editar
           </button>
         )}
 
         {isEditing && (
-          <>
-            <button
-              type="button"
-              onClick={onSave}
-              disabled={isLoading}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Guardando...
-                </>
-              ) : (
-                'Guardar'
-              )}
-            </button>
-          </>
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={isLoading}
+            className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              'Guardar Cambios'
+            )}
+          </button>
         )}
 
         {canDelete() && (
@@ -431,7 +484,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
             type="button"
             onClick={onDelete}
             disabled={isLoading}
-            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+            className="px-6 py-2.5 text-white font-medium bg-red-600 rounded-lg hover:bg-red-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Eliminar
           </button>
