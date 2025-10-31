@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Loader2, UserPlus } from 'lucide-react';
+import toast from 'react-hot-toast';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useUsers } from '../hooks/useUsers';
@@ -88,11 +89,38 @@ const Users = () => {
         }
       }
 
+      // Detectar si se está cambiando la contraseña
+      const isPasswordChange = editedUser.contraseña && editedUser.contraseña.trim() !== '';
+
+      // Incluir contraseña si se ha ingresado un valor nuevo (no vacío)
+      // Nota: No comparamos con selectedUser.contraseña porque por seguridad el backend no la devuelve
+      if (isPasswordChange) {
+        updateData.contraseña = editedUser.contraseña;
+      }
+
+      // Verificar que hay al menos un campo para actualizar
+      if (Object.keys(updateData).length === 0) {
+        console.warn('No hay campos para actualizar');
+        setIsEditing(false);
+        return;
+      }
+
       const updatedUser = await updateUser(editedUser.id, updateData, empresaId);
       setSelectedUser(updatedUser);
+      // Limpiar la contraseña del editedUser después de guardar exitosamente
+      setEditedUser({ ...updatedUser, contraseña: undefined });
       setIsEditing(false);
+
+      // Mostrar mensaje de éxito
+      if (isPasswordChange) {
+        toast.success('Contraseña actualizada correctamente');
+      } else {
+        toast.success('Usuario actualizado correctamente');
+      }
     } catch (error) {
       console.error('Error actualizando usuario:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(`Error al actualizar usuario: ${errorMessage}`);
     }
   };
 
