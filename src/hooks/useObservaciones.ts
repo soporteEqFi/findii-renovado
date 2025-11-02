@@ -79,12 +79,29 @@ export const useObservaciones = ({
       );
 
       if (response.ok) {
+        // Obtener datos del usuario del localStorage
+        const userId = parseInt(localStorage.getItem('user_id') || '1');
+
+        // Obtener el nombre del usuario desde el objeto user en localStorage
+        let userName = 'Usuario';
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const userObj = JSON.parse(userData);
+            userName = userObj.nombre || userObj.nombres || 'Usuario';
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+          }
+        }
+
         // Crear nueva observación local en lugar de recargar del backend
         const nuevaObs: ObservacionBackend = {
           id: `temp-${Date.now()}`, // ID temporal
           tipo: 'comentario',
           fecha: new Date().toISOString(),
-          observacion: observacion.trim()
+          observacion: observacion.trim(),
+          usuario_id: userId,
+          usuario_nombre: userName
         };
 
         // Agregar a la lista local

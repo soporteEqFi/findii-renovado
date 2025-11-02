@@ -6,6 +6,8 @@ export interface ObservacionBackend {
   tipo: string;
   fecha: string;
   observacion: string;
+  usuario_id?: number;
+  usuario_nombre?: string;
 }
 
 export interface HistorialResponse {
@@ -58,7 +60,7 @@ export const solicitudService = {
       }
 
       const result = await response.json();
-      
+
       if (result.ok && result.data) {
         return {
           id: result.data.id,
@@ -151,13 +153,26 @@ export const solicitudService = {
       const url = buildApiUrl(`/solicitudes/${solicitudId}/observaciones?empresa_id=${empresaId}`);
 
       const userId = parseInt(localStorage.getItem('user_id') || '1');
-      const userName = localStorage.getItem('user_name') || 'Usuario';
+
+      // Obtener el nombre del usuario desde el objeto user en localStorage
+      let userName = 'Usuario';
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const userObj = JSON.parse(userData);
+          userName = userObj.nombre || userObj.nombres || 'Usuario';
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
+      }
 
       // Crear el payload según la documentación de la API
       const requestData = {
         observacion: observacion.trim(),
         tipo: tipo,
-        fecha_creacion: new Date().toISOString()
+        fecha_creacion: new Date().toISOString(),
+        usuario_id: userId,
+        usuario_nombre: userName
       };
 
       console.log('🔍 Agregando observación a solicitud:', {

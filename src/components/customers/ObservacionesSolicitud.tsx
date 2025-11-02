@@ -87,11 +87,23 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
 
       // Notificar al componente padre
       if (onObservacionAgregada) {
+        // Obtener el nombre del usuario desde el objeto user en localStorage
+        let userName = 'Usuario';
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          try {
+            const userObj = JSON.parse(userData);
+            userName = userObj.nombre || userObj.nombres || 'Usuario';
+          } catch (e) {
+            console.error('Error parsing user data:', e);
+          }
+        }
+
         const nuevaObs = {
           observacion: nuevaObservacion.trim(),
           fecha_creacion: new Date().toISOString(),
           usuario_id: parseInt(localStorage.getItem('user_id') || '1'),
-          usuario_nombre: localStorage.getItem('user_name') || 'Usuario'
+          usuario_nombre: userName
         };
         onObservacionAgregada(nuevaObs);
       }
@@ -203,7 +215,7 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm font-medium text-gray-900">
-                    {obs.tipo === 'comentario' ? 'Usuario' : obs.tipo}
+                    {obs.usuario_nombre || (obs.tipo === 'comentario' ? 'Usuario' : obs.tipo)}
                   </span>
                   <span className="text-xs text-gray-500">
                     {formatFecha(obs.fecha)}
