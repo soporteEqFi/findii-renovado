@@ -337,10 +337,10 @@ const Users = () => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-xl">
         {/* Header */}
-        <div className="p-6 border-b flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-gray-800">Usuarios</h1>
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-100">Usuarios</h1>
           <div className="flex items-center space-x-4">
             {user && (() => {
               // Obtener info_extra del usuario
@@ -353,10 +353,10 @@ const Users = () => {
 
               return (
                 <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
                     Conectado como: <span className="font-medium">{user.nombre}</span>
                     {user.rol && (
-                      <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                      <span className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs dark:text-gray-300">
                         {user.rol}
                       </span>
                     )}
@@ -389,10 +389,10 @@ const Users = () => {
 
         {/* Botón Nuevo Usuario */}
         {canEdit() && (
-          <div className="flex justify-end p-4 bg-gray-50 border-b">
+          <div className="flex justify-end p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setIsNewUserModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
             >
               <UserPlus className="w-4 h-4 mr-2" />
               Nuevo Usuario

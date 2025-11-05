@@ -183,12 +183,12 @@ const Statistics: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {Object.keys(estadisticasRendimiento.solicitudes_por_dia).length > 0 && (
-            <ChartCard title="Solicitudes por Día">
-              <SimpleChart
-                data={estadisticasRendimiento.solicitudes_por_dia}
-                type="bar"
-              />
-            </ChartCard>
+            <LineChart
+              data={estadisticasRendimiento.solicitudes_por_dia}
+              title="Solicitudes por Día"
+              color="#3B82F6"
+              height={350}
+            />
           )}
 
           {Object.keys(estadisticasRendimiento.productividad_usuarios).length > 0 && (
@@ -418,23 +418,23 @@ const Statistics: React.FC = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Estadísticas</h1>
-        <p className="text-gray-600">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Estadísticas</h1>
+        <p className="text-gray-600 dark:text-gray-400">
           Panel de estadísticas filtrado según tu rol: <span className="font-semibold">{user?.rol?.toUpperCase()}</span>
         </p>
       </div>
 
       {/* Controles de filtrado */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-xl p-4 mb-6">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Tipo de Estadísticas
             </label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value as StatisticsType)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
             >
               <option value="generales">Estadísticas Generales</option>
               <option value="rendimiento">Rendimiento</option>
@@ -448,13 +448,13 @@ const Statistics: React.FC = () => {
 
           {(selectedType === 'rendimiento' || selectedType === 'completas') && (
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Período (días)
               </label>
               <select
                 value={periodDays}
                 onChange={(e) => setPeriodDays(Number(e.target.value))}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
               >
                 <option value={7}>7 días</option>
                 <option value={15}>15 días</option>

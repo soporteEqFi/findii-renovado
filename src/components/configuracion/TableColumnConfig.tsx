@@ -252,20 +252,20 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-xl p-6 border border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-center h-32">
-          <div className="text-gray-500">Cargando configuración de tabla...</div>
+          <div className="text-gray-500 dark:text-gray-400">Cargando configuración de tabla...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900">Configuración Tabla</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">Configuración Tabla</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Configura las columnas que se muestran en la tabla principal
           </p>
         </div>
@@ -281,17 +281,17 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
 
       {/* Formulario para agregar nueva columna */}
       {showAddColumn && (
-        <div className="bg-gray-50 p-4 rounded-lg mb-6 border">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Agregar Nueva Columna</h3>
+        <div className="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-lg mb-6 border border-gray-200 dark:border-gray-700">
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Agregar Nueva Columna</h3>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Campo Disponible
               </label>
               <select
                 value={selectedField}
                 onChange={(e) => setSelectedField(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Seleccionar campo...</option>
                 {camposDisponibles.map(([key, displayName]) => (
@@ -314,7 +314,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                   setShowAddColumn(false);
                   setSelectedField('');
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 w-full sm:w-auto"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 w-full sm:w-auto"
               >
                 Cancelar
               </button>
@@ -344,7 +344,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}
-                          className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-white border rounded-lg transition-all ${
+                          className={`flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg transition-all ${
                             snapshot.isDragging ? 'shadow-lg rotate-1' : 'shadow-sm'
                           }`}
                         >
@@ -353,7 +353,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                             <div className="flex items-center gap-3">
                               <div
                                 {...provided.dragHandleProps}
-                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                               >
                                 <GripVertical size={18} />
                               </div>
@@ -370,7 +370,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                               </button>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                                 #{columna.orden}
                               </span>
                               <button
@@ -387,7 +387,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                           <div className="hidden sm:flex sm:items-center sm:gap-4 sm:w-full">
                             <div
                               {...provided.dragHandleProps}
-                              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+                              className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                             >
                               <GripVertical size={20} />
                             </div>
@@ -407,17 +407,17 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
                             </div>
 
                             <div className="flex-1">
-                              <div className={`font-medium ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                              <div className={`font-medium ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-gray-100'}`}>
                                 {columna.nombre}
                               </div>
                               {columna.nombre_interno && (
-                                <div className="text-xs text-gray-500 mt-1">
+                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                   Nombre interno: {columna.nombre_interno}
                                 </div>
                               )}
                             </div>
 
-                            <div className="text-sm text-gray-500">
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
                               Orden: {columna.orden}
                             </div>
 
@@ -432,11 +432,11 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
 
                           {/* Column info for mobile */}
                           <div className="w-full sm:hidden">
-                            <div className={`font-medium text-sm ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                            <div className={`font-medium text-sm ${!columna.activo ? 'text-gray-400 line-through' : 'text-gray-900 dark:text-gray-100'}`}>
                               {columna.nombre}
                             </div>
                             {columna.nombre_interno && (
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Nombre interno: {columna.nombre_interno}
                               </div>
                             )}
@@ -451,7 +451,7 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
             </Droppable>
           </DragDropContext>
         ) : (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-gray-500 dark:text-gray-400">
             <div className="text-lg mb-2">No hay columnas configuradas</div>
             <div className="text-sm">Agrega columnas para personalizar la tabla principal</div>
           </div>
@@ -460,10 +460,10 @@ export const TableColumnConfig: React.FC<TableColumnConfigProps> = ({ empresaId,
 
       {guardando && (
         <div className="fixed inset-0 bg-black bg-opacity-25 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
             <div className="flex items-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="text-gray-700">Guardando cambios...</span>
+              <span className="text-gray-700 dark:text-gray-200">Guardando cambios...</span>
             </div>
           </div>
         </div>

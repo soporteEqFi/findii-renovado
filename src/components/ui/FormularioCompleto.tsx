@@ -275,7 +275,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   return (
     <div className="space-y-6">
       {titulo && (
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-4">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">
           {titulo}
         </h3>
       )}

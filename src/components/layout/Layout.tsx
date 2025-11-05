@@ -18,18 +18,18 @@ const Layout = () => {
 
   return (
     <EditModalProvider>
-      <div className="flex h-screen bg-gray-100">
+      <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
         {/* Mobile Header with Hamburger Menu */}
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 shadow-lg">
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900 dark:bg-slate-950 shadow-lg">
           <div className="flex items-center justify-between p-4">
             <button
               onClick={toggleSidebar}
-              className="text-white hover:text-gray-300 transition-colors duration-200"
+              className="text-white dark:text-gray-100 hover:text-gray-300 dark:hover:text-gray-400 transition-colors duration-200"
               aria-label="Toggle menu"
             >
               {isSidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <h1 className="text-white font-semibold text-lg">CRM FINDII</h1>
+            <h1 className="text-white dark:text-gray-100 font-semibold text-lg">Oneplatform</h1>
             <div className="w-6 h-6"></div> {/* Spacer for centering */}
           </div>
         </div>

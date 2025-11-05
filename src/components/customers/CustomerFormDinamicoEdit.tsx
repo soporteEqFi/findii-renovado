@@ -1255,27 +1255,27 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   return (
     <div className="space-y-6">
       {/* Resumen superior con datos precargados (sin fondo azul) */}
-      <div className="relative overflow-hidden rounded-xl border bg-white">
+      <div className="relative overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="relative p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             {/* Avatar con iniciales */}
-            <div className="h-12 w-12 rounded-full bg-gray-700 text-white flex items-center justify-center text-lg font-semibold shadow-md border-2 border-gray-300">
+            <div className="h-12 w-12 rounded-full bg-gray-700 dark:bg-gray-600 text-white flex items-center justify-center text-lg font-semibold shadow-md border-2 border-gray-300 dark:border-gray-600">
               {(editedData?.solicitante?.nombres?.[0] || 'U')}
             </div>
             <div>
-              <div className="text-base font-semibold text-gray-900">
+              <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
                 {(editedData?.solicitante?.nombres || '') + ' ' + (editedData?.solicitante?.primer_apellido || '')}
               </div>
-              <div className="text-sm text-gray-600 flex flex-wrap items-center gap-2 mt-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+              <div className="text-sm text-gray-600 dark:text-gray-300 flex flex-wrap items-center gap-2 mt-1">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
                   <span className="text-xs font-medium">Documento:</span>
                   <span className="font-semibold">{editedData?.solicitante?.numero_documento || '—'}</span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                   <span className="text-xs font-medium">Banco:</span>
                   <span className="font-semibold">{editedData?.solicitudes?.[0]?.banco_nombre || '—'}</span>
                 </span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 text-gray-800">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
                   <span className="text-xs font-medium">Tipo crédito:</span>
                   <span className="font-semibold">{getTipoCreditoValue(editedData) || '—'}</span>
                 </span>
@@ -1335,9 +1335,9 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       )}
 
       {esquemas.referencia?.esquema && (
-        <div className="space-y-3 p-4 bg-white rounded-xl border">
+        <div className="space-y-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">Información de Referencias</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Información de Referencias</h3>
             <button
               type="button"
               onClick={() => {
@@ -1509,13 +1509,13 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       )}
 
       {/* Archivos adjuntos */}
-      <div className="space-y-3 p-4 bg-white rounded-xl border">
-        <h3 className="text-lg font-medium text-gray-900">Archivos</h3>
+      <div className="space-y-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Archivos</h3>
         <EditFilesSection solicitanteId={solicitanteId} />
       </div>
 
       {/* Observaciones */}
-      <div className="p-4 bg-white rounded-xl border">
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         {(() => {
           const empresaIdNumber = parseInt(localStorage.getItem('empresa_id') || '1', 10);
           const solicitudIdNumber = Number(editedData?.solicitudes?.[0]?.id || datosCompletos?.solicitudes?.[0]?.id || 0);
@@ -1559,13 +1559,13 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       </div>
 
       {/* Notificaciones */}
-      <div className="space-y-3 p-4 bg-white rounded-xl border">
-        <h3 className="text-lg font-medium text-gray-900">Notificaciones</h3>
+      <div className="space-y-3 p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Notificaciones</h3>
         <NotificacionesSection data={editedData} onChange={(path, v) => updateNestedData(path, v)} />
       </div>
 
       {/* Historial de Notificaciones */}
-      <div className="p-4 bg-white rounded-xl border">
+      <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
         {(() => {
           const empresaIdNumber = parseInt(localStorage.getItem('empresa_id') || '1', 10);
           const solicitudIdNumber = Number(editedData?.solicitudes?.[0]?.id || datosCompletos?.solicitudes?.[0]?.id || 0);
@@ -1579,11 +1579,11 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       </div>
 
       {/* Barra de acciones sticky (para pantallas pequeñas o cuando se hace scroll) */}
-      <div className="sticky bottom-0 inset-x-0 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-t px-4 py-3 flex sm:hidden items-center justify-end gap-2 rounded-b-xl">
+      <div className="sticky bottom-0 inset-x-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-gray-800/60 border-t border-gray-200 dark:border-gray-700 px-4 py-3 flex sm:hidden items-center justify-end gap-2 rounded-b-xl">
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 w-1/3"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 w-1/3"
         >
           Cancelar
         </button>
@@ -1606,11 +1606,11 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       </div>
 
       {/* Barra de acciones para pantallas medianas/grandes */}
-      <div className="hidden sm:flex justify-end gap-2 px-4 py-4 bg-white rounded-b-xl border-t">
+      <div className="hidden sm:flex justify-end gap-2 px-4 py-4 bg-white dark:bg-gray-800 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg border border-gray-300 hover:bg-gray-50"
+          className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
         >
           Cancelar
         </button>
@@ -1732,7 +1732,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
           {documents.length} archivo(s){selectedFiles.length > 0 ? ` · ${selectedFiles.length} nuevo(s)` : ''}
         </div>
         <div className="flex items-center gap-2">
-          <button type="button" onClick={triggerPick} className="inline-flex items-center px-3 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50">
+          <button type="button" onClick={triggerPick} className="inline-flex items-center px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300">
             <Upload className="w-4 h-4 mr-2" /> Agregar archivos
           </button>
           <button
@@ -1754,7 +1754,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
       )}
 
       {!loadingDocs && documents.length === 0 && selectedFiles.length === 0 && (
-        <div className="flex flex-col items-center justify-center text-center border rounded-md py-8 text-gray-500">
+        <div className="flex flex-col items-center justify-center text-center border border-gray-200 dark:border-gray-700 rounded-md py-8 text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800">
           <FileIcon className="w-10 h-10 text-gray-300 mb-2" />
           <p className="text-sm">No hay documentos disponibles para esta solicitud</p>
         </div>
@@ -1768,7 +1768,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
           const isImage = fileName && /\.(jpg|jpeg|png|gif|webp)$/i.test(String(fileName));
           const fileUrl = doc.documento_url;
           return (
-            <div key={`doc-${doc.id}`} className="flex items-center justify-between border rounded-md px-3 py-2 bg-gray-50">
+            <div key={`doc-${doc.id}`} className="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 bg-gray-50 dark:bg-gray-800">
               <div className="flex items-center min-w-0">
                 {isImage ? (
                   <ImageIcon className="w-5 h-5 mr-2 text-gray-500" />
@@ -1776,7 +1776,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
                   <FileIcon className="w-5 h-5 mr-2 text-gray-500" />
                 )}
                 <div className="min-w-0">
-                  <div className="text-sm text-gray-900 truncate max-w-[280px]">{fileName}</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-100 truncate max-w-[280px]">{fileName}</div>
                   {fileUrl && (
                     <a
                       href={fileUrl}
@@ -1821,7 +1821,7 @@ const EditFilesSection: React.FC<{ solicitanteId: number }> = ({ solicitanteId }
           <h4 className="text-sm font-medium text-gray-700 mb-2">Nuevos archivos</h4>
           <div className="space-y-2">
             {selectedFiles.map((file, i) => (
-              <div key={`new-${i}`} className="flex items-center justify-between border rounded-md px-3 py-2 bg-white">
+              <div key={`new-${i}`} className="flex items-center justify-between border border-gray-200 dark:border-gray-700 rounded-md px-3 py-2 bg-white dark:bg-gray-800">
                 <div className="flex items-center min-w-0">
                   <FileIcon className="w-5 h-5 mr-2 text-gray-500" />
                   <div className="min-w-0">
@@ -1851,18 +1851,18 @@ const NotificacionesSection: React.FC<{ data: any; onChange: (path: string, v: a
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Correo</label>
-        <input className="w-full rounded-lg border px-3 py-2" value={email} readOnly />
+        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Correo</label>
+        <input className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" value={email} readOnly />
       </div>
       <div>
-        <label className="block text-sm text-gray-700 mb-1">Celular</label>
-        <input className="w-full rounded-lg border px-3 py-2" value={celular} readOnly />
+        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Celular</label>
+        <input className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100" value={celular} readOnly />
       </div>
-      <label className="inline-flex items-center gap-2 text-sm">
+      <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <input type="checkbox" checked={!!notifyEmail} onChange={(e) => onChange('preferencias_notificacion.email', e.target.checked)} />
         Enviar notificaciones por correo
       </label>
-      <label className="inline-flex items-center gap-2 text-sm">
+      <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
         <input type="checkbox" checked={!!notifySms} onChange={(e) => onChange('preferencias_notificacion.sms', e.target.checked)} />
         Enviar notificaciones por SMS
       </label>

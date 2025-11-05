@@ -34,6 +34,13 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
 }) => {
   const entries = Object.entries(data);
 
+  // Detectar modo oscuro (Tailwind dark class en <html>)
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const textPrimary = isDark ? '#E5E7EB' : '#374151'; // gray-200 vs gray-700
+  const textSecondary = isDark ? '#D1D5DB' : '#6B7280'; // gray-300 vs gray-500
+  const gridColor = isDark ? '#374151' : '#F3F4F6'; // gray-700 vs gray-100
+  const chartBg = isDark ? '#1F2937' : '#FFFFFF'; // gray-800 vs white
+
   if (entries.length === 0) {
     return (
       <div className="flex items-center justify-center h-48 text-gray-500">
@@ -67,7 +74,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
           font: {
             size: 12,
           },
-          color: '#374151',
+          color: textPrimary,
         },
       },
       tooltip: {
@@ -84,6 +91,11 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
             return `${context.label}: ${context.parsed} (${percentage}%)`;
           },
         },
+      },
+      // Plugin de fondo personalizado
+      custom_bg: {
+        // Este valor será leído por el plugin con el mismo id
+        color: chartBg,
       },
     },
   };
@@ -110,6 +122,17 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
               },
             },
           }}
+          plugins={[{
+            id: 'custom_bg',
+            beforeDraw: (chart: any, _args: any, opts: any) => {
+              const { ctx, chartArea } = chart;
+              if (!chartArea) return;
+              ctx.save();
+              ctx.fillStyle = opts?.color || chartBg;
+              ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+              ctx.restore();
+            }
+          }]}
         />
       </div>
     );
@@ -123,7 +146,7 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
           display: false,
         },
         ticks: {
-          color: '#6b7280',
+          color: textSecondary,
           font: {
             size: 11,
           },
@@ -132,11 +155,11 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
       y: {
         beginAtZero: true,
         grid: {
-          color: '#f3f4f6',
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: '#6b7280',
+          color: textSecondary,
           font: {
             size: 11,
           },
@@ -156,7 +179,21 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
 
   return (
     <div style={{ height: '250px' }}>
-      <Bar data={chartData} options={barOptions} />
+      <Bar
+        data={chartData}
+        options={barOptions}
+        plugins={[{
+          id: 'custom_bg',
+          beforeDraw: (chart: any, _args: any, opts: any) => {
+            const { ctx, chartArea } = chart;
+            if (!chartArea) return;
+            ctx.save();
+            ctx.fillStyle = opts?.color || chartBg;
+            ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+            ctx.restore();
+          }
+        }]}
+      />
     </div>
   );
 };

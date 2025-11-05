@@ -180,9 +180,9 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-900">Gestión de Categorías</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Gestión de Categorías</h2>
         </div>
         <div className="p-8 text-center">
           <div className="text-red-600 mb-4">
@@ -190,8 +190,8 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Error al cargar categorías</h3>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Error al cargar categorías</h3>
+          <p className="text-gray-600 dark:text-gray-300 mb-4">{error}</p>
           <button
             onClick={loadCategorias}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -204,11 +204,11 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm dark:shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Gestión de Categorías</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Gestión de Categorías</h2>
           <button
             onClick={handleCreate}
             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 font-medium"
@@ -222,37 +222,37 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
       {/* Lista de categorías */}
       <div className="overflow-x-auto">
         <table className="min-w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">
                 CATEGORÍA
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">
                 DESCRIPCIÓN
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">
                 ESTADO
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider">
                 ACCIONES
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {categorias.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={4} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
                   No hay categorías configuradas
                 </td>
               </tr>
             ) : (
               categorias.map((categoria, index) => (
-                <tr key={categoria.categoria} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                <tr key={categoria.categoria} className={index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-900'}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{categoria.categoria}</div>
+                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{categoria.categoria}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-md">{categoria.descripcion}</div>
+                    <div className="text-sm text-gray-900 dark:text-gray-100 max-w-md">{categoria.descripcion}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
@@ -307,10 +307,10 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
       {/* Modal de formulario */}
       {showForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                   {editingCategoria ? `Editar Categoría: ${editingCategoria}` : 'Crear Nueva Categoría'}
                 </h2>
                 <button
@@ -324,14 +324,14 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Descripción */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Descripción *
                   </label>
                   <input
                     type="text"
                     value={formData.descripcion}
                     onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     placeholder="Descripción de la categoría"
                     required
                   />
@@ -339,11 +339,11 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
 
                 {/* Solo configuración de valores */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Valores de la Categoría
                   </label>
-                  <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
-                    <p className="text-sm text-gray-600 mb-3">
+                  <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                       Array de strings simples. Ideal para listas como ciudades, tipos de documento, bancos, etc.
                     </p>
                   </div>
@@ -352,7 +352,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
 
                 {/* Editor de valores */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Valores de la Categoría
                   </label>
                   <textarea
@@ -382,20 +382,20 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
                         console.warn('JSON inválido:', error);
                       }
                     }}
-                    className="w-full h-64 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                    className="w-full h-64 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     placeholder='Ingrese los valores como array JSON, ejemplo: ["Bogotá", "Medellín", "Cali"]'
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Formato: Array de strings. Ejemplo: ["Bogotá", "Medellín", "Cali"]
                   </p>
                 </div>
 
                 {/* Botones */}
-                <div className="flex justify-end gap-3 pt-4 border-t">
+                <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     type="button"
                     onClick={() => { setShowForm(false); setEditingCategoria(null); }}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800"
                   >
                     Cancelar
                   </button>

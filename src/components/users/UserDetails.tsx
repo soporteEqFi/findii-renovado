@@ -260,7 +260,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
       {/* Header con fondo azul oscuro */}
       <div className="px-8 py-6 bg-gradient-to-r from-slate-800 to-slate-900 relative">
         {onClose && (
@@ -283,9 +283,9 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
         <div className="flex justify-center mb-6">
           <div className="relative">
             <img
-              src="https://via.placeholder.com/150"
+              src="/logouser.png"
               alt={user.nombre}
-              className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+              className="w-24 h-24 rounded-full object-cover border-4 border-white dark:border-gray-700 shadow-lg"
             />
           </div>
         </div>
@@ -299,62 +299,62 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
         {/* Información Personal */}
         <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
             Información Personal
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Nombre <span className="text-red-500">*</span>
               </label>
               {isEditing ? (
                 <input
                   type="text"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   value={editedUser.nombre}
                   onChange={(e) => onInputChange('nombre', e.target.value)}
                 />
               ) : (
-                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.nombre}</p>
+                <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">{user.nombre}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Correo Electrónico <span className="text-red-500">*</span>
               </label>
               {isEditing ? (
                 <input
                   type="email"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   value={editedUser.correo}
                   onChange={(e) => onInputChange('correo', e.target.value)}
                 />
               ) : (
-                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.correo}</p>
+                <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">{user.correo}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Cédula</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Cédula</label>
               {isEditing ? (
                 <input
                   type="text"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   value={editedUser.cedula}
                   onChange={(e) => onInputChange('cedula', e.target.value)}
                 />
               ) : (
-                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.cedula}</p>
+                <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">{user.cedula}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Rol</label>
               {isEditing ? (
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   value={editedUser.rol}
                   onChange={(e) => onInputChange('rol', e.target.value)}
                 >
@@ -364,14 +364,14 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   <option value="supervisor">Supervisor</option>
                 </select>
               ) : (
-                <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.rol}</p>
+                <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">{user.rol}</p>
               )}
             </div>
 
             {/* Campo de Supervisor - Solo visible para asesores */}
             {(editedUser.rol === 'asesor' || user.rol === 'asesor') && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Supervisor</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Supervisor</label>
                 {isEditing ? (
                   <select
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
@@ -387,7 +387,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                     ))}
                   </select>
                 ) : (
-                  <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
+                  <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">
                     {user.reports_to_id ?
                       supervisors.find(s => s.id === user.reports_to_id)?.nombre || `ID: ${user.reports_to_id}`
                       : 'Sin supervisor'
@@ -401,13 +401,13 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">ID</label>
-              <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">{user.id}</p>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">ID</label>
+              <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">{user.id}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Fecha de Creación</label>
-              <p className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-900">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Fecha de Creación</label>
+              <p className="w-full px-4 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-gray-100">
                 {user.created_at ? new Date(user.created_at).toLocaleDateString('es-ES') : 'No disponible'}
               </p>
             </div>
@@ -416,8 +416,8 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
         {/* Estado del Usuario - Visualización */}
         {!isEditing && (
-          <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="mb-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
               <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
               Estado del Usuario
             </h3>
@@ -443,9 +443,9 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
               return (
                 <div className="space-y-4">
-                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
                     <div className="flex-1">
-                      <p className="text-xs text-gray-500 mb-1">Estado del Usuario</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Estado del Usuario</p>
                       <p className={`text-sm font-semibold ${
                         status.type === 'temporal' ? 'text-yellow-600' : 'text-gray-900'
                       }`}>
@@ -470,7 +470,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                       <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
                         <Clock className="w-5 h-5 mr-3 text-blue-500" />
                         <div className="flex-1">
-                          <p className="text-xs text-blue-600 mb-1">Tiempo Restante</p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mb-1">Tiempo Restante</p>
                           <p className={`text-sm font-semibold ${
                             daysRemaining <= 7 ? 'text-red-600' :
                             daysRemaining <= 30 ? 'text-yellow-600' :
@@ -504,14 +504,14 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
         {/* Usuario Temporal - Edición */}
         {isEditing && (
-          <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="mb-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
               <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
               Usuario Temporal
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Fecha y Hora de Expiración
                 </label>
                 <div className="relative">
@@ -558,7 +558,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                 {validationErrors.tiempo_conexion && (
                   <p className="mt-1 text-sm text-red-600">{validationErrors.tiempo_conexion}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Dejar vacío para usuario permanente. Si se completa, el usuario será temporal.
                 </p>
                 {getInfoExtraValue('tiempo_conexion', editedUser) && (
@@ -569,7 +569,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Estado del Usuario
                 </label>
                 <select
@@ -615,7 +615,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                 {validationErrors.usuario_activo && (
                   <p className="mt-1 text-sm text-red-600">{validationErrors.usuario_activo}</p>
                 )}
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Selecciona el estado del usuario temporal. Si se borra la fecha, el usuario será permanente.
                 </p>
               </div>
@@ -625,8 +625,8 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
         {/* Información adicional */}
         {(user.info_extra || editedUser.info_extra) && (
-          <div className="mb-6 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <div className="mb-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
               <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
               Información Adicional
             </h3>
@@ -634,12 +634,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           {isEditing ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Ciudad</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ciudad</label>
                 <div className="relative">
                   <MapPin className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('ciudad', editedUser)}
                     onChange={(e) => handleInfoExtraChange('ciudad', e.target.value)}
                     placeholder="Ej: Barranquilla"
@@ -648,12 +648,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Banco</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Banco</label>
                 <div className="relative">
                   <Building className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('banco_nombre', editedUser)}
                     onChange={(e) => handleInfoExtraChange('banco_nombre', e.target.value)}
                     placeholder="Ej: Bancolombia"
@@ -662,11 +662,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Línea de Crédito</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Línea de Crédito</label>
                 <div className="relative">
                   <CreditCard className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   <select
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     value={getInfoExtraValue('linea_credito', editedUser)}
                     onChange={(e) => handleInfoExtraChange('linea_credito', e.target.value)}
                   >
@@ -683,31 +683,31 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {getInfoExtraValue('ciudad', user) && (
-                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
                   <MapPin className="w-4 h-4 mr-2 text-gray-500" />
                   <div>
-                    <p className="text-xs text-gray-500">Ciudad</p>
-                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('ciudad', user)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Ciudad</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{getInfoExtraValue('ciudad', user)}</p>
                   </div>
                 </div>
               )}
 
               {getInfoExtraValue('banco_nombre', user) && (
-                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
                   <Building className="w-4 h-4 mr-2 text-gray-500" />
                   <div>
-                    <p className="text-xs text-gray-500">Banco</p>
-                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('banco_nombre', user)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Banco</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{getInfoExtraValue('banco_nombre', user)}</p>
                   </div>
                 </div>
               )}
 
               {getInfoExtraValue('linea_credito', user) && (
-                <div className="flex items-center p-3 bg-gray-50 rounded-md">
+                <div className="flex items-center p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
                   <CreditCard className="w-4 h-4 mr-2 text-gray-500" />
                   <div>
-                    <p className="text-xs text-gray-500">Línea de Crédito</p>
-                    <p className="text-sm font-medium text-gray-900">{getInfoExtraValue('linea_credito', user)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Línea de Crédito</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{getInfoExtraValue('linea_credito', user)}</p>
                   </div>
                 </div>
               )}
@@ -756,7 +756,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       {/* Sección de cambio de contraseña */}
       {isEditing && (
         <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
             <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
             Cambiar Contraseña
             <span className="ml-2 text-sm font-normal text-gray-500">(Opcional)</span>
@@ -788,12 +788,12 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       </div>
 
       {/* Footer con botones */}
-      <div className="px-8 py-5 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
+      <div className="px-8 py-5 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
         {!isEditing && canEdit() && (
           <button
             type="button"
             onClick={onEdit}
-            className="px-6 py-2.5 text-gray-700 font-medium border border-gray-300 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+            className="px-6 py-2.5 text-gray-700 dark:text-gray-300 font-medium border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 hover:shadow-sm transition-all"
           >
             Editar
           </button>

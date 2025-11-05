@@ -132,13 +132,13 @@ const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
         }`} />
       </button>
       {isOpen && (
-        <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-200">
+        <div className="absolute right-0 z-50 mt-1 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 border border-gray-200 dark:border-gray-700">
           <div className="py-1">
             {estados.map((estado) => (
               <button
                 key={estado}
-                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 cursor-pointer transition-colors ${
-                  estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50 font-medium' : ''
+                className={`block w-full px-4 py-2 text-sm text-left text-gray-700 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+                  estado.toLowerCase() === currentState.toLowerCase() ? 'bg-gray-50 dark:bg-gray-700 font-medium' : ''
                 }`}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -333,7 +333,7 @@ export const createDynamicColumns = (columnNames: string[], estados: string[] = 
         return columnHelper.accessor((row) => getColumnValue(row, columnName), {
           id: 'created_by_user_name',
           header: columnName,
-          cell: (info) => <span className="font-medium text-gray-700">{String(info.getValue() || '')}</span>,
+          cell: (info) => <span className="font-medium text-gray-700 dark:text-gray-100">{String(info.getValue() || '')}</span>,
           enableColumnFilter: true,
         });
 

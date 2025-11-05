@@ -68,15 +68,15 @@ export const columns = [
   columnHelper.accessor('id', {
     header: 'ID',
     cell: (info) => (
-      <span className="text-sm text-gray-500">#{info.getValue()}</span>
+      <span className="text-sm text-gray-700 dark:text-gray-100">#{info.getValue()}</span>
     ),
   }),
   columnHelper.accessor('nombre', {
     header: 'Nombre',
     cell: (info) => (
       <div className="flex items-center">
-        <UserIcon className="w-4 h-4 mr-2 text-gray-500" />
-        <span className="font-medium">{info.getValue()}</span>
+        <UserIcon className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+        <span className="font-medium text-gray-900 dark:text-gray-100">{info.getValue()}</span>
       </div>
     ),
   }),
@@ -84,15 +84,15 @@ export const columns = [
     header: 'Correo',
     cell: (info) => (
       <div className="flex items-center">
-        <Mail className="w-4 h-4 mr-2 text-gray-500" />
-        <span className="text-sm">{info.getValue()}</span>
+        <Mail className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+        <span className="text-sm text-gray-900 dark:text-gray-100">{info.getValue()}</span>
       </div>
     ),
   }),
   columnHelper.accessor('cedula', {
     header: 'Cédula',
     cell: (info) => (
-      <span className="text-sm text-gray-600">{info.getValue()}</span>
+      <span className="text-sm text-gray-800 dark:text-gray-100">{info.getValue()}</span>
     ),
   }),
   columnHelper.accessor('rol', {
@@ -155,13 +155,13 @@ export const columns = [
                'Expirado'}
             </span>
           </div>
-          <p className="text-xs text-gray-600 mt-1">
+          <p className="text-xs text-gray-700 dark:text-gray-300 mt-1">
             {statusMessage}
           </p>
           {tiempoConexion && status.status === 'activo' && daysRemaining !== null && daysRemaining >= 0 && (
             <div className="flex items-center text-xs mt-1">
-              <Clock className="w-3 h-3 mr-1" />
-              <span className={daysRemaining <= 7 ? 'text-red-600 font-medium' : daysRemaining <= 30 ? 'text-yellow-600' : 'text-gray-600'}>
+              <Clock className="w-3 h-3 mr-1 text-gray-500 dark:text-gray-400" />
+              <span className={daysRemaining <= 7 ? 'text-red-500 dark:text-red-400 font-medium' : daysRemaining <= 30 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-700 dark:text-gray-300'}>
                 {daysRemaining} día{daysRemaining !== 1 ? 's' : ''} restante{daysRemaining !== 1 ? 's' : ''}
               </span>
             </div>
@@ -179,20 +179,20 @@ export const columns = [
       const banco = getInfoExtraValue(user, 'banco_nombre');
 
       if (!ciudad && !banco) {
-        return <span className="text-sm text-gray-400">Sin información adicional</span>;
+        return <span className="text-sm text-gray-400 dark:text-gray-300">Sin información adicional</span>;
       }
 
       return (
         <div className="space-y-1">
           {ciudad && (
-            <div className="flex items-center text-xs text-gray-600">
-              <MapPin className="w-3 h-3 mr-1" />
+            <div className="flex items-center text-xs text-gray-700 dark:text-gray-300">
+              <MapPin className="w-3 h-3 mr-1 text-gray-500 dark:text-gray-400" />
               {ciudad}
             </div>
           )}
           {banco && (
-            <div className="flex items-center text-xs text-gray-600">
-              <Building className="w-3 h-3 mr-1" />
+            <div className="flex items-center text-xs text-gray-700 dark:text-gray-300">
+              <Building className="w-3 h-3 mr-1 text-gray-500 dark:text-gray-400" />
               {banco}
             </div>
           )}
@@ -206,8 +206,8 @@ export const columns = [
       const reportsToNombre = info.getValue();
       return (
         <div className="flex items-center">
-          <Users className="w-4 h-4 mr-2 text-gray-500" />
-          <span className="text-sm text-gray-600">
+          <Users className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm text-gray-800 dark:text-gray-100">
             {reportsToNombre || 'Sin supervisor'}
           </span>
         </div>
@@ -220,8 +220,8 @@ export const columns = [
       const date = info.getValue();
       return (
         <div className="flex items-center">
-          <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-          <span className="text-sm text-gray-600">
+          <Calendar className="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" />
+          <span className="text-sm text-gray-800 dark:text-gray-100">
             {date ? new Date(date).toLocaleDateString('es-ES') : 'N/A'}
           </span>
         </div>

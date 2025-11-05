@@ -1,6 +1,7 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, Settings, LogOut, UserCog, User, BarChart3, GraduationCap } from 'lucide-react';
+import { Users, Settings, LogOut, UserCog, User, BarChart3, GraduationCap, Moon, Sun } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { NotificationManager } from './NotificationManager';
 
 interface SidebarProps {
@@ -9,6 +10,7 @@ interface SidebarProps {
 }
 const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const { logout, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
     <div className={` sidebar-root
       fixed lg:static inset-y-0 left-0 z-50
       w-64 lg:w-64 md:w-48
-      bg-slate-900 shadow-lg
+      bg-slate-900 dark:bg-slate-950 shadow-lg
       transform transition-transform duration-300 ease-in-out
       ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       h-screen flex flex-col overflow-hidden lg:h-auto lg:overflow-visible
@@ -55,11 +57,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
         )}
       </div>
       <div className="flex flex-col items-center p-3 md:p-3 lg:p-6">
-        <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white text-center">{user?.empresa || 'Empresa'}</h1>
+        <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white dark:text-gray-100 text-center">{user?.empresa || 'Empresa'}</h1>
         {user && (
-          <div className="mt-2 text-sm text-gray-300 text-center user-info">
-            <p className="text-xs md:text-sm lg:text-base text-gray-300">{user.nombre}</p>
-            <p className="inline-block text-xs bg-white text-slate-900 px-3 py-1 rounded-full mt-1 user-role">{user.rol}</p>
+          <div className="mt-2 text-sm text-gray-300 dark:text-gray-400 text-center user-info">
+            <p className="text-xs md:text-sm lg:text-base text-gray-300 dark:text-gray-400">{user.nombre}</p>
+            <p className="inline-block text-xs bg-white dark:bg-slate-700 text-slate-900 dark:text-gray-100 px-3 py-1 rounded-full mt-1 user-role">{user.rol}</p>
             <div className="notification-area mt-2 flex justify-center">
               <NotificationManager empresaId={parseInt(localStorage.getItem('empresa_id') || '1')} />
             </div>
@@ -76,7 +78,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={onClose}
-                className="menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start text-gray-300"
+                className="menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 dark:hover:bg-slate-800 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start text-gray-300 dark:text-gray-400"
                 title={item.label}
               >
                 <item.icon className="menu-icon w-4 h-4 mr-3 md:mr-3 lg:mr-3 lg:w-5 lg:h-5" />
@@ -86,10 +88,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
               <Link
                 to={item.path}
                 onClick={onClose}
-                className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
+                className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 dark:hover:bg-slate-800 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
                   location.pathname === item.path
-                    ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
-                    : 'text-gray-300'
+                    ? 'bg-slate-700 dark:bg-slate-800 text-white dark:text-gray-100 font-bold border-l-4 border-blue-500 dark:border-blue-400'
+                    : 'text-gray-300 dark:text-gray-400'
                 }`}
                 title={item.label}
               >
@@ -106,10 +108,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
             <Link
               to={item.path}
               onClick={onClose}
-              className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
+              className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 dark:hover:bg-slate-800 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
                 location.pathname === item.path
-                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
-                  : 'text-gray-300'
+                  ? 'bg-slate-700 dark:bg-slate-800 text-white dark:text-gray-100 font-bold border-l-4 border-blue-500 dark:border-blue-400'
+                  : 'text-gray-300 dark:text-gray-400'
               }`}
               title={item.label}
             >
@@ -125,10 +127,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
             <Link
               to={item.path}
               onClick={onClose}
-              className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
+              className={`menu-item flex items-center px-4 py-2 text-sm hover:bg-slate-700 dark:hover:bg-slate-800 md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start ${
                 location.pathname === item.path
-                  ? 'bg-slate-700 text-white font-bold border-l-4 border-blue-500'
-                  : 'text-gray-300'
+                  ? 'bg-slate-700 dark:bg-slate-800 text-white dark:text-gray-100 font-bold border-l-4 border-blue-500 dark:border-blue-400'
+                  : 'text-gray-300 dark:text-gray-400'
               }`}
               title={item.label}
             >
@@ -138,10 +140,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
           </li>
         ))}
       </nav>
-      <div className="mt-auto w-full border-t border-slate-800">
+      <div className="mt-auto w-full border-t border-slate-800 dark:border-slate-700">
+        {/* Toggle de tema */}
+        <button
+          onClick={toggleTheme}
+          className="menu-item flex items-center px-4 py-2 text-sm text-gray-300 dark:text-gray-400 hover:bg-slate-700 dark:hover:bg-slate-800 w-full md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start"
+          title={theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+        >
+          {theme === 'light' ? (
+            <Moon className="menu-icon w-4 h-4 mr-3 md:mr-3 lg:mr-3 lg:w-5 lg:h-5" />
+          ) : (
+            <Sun className="menu-icon w-4 h-4 mr-3 md:mr-3 lg:mr-3 lg:w-5 lg:h-5" />
+          )}
+          <span className="menu-text text-sm md:text-sm lg:text-base">
+            {theme === 'light' ? 'Modo oscuro' : 'Modo claro'}
+          </span>
+        </button>
         <button
           onClick={handleLogout}
-          className="menu-item flex items-center px-4 py-2 text-sm text-white hover:bg-gray-100 hover:text-slate-900 w-full md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start"
+          className="menu-item flex items-center px-4 py-2 text-sm text-white dark:text-gray-100 hover:bg-gray-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-gray-100 w-full md:px-4 lg:px-6 lg:py-3 md:justify-start lg:justify-start"
           title="Salir"
         >
           <LogOut className="menu-icon w-4 h-4 mr-3 md:mr-3 lg:mr-3 lg:w-5 lg:h-5" />

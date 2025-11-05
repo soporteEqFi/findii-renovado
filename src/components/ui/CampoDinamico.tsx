@@ -123,7 +123,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {structureOrdenada.map((subcampo: EsquemaCampo) => (
             <div key={subcampo.key} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-white">
                 {subcampo.description || subcampo.key} {subcampo.required && <span className="text-red-500">*</span>}
               </label>
               {(() => {
@@ -159,7 +159,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                       }}
                       required={subcampo.required}
                       disabled={disabled}
-                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                      className="border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     >
                       <option value="">{tipoActual ? 'Seleccionar relación...' : 'Seleccione primero el tipo de referencia...'}</option>
                       {opciones.map(op => (
@@ -182,7 +182,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                       }}
                       required={subcampo.required}
                       disabled={disabled}
-                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                      className="border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     >
                       <option value="">Seleccionar...</option>
                       {(subcampo.list_values as { enum: string[] }).enum.map((option) => (
@@ -205,7 +205,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                       }}
                       required={subcampo.required}
                       disabled={disabled}
-                      className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                      className="border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     />
                   );
                 }
@@ -238,8 +238,8 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
     const baseClasses = `border text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 ${
       error
         ? 'border-red-500 focus:ring-red-500'
-        : 'border-gray-300 focus:ring-blue-500'
-    } ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`;
+        : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`; 
 
     // Campos especiales que usan configuraciones
     if (campo.key === 'ciudad_solicitud') {
@@ -784,7 +784,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
               required={campo.required}
               disabled={disabled}
             />
-            <label className="ml-2 text-sm text-gray-700">
+            <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
               {campo.description || campo.key}
             </label>
           </div>
@@ -879,7 +879,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
   return (
     <div className="space-y-2">
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-white">
         {campo.description || campo.key} {campo.required && '*'}
       </label>
       {renderCampo()}

@@ -942,7 +942,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
                  {/* Archivos Adjuntos */}
          <div>
-           <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3">Archivos Adjuntos</h3>
+           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">Archivos Adjuntos</h3>
           <div className="mt-2">
             <input
               type="file"
@@ -956,7 +956,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
               <button
                 type="button"
                 onClick={triggerFileInput}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Seleccionar Archivos
@@ -964,16 +964,16 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
               {selectedFiles.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Archivos seleccionados: ({selectedFiles.length})
                   </h4>
                   <ul className="space-y-2">
                     {selectedFiles.map((file, index) => (
-                      <li key={index} className="flex items-center justify-between bg-gray-50 px-3 py-2 rounded-md">
+                      <li key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-md">
                         <div className="flex items-center">
                           <File className="w-4 h-4 mr-2 text-gray-500" />
-                          <span className="text-sm text-gray-800">{file.name}</span>
-                          <span className="ml-2 text-xs text-gray-500">
+                          <span className="text-sm text-gray-800 dark:text-gray-200">{file.name}</span>
+                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
                             ({(file.size / 1024).toFixed(1)} KB)
                           </span>
                         </div>
@@ -996,7 +996,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
       {/* Checkboxes de Términos y Condiciones */}
       <div className="mt-6 space-y-4">
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start space-x-3">
             <input
               type="checkbox"
@@ -1007,7 +1007,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
               required
             />
             <div className="flex-1">
-              <label htmlFor="acepta-terminos" className="text-sm text-gray-700">
+              <label htmlFor="acepta-terminos" className="text-sm text-gray-700 dark:text-gray-300">
                 <a href="/terminos-condiciones" target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline">
                   Acepto los Términos y Condiciones de Uso
                 </a>
@@ -1016,7 +1016,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           </div>
         </div>
 
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
           <div className="flex items-start space-x-3">
             <input
               type="checkbox"
@@ -1027,7 +1027,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
               required
             />
             <div className="flex-1">
-              <label htmlFor="acepta-acuerdo-firma" className="text-sm text-gray-700">
+              <label htmlFor="acepta-acuerdo-firma" className="text-sm text-gray-700 dark:text-gray-300">
                 <a href="/acuerdo-firma" target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline">
                   Acepto el Acuerdo de Firma
                 </a>
@@ -1059,7 +1059,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
        )} */}
 
       {/* Form Actions */}
-      <div className="flex justify-between items-center pt-4 border-t">
+      <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={limpiarFormulario}
@@ -1072,7 +1072,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Cancelar
           </button>

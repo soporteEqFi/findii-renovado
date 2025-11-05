@@ -37,12 +37,17 @@ export const LineChart: React.FC<LineChartProps> = ({
   height = 400 
 }) => {
   const entries = Object.entries(data).sort(([a], [b]) => a.localeCompare(b));
+  const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+  const textPrimary = isDark ? '#E5E7EB' : '#111827'; // gray-200 vs gray-900
+  const textSecondary = isDark ? '#D1D5DB' : '#6B7280'; // gray-300 vs gray-500
+  const gridColor = isDark ? '#374151' : '#F3F4F6'; // gray-700 vs gray-100
+  const chartBg = isDark ? '#1F2937' : '#FFFFFF'; // gray-800 vs white
   
   if (entries.length === 0) {
     return (
-      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-        <h3 className="text-xl font-bold text-gray-900 mb-6">{title}</h3>
-        <div className="flex items-center justify-center h-48 text-gray-500">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">{title}</h3>
+        <div className="flex items-center justify-center h-48 text-gray-500 dark:text-gray-400">
           No hay datos disponibles
         </div>
       </div>
@@ -113,15 +118,18 @@ export const LineChart: React.FC<LineChartProps> = ({
           },
         },
       },
+      custom_bg: {
+        color: chartBg,
+      },
     },
     scales: {
       x: {
         grid: {
-          color: '#f3f4f6',
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: '#6b7280',
+          color: textSecondary,
           font: {
             size: 12,
           },
@@ -130,11 +138,11 @@ export const LineChart: React.FC<LineChartProps> = ({
       y: {
         beginAtZero: true,
         grid: {
-          color: '#f3f4f6',
+          color: gridColor,
           drawBorder: false,
         },
         ticks: {
-          color: '#6b7280',
+          color: textSecondary,
           font: {
             size: 12,
           },
@@ -156,10 +164,24 @@ export const LineChart: React.FC<LineChartProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
-      <h3 className="text-xl font-bold text-gray-900 mb-6">{title}</h3>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+      <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-6">{title}</h3>
       <div style={{ height: `${height}px` }}>
-        <Line data={chartData} options={options} />
+        <Line
+          data={chartData}
+          options={options}
+          plugins={[{
+            id: 'custom_bg',
+            beforeDraw: (chart: any, _args: any, opts: any) => {
+              const { ctx, chartArea } = chart;
+              if (!chartArea) return;
+              ctx.save();
+              ctx.fillStyle = opts?.color || chartBg;
+              ctx.fillRect(chartArea.left, chartArea.top, chartArea.width, chartArea.height);
+              ctx.restore();
+            }
+          }]}
+        />
       </div>
     </div>
   );

@@ -150,11 +150,11 @@ const Customers = () => {
 
   return (
     <>
-      <div className="bg-white rounded-lg shadow">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow dark:shadow-xl">
         {/* Header */}
-        <div className="p-4 lg:p-6 border-b">
+        <div className="p-4 lg:p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h1 className="text-xl lg:text-2xl font-semibold text-gray-800">Creditos</h1>
+            <h1 className="text-xl lg:text-2xl font-semibold text-gray-800 dark:text-gray-100">Creditos</h1>
             <div className="flex items-center space-x-4">
               {user && (() => {
                 // Obtener info_extra del usuario
@@ -167,10 +167,10 @@ const Customers = () => {
 
                 return (
                   <div className="flex items-center space-x-4">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
                       Conectado como: <span className="font-medium">{user.nombre}</span>
                       {user.rol && (
-                        <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                        <span className="ml-2 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-xs dark:text-gray-300">
                           {user.rol}
                         </span>
                       )}
@@ -203,7 +203,7 @@ const Customers = () => {
         </div>
 
         {/* Botones de acción */}
-        <div className="p-4 bg-gray-50 border-b">
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
             {/* Botón de descargar ventas*/}
             {canDownloadSales() && (

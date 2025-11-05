@@ -178,54 +178,54 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
       {/* Campos principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Nombre *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre *</label>
           <input
             type="text"
             required
-            className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
             value={formData.nombre}
             onChange={(e) => handleInputChange('nombre', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Cédula *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cédula *</label>
           <input
             type="text"
             required
-            className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
             value={formData.cedula}
             onChange={(e) => handleInputChange('cedula', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Correo *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Correo *</label>
           <input
             type="email"
             required
-            className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
             value={formData.correo}
             onChange={(e) => handleInputChange('correo', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Contraseña *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contraseña *</label>
           <input
             type="password"
             required
-            className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
             value={formData.contraseña}
             onChange={(e) => handleInputChange('contraseña', e.target.value)}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Rol *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Rol *</label>
           <select
             required
-            className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
             value={formData.rol}
             onChange={(e) => handleInputChange('rol', e.target.value)}
           >
@@ -240,9 +240,9 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         {/* Campo de Supervisor - Solo visible para asesores */}
         {formData.rol === 'asesor' && (
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700">Supervisor (Opcional)</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Supervisor (Opcional)</label>
             <select
-              className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 disabled:bg-gray-50 dark:disabled:bg-gray-800"
               value={formData.reports_to_id || ''}
               onChange={(e) => handleInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
               disabled={loadingSupervisors}
@@ -262,8 +262,8 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
       </div>
 
       {/* Usuario Temporal */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Usuario Temporal</h3>
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Usuario Temporal</h3>
         <div className="mb-4">
           <label className="flex items-center">
             <input
@@ -272,22 +272,22 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
               onChange={(e) => handleTemporalUserToggle(e.target.checked)}
               className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
               Crear como usuario temporal
             </span>
           </label>
         </div>
 
         {isTemporalUser && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Fecha y Hora de Expiración *
               </label>
               <input
                 type="datetime-local"
-                className={`mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                  validationErrors.tiempo_conexion ? 'border-red-500' : ''
+                className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                  validationErrors.tiempo_conexion ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 value={(() => {
                   const tiempoConexion = formData.info_extra?.tiempo_conexion || '';
@@ -318,23 +318,23 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
               {validationErrors.tiempo_conexion && (
                 <p className="mt-1 text-sm text-red-600">{validationErrors.tiempo_conexion}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 La fecha y hora deben ser futuras
               </p>
               {formData.info_extra?.tiempo_conexion && (
-                <p className="mt-1 text-xs text-gray-600 font-medium">
+                <p className="mt-1 text-xs text-gray-600 dark:text-gray-400 font-medium">
                   Formato guardado: {formData.info_extra.tiempo_conexion}
                 </p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Estado del Usuario (Opcional)
               </label>
               <select
-                className={`mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 ${
-                  validationErrors.usuario_activo ? 'border-red-500' : ''
+                className={`mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 ${
+                  validationErrors.usuario_activo ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 }`}
                 value={formData.info_extra?.usuario_activo === undefined ? '' : String(formData.info_extra.usuario_activo)}
                 onChange={(e) => {
@@ -352,7 +352,7 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
               {validationErrors.usuario_activo && (
                 <p className="mt-1 text-sm text-red-600">{validationErrors.usuario_activo}</p>
               )}
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 Si no se especifica, el usuario será activo por defecto
               </p>
             </div>
@@ -361,14 +361,14 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
       </div>
 
       {/* Información adicional */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Información Adicional (Opcional)</h3>
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Información Adicional (Opcional)</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Ciudad</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Ciudad</label>
             <input
               type="text"
-              className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
               value={formData.info_extra?.ciudad || ''}
               onChange={(e) => handleInfoExtraChange('ciudad', e.target.value)}
               placeholder="Ej: Barranquilla"
@@ -376,10 +376,10 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Banco</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Banco</label>
             <input
               type="text"
-              className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500"
               value={formData.info_extra?.banco_nombre || ''}
               onChange={(e) => handleInfoExtraChange('banco_nombre', e.target.value)}
               placeholder="Ej: Bancolombia"
@@ -387,9 +387,9 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Línea de Crédito</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Línea de Crédito</label>
             <select
-              className="mt-1 p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 p-2 block w-full rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600"
               value={formData.info_extra?.linea_credito || ''}
               onChange={(e) => handleInfoExtraChange('linea_credito', e.target.value)}
             >
@@ -401,11 +401,11 @@ export const NewUserForm: React.FC<NewUserFormProps> = ({
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-4 border-t">
+      <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Cancelar
         </button>

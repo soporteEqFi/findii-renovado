@@ -40,8 +40,8 @@ const Profile = () => {
   if (error || !userInfo) {
     return (
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mt-4 sm:mt-6">
-          <div className="text-center text-sm sm:text-base">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 mt-4 sm:mt-6 border border-gray-200 dark:border-gray-700">
+          <div className="text-center text-sm sm:text-base text-gray-900 dark:text-gray-100">
             {error || 'No se pudo cargar la información del usuario'}
           </div>
         </div>
@@ -52,33 +52,33 @@ const Profile = () => {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <div className="py-4 sm:py-6 lg:py-8">
-        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md dark:shadow-xl p-4 sm:p-6 lg:p-8 border border-gray-200 dark:border-gray-700">
           <div className="flex flex-col items-center">
             <img
               src={userInfo.imagen_aliado || '/default-avatar.png'}
               alt={userInfo.nombre}
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full mb-4 sm:mb-5 object-cover"
             />
-            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center">{userInfo.nombre}</h2>
-            <p className="text-gray-600 mb-4 sm:mb-6 text-center">{userInfo.rol}</p>
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 text-center text-gray-900 dark:text-gray-100">{userInfo.nombre}</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4 sm:mb-6 text-center">{userInfo.rol}</p>
             
             {/* Responsive grid for user info */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full max-w-2xl mb-6">
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm font-medium text-gray-500">Correo</p>
-                <p className="text-sm sm:text-base break-words">{userInfo.correo}</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Correo</p>
+                <p className="text-sm sm:text-base break-words text-gray-900 dark:text-gray-100">{userInfo.correo}</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm font-medium text-gray-500">Cédula</p>
-                <p className="text-sm sm:text-base">{userInfo.cedula}</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Cédula</p>
+                <p className="text-sm sm:text-base text-gray-900 dark:text-gray-100">{userInfo.cedula}</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm font-medium text-gray-500">Empresa</p>
-                <p className="text-sm sm:text-base break-words">{userInfo.empresa}</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Empresa</p>
+                <p className="text-sm sm:text-base break-words text-gray-900 dark:text-gray-100">{userInfo.empresa}</p>
               </div>
-              <div className="p-3 bg-gray-50 rounded">
-                <p className="text-sm font-medium text-gray-500">Rol</p>
-                <p className="text-sm sm:text-base">{userInfo.rol}</p>
+              <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Rol</p>
+                <p className="text-sm sm:text-base text-gray-900 dark:text-gray-100">{userInfo.rol}</p>
               </div>
             </div>
             

@@ -28,16 +28,16 @@ const ArrayConfiguration: React.FC<{
   };
 
   return (
-    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-      <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Array</h5>
+    <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
+      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Configuración de Array</h5>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm text-gray-600 mb-2">Opciones del Array (una por línea)</label>
+          <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">Opciones del Array (una por línea)</label>
           <textarea
             value={localValue}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             rows={6}
             placeholder="Opción 1
 Opción 2
@@ -46,7 +46,7 @@ Opción 4
 Opción 5
 Opción 6"
           />
-          <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
         </div>
 
 
@@ -124,18 +124,18 @@ const NestedArrayConfiguration: React.FC<{
   };
 
   return (
-    <div className="mt-3 p-3 bg-gray-50 rounded border">
+    <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-900/40 rounded border border-gray-200 dark:border-gray-700">
       <div className="space-y-3">
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm text-gray-600">Opciones del Array</label>
+          <label className="block text-sm text-gray-600 dark:text-gray-300">Opciones del Array</label>
           {value.length >= 2 && (
             <button
               type="button"
               onClick={() => setReorderMode(!reorderMode)}
               className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
                 reorderMode
-                  ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                  : 'bg-gray-100 text-gray-600 border border-gray-300'
+                  ? 'bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                  : 'bg-gray-100 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
               } hover:bg-blue-50`}
             >
               <GripVertical size={12} />
@@ -154,16 +154,16 @@ const NestedArrayConfiguration: React.FC<{
                 onDragStart={(e) => handleDragStart(e, index)}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, index)}
-                className={`flex items-center gap-2 p-2 bg-white border rounded cursor-move hover:bg-gray-50 ${
+                className={`flex items-center gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded cursor-move hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   draggedIndex === index ? 'opacity-50' : ''
                 }`}
               >
                 <GripVertical size={14} className="text-gray-400" />
                 <span className="flex-1 text-sm">{option}</span>
-                <span className="text-xs text-gray-500">#{index + 1}</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">#{index + 1}</span>
               </div>
             ))}
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Arrastra las opciones para reordenarlas. Haz clic en "Terminar Orden" cuando termines.
             </p>
           </div>
@@ -171,7 +171,7 @@ const NestedArrayConfiguration: React.FC<{
           // Vista normal con lista de opciones
           <div className="space-y-2">
             {value.map((option, index) => (
-              <div key={index} className="flex items-center gap-2 p-2 bg-white border rounded">
+              <div key={index} className="flex items-center gap-2 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded">
                 <span className="flex-1 text-sm">{option}</span>
                 <button
                   type="button"
@@ -191,7 +191,7 @@ const NestedArrayConfiguration: React.FC<{
                 onChange={(e) => setNewOption(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Nueva opción..."
-                className="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"
+                className="flex-1 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
               <button
                 type="button"
@@ -207,7 +207,7 @@ const NestedArrayConfiguration: React.FC<{
 
         {/* Opción alternativa: textarea para edición masiva */}
         <details className="mt-3">
-          <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-800">
+          <summary className="text-xs text-gray-600 dark:text-gray-300 cursor-pointer hover:text-gray-800 dark:hover:text-gray-200">
             Edición masiva (una por línea)
           </summary>
           <div className="mt-2">
@@ -215,11 +215,11 @@ const NestedArrayConfiguration: React.FC<{
               value={localValue}
               onChange={handleChange}
               onBlur={handleBlur}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-sm"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               rows={4}
               placeholder="Opción 1\nOpción 2\nOpción 3"
             />
-            <p className="text-xs text-gray-500 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Presiona Enter para agregar nuevas opciones. Cada línea será una opción del array.</p>
           </div>
         </details>
       </div>
@@ -287,17 +287,17 @@ const ObjectConfiguration: React.FC<{
   };
 
   return (
-  <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+  <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
     <div className="flex items-center justify-between mb-3">
-      <h5 className="text-sm font-medium text-gray-700">Configuración de Objeto</h5>
+      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300">Configuración de Objeto</h5>
       {structure.length >= 2 && (
         <button
           type="button"
           onClick={() => setReorderMode(!reorderMode)}
           className={`px-2 py-1 text-xs rounded flex items-center gap-1 ${
             reorderMode
-              ? 'bg-blue-100 text-blue-700 border border-blue-300'
-              : 'bg-gray-100 text-gray-600 border border-gray-300'
+              ? 'bg-blue-100 text-blue-700 border border-blue-300 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+              : 'bg-gray-100 text-gray-600 border border-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600'
           } hover:bg-blue-50`}
         >
           <GripVertical size={12} />
@@ -309,7 +309,7 @@ const ObjectConfiguration: React.FC<{
       {structure.map((field, index) => (
         <div
           key={index}
-          className={`p-3 bg-white rounded border space-y-2 ${
+          className={`p-3 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 space-y-2 ${
             reorderMode ? 'cursor-move' : ''
           } ${draggedIndex === index ? 'opacity-50' : ''}`}
           draggable={reorderMode}
@@ -318,10 +318,10 @@ const ObjectConfiguration: React.FC<{
           onDrop={reorderMode ? (e) => handleDrop(e, index) : undefined}
         >
           {reorderMode && (
-            <div className="flex items-center gap-2 mb-2 text-gray-500 text-xs">
+            <div className="flex items-center gap-2 mb-2 text-gray-500 dark:text-gray-400 text-xs">
               <GripVertical size={14} className="text-gray-400" />
               <span>Arrastra para reordenar</span>
-              <span className="ml-auto bg-gray-100 px-2 py-0.5 rounded">
+              <span className="ml-auto bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
                 Posición: {index + 1}
               </span>
             </div>
@@ -336,7 +336,7 @@ const ObjectConfiguration: React.FC<{
                 onChange(newStructure);
               }}
               placeholder="nombre_campo"
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
             <input
               type="text"
@@ -347,7 +347,7 @@ const ObjectConfiguration: React.FC<{
                 onChange(newStructure);
               }}
               placeholder="Descripción del campo"
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -365,7 +365,7 @@ const ObjectConfiguration: React.FC<{
                 }
                 onChange(newStructure);
               }}
-              className="border border-gray-300 rounded px-2 py-1 text-sm"
+              className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="string">Texto</option>
               <option value="number">Número</option>
@@ -414,11 +414,11 @@ const ObjectConfiguration: React.FC<{
 
           {/* Configuración de Objeto anidado */}
           {field.type === 'object' && (
-            <div className="mt-3 p-3 bg-gray-50 rounded border">
-              <label className="block text-sm text-gray-600 mb-2">Sub-campos del Objeto</label>
+            <div className="mt-3 p-3 bg-gray-50 dark:bg-gray-900/40 rounded border border-gray-200 dark:border-gray-700">
+              <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">Sub-campos del Objeto</label>
               <div className="space-y-2">
                 {(field.objectStructure || []).map((subField, subIndex) => (
-                  <div key={subIndex} className="p-2 bg-white rounded border space-y-1">
+                  <div key={subIndex} className="p-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 space-y-1">
                     <div className="grid grid-cols-3 gap-1">
                       <input
                         type="text"
@@ -431,7 +431,7 @@ const ObjectConfiguration: React.FC<{
                           onChange(newStructure);
                         }}
                         placeholder="nombre_subcampo"
-                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                       <input
                         type="text"
@@ -444,7 +444,7 @@ const ObjectConfiguration: React.FC<{
                           onChange(newStructure);
                         }}
                         placeholder="Descripción"
-                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       />
                       <input
                         type="number"
@@ -457,7 +457,7 @@ const ObjectConfiguration: React.FC<{
                           onChange(newStructure);
                         }}
                         placeholder="Orden"
-                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         min="1"
                       />
                     </div>
@@ -471,7 +471,7 @@ const ObjectConfiguration: React.FC<{
                           newStructure[index].objectStructure = newSubStructure;
                           onChange(newStructure);
                         }}
-                        className="border border-gray-300 rounded px-2 py-1 text-xs"
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       >
                         <option value="string">Texto</option>
                         <option value="number">Número</option>
@@ -523,7 +523,7 @@ const ObjectConfiguration: React.FC<{
                     newStructure[index].objectStructure = newSubStructure;
                     onChange(newStructure);
                   }}
-                  className="w-full px-2 py-1 border border-dashed border-gray-300 rounded text-xs text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
+                  className="w-full px-2 py-1 border border-dashed border-gray-300 dark:border-gray-600 rounded text-xs text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-1"
                 >
                   <Plus size={12} />
                   Agregar Sub-campo
@@ -539,7 +539,7 @@ const ObjectConfiguration: React.FC<{
           const newStructure = [...structure, { key: '', type: 'string', required: false, description: '', order_index: undefined }];
           onChange(newStructure);
         }}
-        className="w-full px-3 py-2 border border-dashed border-gray-300 rounded text-sm text-gray-600 hover:bg-gray-50 flex items-center justify-center gap-1"
+        className="w-full px-3 py-2 border border-dashed border-gray-300 dark:border-gray-600 rounded text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-center gap-1"
       >
         <Plus size={14} />
         Agregar Campo al Objeto
@@ -603,23 +603,23 @@ const FileConfiguration: React.FC<{
   };
 
   return (
-    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
-      <h5 className="text-sm font-medium text-gray-700 mb-3">Configuración de Archivo</h5>
+    <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
+      <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Configuración de Archivo</h5>
 
       {/* Tipos de archivo permitidos */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-2">Tipos de archivo permitidos</label>
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Tipos de archivo permitidos</label>
         <div className="flex flex-wrap gap-2 mb-2">
           {value.allowed_types.map((type) => (
             <span
               key={type}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
             >
               {type}
               <button
                 type="button"
                 onClick={() => removeAllowedType(type)}
-                className="ml-1 text-blue-600 hover:text-blue-800"
+                className="ml-1 text-blue-600 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200"
               >
                 ×
               </button>
@@ -629,7 +629,7 @@ const FileConfiguration: React.FC<{
         <div className="flex gap-2">
           <select
             onChange={(e) => addAllowedType(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm"
+            className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             defaultValue=""
           >
             <option value="">Agregar tipo...</option>
@@ -648,12 +648,12 @@ const FileConfiguration: React.FC<{
 
       {/* Tamaño máximo */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-1">Tamaño máximo (MB)</label>
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Tamaño máximo (MB)</label>
         <input
           type="number"
           value={value.max_size_mb}
           onChange={(e) => onChange({ ...value, max_size_mb: parseInt(e.target.value) || 1 })}
-          className="border border-gray-300 rounded px-2 py-1 text-sm w-24"
+          className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm w-24 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           min="1"
           max="100"
         />
@@ -674,31 +674,31 @@ const FileConfiguration: React.FC<{
 
       {/* Ruta de almacenamiento */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-1">Ruta de almacenamiento</label>
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Ruta de almacenamiento</label>
         <input
           type="text"
           value={value.storage_path}
           onChange={(e) => onChange({ ...value, storage_path: e.target.value })}
-          className="border border-gray-300 rounded px-2 py-1 text-sm w-full"
+          className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           placeholder="ej: solicitantes/documentos"
         />
-        <p className="text-xs text-gray-500 mt-1">Ruta donde se almacenarán los archivos</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Ruta donde se almacenarán los archivos</p>
       </div>
 
       {/* Campos requeridos adicionales */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-2">Campos adicionales requeridos</label>
+        <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-2">Campos adicionales requeridos</label>
         <div className="flex flex-wrap gap-2 mb-2">
           {value.required_fields.map((field) => (
             <span
               key={field}
-              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
             >
               {field}
               <button
                 type="button"
                 onClick={() => removeRequiredField(field)}
-                className="ml-1 text-green-600 hover:text-green-800"
+                className="ml-1 text-green-600 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
               >
                 ×
               </button>
@@ -710,7 +710,7 @@ const FileConfiguration: React.FC<{
             type="text"
             value={newField}
             onChange={(e) => setNewField(e.target.value)}
-            className="border border-gray-300 rounded px-2 py-1 text-sm flex-1"
+            className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm flex-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             placeholder="ej: descripcion, categoria"
             onKeyPress={(e) => e.key === 'Enter' && addRequiredField()}
           />
@@ -722,7 +722,7 @@ const FileConfiguration: React.FC<{
             Agregar
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-1">Campos adicionales que se pedirán para cada archivo</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Campos adicionales que se pedirán para cada archivo</p>
       </div>
     </div>
   );
@@ -1187,23 +1187,23 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Interno *</label>
             <input
               name="key"
               value={form.key}
               onChange={(e) => setForm(prev => ({ ...prev, key: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="credito_hipotecario"
             />
-            <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Identificador único (sin espacios)</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre para Mostrar *</label>
             <input
               name="description"
               value={form.description || ''}
               onChange={(e) => setForm(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="Crédito de vivienda"
             />
           </div>
@@ -1211,37 +1211,37 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Orden de Aparición</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Orden de Aparición</label>
             <input
               type="number"
               name="order_index"
               value={form.order_index || ''}
               onChange={(e) => setForm(prev => ({ ...prev, order_index: e.target.value ? parseInt(e.target.value) : undefined }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="1, 2, 3..."
               min="1"
             />
-            <p className="text-xs text-gray-500 mt-1">Número que define el orden de aparición (1 = primero, 2 = segundo, etc.)</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Número que define el orden de aparición (1 = primero, 2 = segundo, etc.)</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Valor por Defecto</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor por Defecto</label>
             <input
               name="default_value"
               value={form.default_value || ''}
               onChange={(e) => setForm(prev => ({ ...prev, default_value: e.target.value }))}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder="Valor predeterminado"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
           <textarea
             name="default_value"
             value={form.default_value || ''}
             onChange={(e) => setForm(prev => ({ ...prev, default_value: e.target.value }))}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             rows={3}
             placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
@@ -1256,7 +1256,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="required" className="ml-2 block text-sm text-gray-700">Obligatorio (REQ)</label>
+            <label htmlFor="required" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Obligatorio (REQ)</label>
           </div>
 
           <div className="flex items-center">
@@ -1267,7 +1267,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700">Activo</label>
+            <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Activo</label>
           </div>
         </div>
 
@@ -1332,8 +1332,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           />
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t">
-          <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
             Cancelar
           </button>
           <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
@@ -1348,38 +1348,38 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
   return (
     <div className="space-y-6">
       {/* Group Information Section */}
-      <div className={`bg-gray-50 p-4 rounded-lg ${showAddField ? 'opacity-50' : ''}`}>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Información de la Entidad</h3>
+      <div className={`bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 p-4 rounded-lg ${showAddField ? 'opacity-50' : ''}`}>
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Información de la Entidad</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Interno *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre Interno *</label>
             <input
               value={selectedGroup?.entity || ''}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-100"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               placeholder="credito_hipotecario"
               disabled
             />
-            <p className="text-xs text-gray-500 mt-1">Identificador único (sin espacios)</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Identificador único (sin espacios)</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre para Mostrar *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nombre para Mostrar *</label>
             <input
               name="displayName"
               value={groupForm.displayName}
               onChange={handleGroupFormChange}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               placeholder="Crédito de vivienda"
             />
           </div>
         </div>
 
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descripción</label>
           <textarea
             name="description"
             value={groupForm.description}
             onChange={handleGroupFormChange}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             rows={3}
             placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
@@ -1394,16 +1394,16 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             onChange={handleGroupFormChange}
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />
-          <label htmlFor="active" className="ml-2 block text-sm text-gray-700">Activo</label>
+          <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Activo</label>
         </div>
       </div>
 
       {/* Fields Configuration Section */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Campos Personalizados</h3>
-        <div className="bg-gray-50 p-4 rounded-lg">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Campos Personalizados</h3>
+        <div className="bg-gray-50 dark:bg-gray-900/40 border border-gray-200 dark:border-gray-700 p-4 rounded-lg">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="text-sm font-medium text-gray-700">Campos Configurados</h4>
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">Campos Configurados</h4>
             {selectedGroup && selectedGroup.fields.length > 1 && (
               <div className="flex gap-2">
                 {reorderMode ? (
@@ -1411,7 +1411,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                     <button
                       type="button"
                       onClick={() => setReorderMode(false)}
-                      className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                      className="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
                     >
                       Cancelar
                     </button>
@@ -1429,7 +1429,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                   <button
                     type="button"
                     onClick={() => setReorderMode(true)}
-                    className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center gap-1"
+                    className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/40 flex items-center gap-1"
                   >
                     <GripVertical size={14} />
                     Reordenar
@@ -1440,7 +1440,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
           </div>
 
           {reorderMode && (
-            <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm text-blue-700">
+            <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-sm text-blue-700 dark:text-blue-300">
               💡 <strong>Modo Reordenamiento:</strong> Arrastra los campos para cambiar su orden en los formularios.
             </div>
           )}
@@ -1458,7 +1458,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                 <div
                   key={field.key}
                   className={`
-                    flex items-center justify-between bg-white p-3 rounded border
+                    flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700
                     ${reorderMode ? 'cursor-move hover:shadow-md transition-shadow' : ''}
                     ${draggedIndex === index ? 'opacity-50 transform rotate-1' : ''}
                   `}
@@ -1476,13 +1476,13 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                         {field.order_index}
                       </div>
                     ) : (
-                      <div className="flex items-center justify-center w-6 h-6 bg-gray-100 text-gray-400 text-xs font-medium rounded-full">
+                      <div className="flex items-center justify-center w-6 h-6 bg-gray-100 dark:bg-gray-700 text-gray-400 text-xs font-medium rounded-full">
                         ?
                       </div>
                     )}
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">{field.description || field.key}</div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{field.description || field.key}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {field.key} - Tipo: {field.type} {field.required ? '(Obligatorio)' : ''}
                       </div>
                     </div>
@@ -1524,52 +1524,52 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">No hay campos configurados</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">No hay campos configurados</p>
           )}
         </div>
 
         {/* Add New Field Section */}
         {showAddField ? (
-          <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+          <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-lg font-semibold text-blue-800">✨ Agregar Nuevo Campo</h4>
+              <h4 className="text-lg font-semibold text-blue-800 dark:text-blue-300">✨ Agregar Nuevo Campo</h4>
               <button
                 type="button"
                 onClick={() => setShowAddField(false)}
-                className="text-gray-500 hover:text-gray-700 text-sm"
+                className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 text-sm"
               >
                 ✕ Cancelar
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Nombre Interno</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Nombre Interno</label>
                 <input
                   name="key"
                   value={newFieldForm.key}
                   onChange={handleNewFieldChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="Sin espacios ni caracteres especiales"
                 />
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Nombre para Mostrar</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Nombre para Mostrar</label>
                 <input
                   name="displayName"
                   value={newFieldForm.displayName}
                   onChange={handleNewFieldChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
               </div>
             </div>
             <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Tipo de Campo</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Tipo de Campo</label>
                 <select
                   name="type"
                   value={newFieldForm.type}
                   onChange={handleNewFieldChange}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
+                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 >
                   <option value="string">Texto</option>
                   <option value="number">Número</option>
@@ -1582,13 +1582,13 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                 </select>
               </div>
               <div>
-                <label className="block text-sm text-gray-600 mb-1">Orden de Aparición</label>
+                <label className="block text-sm text-gray-600 dark:text-gray-300 mb-1">Orden de Aparición</label>
                 <input
                   type="number"
                   name="order_index"
                   value={newFieldForm.order_index || ''}
                   onChange={(e) => setNewFieldForm(prev => ({ ...prev, order_index: e.target.value ? parseInt(e.target.value) : undefined }))}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm w-full"
+                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder="1, 2, 3..."
                   min="1"
                 />

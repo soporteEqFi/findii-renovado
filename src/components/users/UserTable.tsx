@@ -84,18 +84,18 @@ export const UserTable: React.FC<UserTableProps> = ({
   return (
     <div>
       {/* Filtros */}
-      <div className="p-4 bg-white border-b">
+      <div className="p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-wrap gap-4">
           {/* Búsqueda global */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Search className="w-4 h-4 absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 value={globalFilter}
                 onChange={e => setGlobalFilter(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full pl-8 pr-3 py-2 border rounded"
+                className="w-full pl-8 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             </div>
           </div>
@@ -104,14 +104,14 @@ export const UserTable: React.FC<UserTableProps> = ({
 
       {/* Tabla */}
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-100 uppercase tracking-wider"
                   >
                     {flexRender(
                       header.column.columnDef.header,
@@ -122,17 +122,17 @@ export const UserTable: React.FC<UserTableProps> = ({
               </tr>
             ))}
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}
                 onClick={() => onRowClick(row.original)}
-                className="hover:bg-gray-50 cursor-pointer"
+                className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
                     key={cell.id}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-100"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
@@ -144,12 +144,12 @@ export const UserTable: React.FC<UserTableProps> = ({
       </div>
 
       {/* Controles de paginación */}
-      <div className="px-6 py-4 flex items-center justify-between border-t">
+      <div className="px-6 py-4 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
         <div className="flex items-center gap-4">
           <select
             value={pageSize}
             onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-            className="border rounded px-2 py-1"
+            className="border border-gray-300 dark:border-gray-600 rounded px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
             {[10, 20, 30, 50].map(size => (
               <option key={size} value={size}>
@@ -158,7 +158,7 @@ export const UserTable: React.FC<UserTableProps> = ({
             ))}
           </select>
 
-          <span className="text-sm text-gray-700">
+          <span className="text-sm text-gray-700 dark:text-gray-300">
             Página {pageIndex + 1} de {Math.max(1, Math.ceil(filteredData.length / pageSize))}
           </span>
         </div>
@@ -167,28 +167,28 @@ export const UserTable: React.FC<UserTableProps> = ({
           <button
             onClick={() => setPageIndex(0)}
             disabled={pageIndex === 0}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             {'<<'}
           </button>
           <button
             onClick={handlePreviousPage}
             disabled={pageIndex === 0}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             {'<'}
           </button>
           <button
             onClick={handleNextPage}
             disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             {'>'}
           </button>
           <button
             onClick={() => setPageIndex(Math.ceil(filteredData.length / pageSize) - 1)}
             disabled={pageIndex >= Math.ceil(filteredData.length / pageSize) - 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600"
           >
             {'>>'}
           </button>

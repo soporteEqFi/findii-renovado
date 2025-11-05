@@ -36,21 +36,21 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg border">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">
-        Configurar Condición para: <span className="text-blue-600">{campo.description || campo.key}</span>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+        Configurar Condición para: <span className="text-blue-600 dark:text-blue-400">{campo.description || campo.key}</span>
       </h3>
 
       <div className="space-y-4">
         {/* Campo Activador */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Campo Activador
           </label>
           <select
             value={campoActivador}
             onChange={(e) => setCampoActivador(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           >
             <option value="">Sin condición (siempre visible)</option>
             {camposActivadores.map(c => (
@@ -64,14 +64,14 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
         {/* Valor Esperado */}
         {campoActivador && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Valor Esperado
             </label>
             {valoresPosibles.length > 0 ? (
               <select
                 value={valorEsperado}
                 onChange={(e) => setValorEsperado(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="">Seleccionar valor...</option>
                 {valoresPosibles.map((valor: string) => (
@@ -84,7 +84,7 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
                 value={valorEsperado}
                 onChange={(e) => setValorEsperado(e.target.value)}
                 placeholder="Ingrese el valor esperado"
-                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               />
             )}
           </div>
@@ -92,9 +92,9 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
 
         {/* Vista previa de la condición */}
         {campoActivador && (
-          <div className="bg-gray-50 p-3 rounded-md">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Vista previa de la condición:</h4>
-            <p className="text-sm text-gray-600">
+          <div className="bg-gray-50 dark:bg-gray-900/40 p-3 rounded-md border border-gray-200 dark:border-gray-700">
+            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vista previa de la condición:</h4>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Mostrar "{campo.description || campo.key}" cuando "{campoActivadorSeleccionado?.description || campoActivador}" sea igual a "{valorEsperado}"
             </p>
           </div>
@@ -102,11 +102,11 @@ export const ConditionalFieldConfig: React.FC<ConditionalFieldConfigProps> = ({
       </div>
 
       {/* Botones de acción */}
-      <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+      <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
         >
           Cancelar
         </button>
