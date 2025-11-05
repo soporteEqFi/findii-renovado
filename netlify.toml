@@ -1,7 +1,7 @@
 # Solo cuando acceden vía netlify.app
 [[redirects]]
   from = "https://updated-crm.netlify.app/"
-  to = "https://oneplatform.findii.co/
+  to = "https://oneplatform.findii.co/"
   status = 301
   force = true
 
