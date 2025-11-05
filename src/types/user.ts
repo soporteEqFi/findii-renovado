@@ -20,6 +20,9 @@ export interface UserInfoExtra {
   ciudad?: string;
   banco_nombre?: string;
   linea_credito?: string;
+  // Campos para usuarios temporales
+  usuario_activo?: boolean;
+  tiempo_conexion?: string; // Formato DD/MM/YYYY
   [key: string]: any; // Para otros campos dinámicos
 }
 

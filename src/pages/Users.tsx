@@ -24,6 +24,7 @@ const Users = () => {
   // Estados locales
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [editedUser, setEditedUser] = useState<User | null>(null);
+  const [originalUser, setOriginalUser] = useState<User | null>(null); // Copia del usuario original para comparar
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
@@ -43,8 +44,11 @@ const Users = () => {
 
   // Manejadores de eventos
   const handleRowClick = (user: User) => {
+    // Guardar una copia profunda del usuario original para comparar después
+    const originalUserCopy = JSON.parse(JSON.stringify(user));
     setSelectedUser(user);
     setEditedUser(user);
+    setOriginalUser(originalUserCopy);
     setIsEditing(false);
     setIsModalOpen(true);
   };
@@ -57,6 +61,12 @@ const Users = () => {
 
   const handleSave = async () => {
     if (!editedUser) return;
+
+    console.log('🚀 handleSave INICIADO');
+    console.log('🚀 editedUser.info_extra:', editedUser.info_extra);
+    console.log('🚀 selectedUser?.info_extra:', selectedUser?.info_extra);
+    console.log('🚀 originalUser?.info_extra:', originalUser?.info_extra);
+
     try {
       const updateData: UpdateUserData = {};
 
@@ -66,26 +76,132 @@ const Users = () => {
       if (editedUser.correo !== selectedUser?.correo) updateData.correo = editedUser.correo;
       if (editedUser.rol !== selectedUser?.rol) updateData.rol = editedUser.rol;
       if (editedUser.reports_to_id !== selectedUser?.reports_to_id) updateData.reports_to_id = editedUser.reports_to_id;
-      if (editedUser.info_extra !== selectedUser?.info_extra) {
-        // Validación final antes de enviar
-        if (typeof editedUser.info_extra === 'object' && editedUser.info_extra !== null) {
-          const keys = Object.keys(editedUser.info_extra);
-          const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+      // Comparar info_extra de forma más robusta
+      // Primero parsear y limpiar campos temporales de ambos objetos para comparar correctamente
+      let parsedEditedInfoExtra: any = {};
+      let parsedSelectedInfoExtra: any = {};
 
-          if (hasNumericKeys) {
-            // Intentar reconstruir el JSON válido a partir de las claves numéricas
-            try {
-              const reconstructedJson = Object.values(editedUser.info_extra).join('');
-              const validJson = JSON.parse(reconstructedJson);
-              updateData.info_extra = validJson;
-            } catch (error) {
-              updateData.info_extra = {}; // Solo si no se puede reconstruir
-            }
-          } else {
-            updateData.info_extra = editedUser.info_extra;
+      // Parsear info_extra de editedUser
+      if (editedUser.info_extra) {
+        if (typeof editedUser.info_extra === 'string') {
+          try {
+            parsedEditedInfoExtra = JSON.parse(editedUser.info_extra);
+          } catch {
+            parsedEditedInfoExtra = {};
           }
         } else {
-          updateData.info_extra = editedUser.info_extra;
+          parsedEditedInfoExtra = editedUser.info_extra;
+        }
+      }
+
+      // Usar originalUser para comparar (el estado original antes de editar)
+      const userToCompare = originalUser || selectedUser;
+
+      // Parsear info_extra del usuario original (para comparar)
+      if (userToCompare?.info_extra) {
+        if (typeof userToCompare.info_extra === 'string') {
+          try {
+            parsedSelectedInfoExtra = JSON.parse(userToCompare.info_extra);
+          } catch {
+            parsedSelectedInfoExtra = {};
+          }
+        } else {
+          parsedSelectedInfoExtra = userToCompare.info_extra;
+        }
+      }
+
+      console.log('🔍 Usando originalUser para comparar:', originalUser ? 'SÍ' : 'NO');
+
+      // Detectar objetos corruptos con claves numéricas en editedUser
+      if (typeof parsedEditedInfoExtra === 'object' && parsedEditedInfoExtra !== null) {
+        const keys = Object.keys(parsedEditedInfoExtra);
+        const hasNumericKeys = keys.some(key => /^\d+$/.test(key));
+
+        if (hasNumericKeys) {
+          try {
+            const reconstructedJson = Object.values(parsedEditedInfoExtra).join('');
+            parsedEditedInfoExtra = JSON.parse(reconstructedJson);
+          } catch (error) {
+            parsedEditedInfoExtra = {};
+          }
+        }
+      }
+
+      // Verificar si el usuario originalmente tenía campos temporales (ANTES de limpiar)
+      const originallyHadTemporalFields = parsedSelectedInfoExtra.tiempo_conexion ||
+                                          parsedSelectedInfoExtra.usuario_activo !== undefined;
+
+      // Verificar si el usuario editado tiene campos temporales (ANTES de limpiar)
+      const editedHasTemporalFields = parsedEditedInfoExtra.tiempo_conexion ||
+                                     parsedEditedInfoExtra.usuario_activo !== undefined;
+
+      // Crear copias para comparar SIN campos temporales
+      let cleanedEditedForComparison = { ...parsedEditedInfoExtra };
+      let cleanedSelectedForComparison = { ...parsedSelectedInfoExtra };
+
+      // Limpiar campos temporales de ambas copias para comparar
+      delete cleanedEditedForComparison.tiempo_conexion;
+      delete cleanedEditedForComparison.usuario_activo;
+      delete cleanedSelectedForComparison.tiempo_conexion;
+      delete cleanedSelectedForComparison.usuario_activo;
+
+      // Comparar objetos parseados DESPUÉS de limpiar campos temporales
+      const editedKeys = Object.keys(cleanedEditedForComparison).sort();
+      const selectedKeys = Object.keys(cleanedSelectedForComparison).sort();
+
+      console.log('🔍 Comparación de info_extra:');
+      console.log('🔍 parsedEditedInfoExtra (ORIGINAL):', JSON.stringify(parsedEditedInfoExtra, null, 2));
+      console.log('🔍 parsedSelectedInfoExtra (ORIGINAL):', JSON.stringify(parsedSelectedInfoExtra, null, 2));
+      console.log('🔍 cleanedEditedForComparison:', JSON.stringify(cleanedEditedForComparison, null, 2));
+      console.log('🔍 cleanedSelectedForComparison:', JSON.stringify(cleanedSelectedForComparison, null, 2));
+      console.log('🔍 originallyHadTemporalFields:', originallyHadTemporalFields);
+      console.log('🔍 editedHasTemporalFields:', editedHasTemporalFields);
+
+      // Comparar objetos originales (antes de limpiar) para detectar cambios en campos temporales
+      const originalObjectsAreDifferent = JSON.stringify(parsedEditedInfoExtra) !== JSON.stringify(parsedSelectedInfoExtra);
+
+      // Comparar objetos limpios (después de limpiar campos temporales) para detectar cambios en otros campos
+      const cleanedObjectsAreDifferent = editedKeys.length !== selectedKeys.length ||
+          JSON.stringify(cleanedEditedForComparison) !== JSON.stringify(cleanedSelectedForComparison);
+
+      // Si originalmente NO tenía campos temporales pero ahora SÍ los tiene, es un cambio importante
+      const temporalFieldsAdded = !originallyHadTemporalFields && editedHasTemporalFields;
+
+      // Si originalmente tenía campos temporales pero ahora no los tiene en el editado, es un cambio importante
+      // IMPORTANTE: Esto detecta cuando se eliminaron campos temporales, incluso si ambos objetos quedan iguales después
+      const temporalFieldsRemoved = originallyHadTemporalFields && !editedHasTemporalFields;
+
+      // Hay cambio si:
+      // 1. Los objetos originales son diferentes (cualquier cambio, incluyendo campos temporales)
+      // 2. Los objetos limpios son diferentes (cambio en otros campos)
+      // 3. Se agregaron campos temporales
+      // 4. Se eliminaron campos temporales
+      const infoExtraChanged = originalObjectsAreDifferent || cleanedObjectsAreDifferent || temporalFieldsAdded || temporalFieldsRemoved;
+
+      console.log('🔍 originalObjectsAreDifferent:', originalObjectsAreDifferent);
+      console.log('🔍 cleanedObjectsAreDifferent:', cleanedObjectsAreDifferent);
+      console.log('🔍 temporalFieldsAdded:', temporalFieldsAdded);
+      console.log('🔍 temporalFieldsRemoved:', temporalFieldsRemoved);
+      console.log('🔍 infoExtraChanged:', infoExtraChanged);
+
+      if (infoExtraChanged) {
+        // Si tiene campos temporales, enviar el objeto completo (con campos temporales)
+        // Si no tiene campos temporales, enviar el objeto limpio (sin campos temporales)
+        // Esto preserva todos los demás campos (ciudad, banco_nombre, etc.)
+        if (editedHasTemporalFields) {
+          // Tiene campos temporales: enviar el objeto completo con campos temporales
+          updateData.info_extra = parsedEditedInfoExtra;
+          console.log('✅ INFO_EXTRA con campos temporales (a enviar al backend):', JSON.stringify(parsedEditedInfoExtra, null, 2));
+        } else {
+          // No tiene campos temporales: enviar el objeto limpio (sin campos temporales)
+          updateData.info_extra = cleanedEditedForComparison;
+          console.log('✅ INFO_EXTRA LIMPIO (a enviar al backend):', JSON.stringify(cleanedEditedForComparison, null, 2));
+        }
+
+        if (updateData.info_extra) {
+          console.log('✅ ¿Tiene tiempo_conexion?', 'tiempo_conexion' in updateData.info_extra);
+          console.log('✅ ¿Tiene usuario_activo?', 'usuario_activo' in updateData.info_extra);
+          console.log('✅ Campos que se envían:', Object.keys(updateData.info_extra));
         }
       }
 
@@ -99,16 +215,23 @@ const Users = () => {
       }
 
       // Verificar que hay al menos un campo para actualizar
+      console.log('📊 updateData antes de verificar:', updateData);
+      console.log('📊 Keys en updateData:', Object.keys(updateData));
+
       if (Object.keys(updateData).length === 0) {
-        console.warn('No hay campos para actualizar');
+        console.warn('⚠️ No hay campos para actualizar - SALIENDO');
         setIsEditing(false);
         return;
       }
+
+      console.log('✅ Hay campos para actualizar, procediendo...');
 
       const updatedUser = await updateUser(editedUser.id, updateData, empresaId);
       setSelectedUser(updatedUser);
       // Limpiar la contraseña del editedUser después de guardar exitosamente
       setEditedUser({ ...updatedUser, contraseña: undefined });
+      // Actualizar también el originalUser con el usuario actualizado
+      setOriginalUser(JSON.parse(JSON.stringify(updatedUser)));
       setIsEditing(false);
 
       // Mostrar mensaje de éxito
@@ -258,6 +381,7 @@ const Users = () => {
         onClose={() => {
           setIsModalOpen(false);
           setIsEditing(false);
+          setOriginalUser(null); // Limpiar cuando se cierra el modal
         }}
         title=""
         size="xl"

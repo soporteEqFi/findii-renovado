@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Login = () => {
@@ -22,9 +22,21 @@ const Login = () => {
     } catch (error) {
       // Mostrar mensaje de error más específico
       if (error instanceof Error) {
-        const errorMessage = error.message;
+        const errorCode = (error as any).errorCode;
+        const errorMessage = (error as any).errorMessage || error.message;
 
-        if (errorMessage.includes('acceso') || errorMessage.includes('Access denied')) {
+        // Manejar errores específicos de usuarios temporales usando el código del backend
+        if (errorCode === 'USER_INACTIVE') {
+          // Usar el mensaje del backend si está disponible, sino usar uno por defecto
+          setError(errorMessage || 'Tu cuenta temporal está desactivada. Contacta al administrador para activarla.');
+        } else if (errorCode === 'USER_EXPIRED') {
+          // Usar el mensaje del backend si está disponible, sino usar uno por defecto
+          setError(errorMessage || 'Tu cuenta temporal ha expirado. Contacta al administrador para renovar el acceso.');
+        } else if (errorMessage.includes('USER_INACTIVE') || errorMessage.includes('usuario_inactivo')) {
+          setError(errorMessage || 'Tu cuenta temporal está desactivada. Contacta al administrador.');
+        } else if (errorMessage.includes('USER_EXPIRED') || errorMessage.includes('usuario_expirado') || errorMessage.includes('Cuenta expirada')) {
+          setError(errorMessage || 'Tu cuenta temporal ha expirado. Contacta al administrador para renovar el acceso.');
+        } else if (errorMessage.includes('acceso') || errorMessage.includes('Access denied')) {
           setError('Credenciales inválidas. Por favor, verifique su email y contraseña.');
         } else if (errorMessage.includes('usuario') || errorMessage.includes('datos')) {
           setError('Error en la respuesta del servidor. Contacte al administrador.');
@@ -33,7 +45,8 @@ const Login = () => {
         } else if (errorMessage.includes('fetch') || errorMessage.includes('network')) {
           setError('Error de conexión. Verifique su conexión a internet.');
         } else {
-          setError(`Error: ${errorMessage}`);
+          // Mostrar el mensaje del backend directamente si está disponible
+          setError(errorMessage || 'Error al iniciar sesión. Por favor, intente nuevamente.');
         }
       } else {
         setError('Error desconocido. Por favor, intente nuevamente.');
@@ -53,8 +66,17 @@ const Login = () => {
         </div>
 
         {error && (
-          <div className="bg-red-50 p-4 rounded-md">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md shadow-sm">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-red-800">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 

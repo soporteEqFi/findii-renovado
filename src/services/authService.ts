@@ -57,7 +57,34 @@ export const loginUser = async (email: string, password: string): Promise<LoginR
   });
 
   if (!response.ok) {
-    throw new Error('Login failed');
+    // Intentar obtener el mensaje de error del backend
+    try {
+      const errorData = await response.json();
+      const errorCode = errorData.error_code || errorData.errorCode;
+      const errorMessage = errorData.message || errorData.error || 'Error al iniciar sesión';
+
+      // Crear un error personalizado con código y mensaje
+      const error = new Error(errorMessage);
+      (error as any).errorCode = errorCode;
+      (error as any).errorMessage = errorMessage;
+
+      // Propagar errores específicos del backend con su código
+      if (errorCode === 'USER_INACTIVE' || errorMessage.includes('USER_INACTIVE') || errorMessage.includes('usuario_inactivo')) {
+        (error as any).errorCode = 'USER_INACTIVE';
+        throw error;
+      } else if (errorCode === 'USER_EXPIRED' || errorMessage.includes('USER_EXPIRED') || errorMessage.includes('usuario_expirado')) {
+        (error as any).errorCode = 'USER_EXPIRED';
+        throw error;
+      }
+
+      throw error;
+    } catch (parseError) {
+      // Si no se puede parsear el error, lanzar error genérico
+      if (parseError instanceof Error) {
+        throw parseError;
+      }
+      throw new Error('Error al iniciar sesión. Por favor, intente nuevamente.');
+    }
   }
 
   const data = await response.json();

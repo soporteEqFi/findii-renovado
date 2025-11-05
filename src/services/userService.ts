@@ -44,10 +44,16 @@ export const userService = {
       const users = result.data || result || [];
 
       // Procesar info_extra para asegurar que sea un objeto
-      return users.map((user: User) => ({
-        ...user,
-        info_extra: this.processInfoExtra(user.info_extra)
-      }));
+      // Transformar informacion_adicional del backend a info_extra para el frontend
+      return users.map((user: any) => {
+        const userWithInfoExtra: User = {
+          ...user,
+          info_extra: this.processInfoExtra(user.informacion_adicional || user.info_extra)
+        };
+        // Eliminar informacion_adicional si existe para mantener consistencia
+        delete (userWithInfoExtra as any).informacion_adicional;
+        return userWithInfoExtra;
+      });
     } catch (error) {
       console.error('Error obteniendo usuarios:', error);
       throw error;
@@ -96,10 +102,15 @@ export const userService = {
       const result = await response.json();
       const user = result.data || result;
 
-      return {
+      // Transformar informacion_adicional del backend a info_extra para el frontend
+      const userResponse: any = user;
+      const userWithInfoExtra: User = {
         ...user,
-        info_extra: this.processInfoExtra(user.info_extra)
+        info_extra: this.processInfoExtra(userResponse.informacion_adicional || user.info_extra)
       };
+      // Eliminar informacion_adicional si existe para mantener consistencia
+      delete (userWithInfoExtra as any).informacion_adicional;
+      return userWithInfoExtra;
     } catch (error) {
       console.error('Error obteniendo usuario:', error);
       throw error;
@@ -119,10 +130,22 @@ export const userService = {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
       // Limpiar info_extra si está vacío
-      const cleanUserData = {
-        ...userData,
-        info_extra: this.cleanInfoExtra(userData.info_extra)
+      const cleanedInfoExtra = this.cleanInfoExtra(userData.info_extra);
+
+      // Transformar info_extra a informacion_adicional para el backend
+      const cleanUserData: any = {
+        nombre: userData.nombre,
+        cedula: userData.cedula,
+        correo: userData.correo,
+        contraseña: userData.contraseña,
+        rol: userData.rol,
+        ...(userData.reports_to_id !== null && userData.reports_to_id !== undefined && { reports_to_id: userData.reports_to_id })
       };
+
+      // Agregar informacion_adicional si existe
+      if (cleanedInfoExtra) {
+        cleanUserData.informacion_adicional = cleanedInfoExtra;
+      }
 
       const response = await fetch(
         buildApiUrl(`/usuarios/?empresa_id=${empresaIdToUse}`),
@@ -144,10 +167,15 @@ export const userService = {
       const result = await response.json();
       const user = result.data || result;
 
-      return {
+      // Transformar informacion_adicional del backend a info_extra para el frontend
+      const userResponse: any = user;
+      const userWithInfoExtra: User = {
         ...user,
-        info_extra: this.processInfoExtra(user.info_extra)
+        info_extra: this.processInfoExtra(userResponse.informacion_adicional || user.info_extra)
       };
+      // Eliminar informacion_adicional si existe para mantener consistencia
+      delete (userWithInfoExtra as any).informacion_adicional;
+      return userWithInfoExtra;
     } catch (error) {
       console.error('Error creando usuario:', error);
       throw error;
@@ -171,12 +199,42 @@ export const userService = {
     try {
       const empresaIdToUse = empresaId || parseInt(localStorage.getItem('empresa_id') || '1', 10);
 
-      // Limpiar info_extra si está presente
-      const cleanUpdateData = {
-        ...updateData,
-        info_extra: updateData.info_extra ? this.cleanInfoExtra(updateData.info_extra) : undefined
-      };
+      // Transformar info_extra a informacion_adicional para el backend
+      const cleanUpdateData: any = {};
 
+      if (updateData.nombre !== undefined) cleanUpdateData.nombre = updateData.nombre;
+      if (updateData.cedula !== undefined) cleanUpdateData.cedula = updateData.cedula;
+      if (updateData.correo !== undefined) cleanUpdateData.correo = updateData.correo;
+      if (updateData.contraseña !== undefined) cleanUpdateData.contraseña = updateData.contraseña;
+      if (updateData.rol !== undefined) cleanUpdateData.rol = updateData.rol;
+      if (updateData.reports_to_id !== undefined) cleanUpdateData.reports_to_id = updateData.reports_to_id;
+
+      // Agregar info_extra/informacion_adicional si existe
+      // El backend ya maneja la preservación de otros campos automáticamente
+      if (updateData.info_extra !== undefined) {
+        // El objeto ya viene con campos temporales eliminados si corresponde (desde Users.tsx)
+        // Enviar todos los campos restantes (ciudad, banco_nombre, linea_credito, etc.)
+        // El backend preservará automáticamente otros campos que no están en el objeto
+        cleanUpdateData.info_extra = updateData.info_extra;
+        cleanUpdateData.informacion_adicional = updateData.info_extra;
+      }
+
+      // Debug: ver qué se está enviando al backend
+      console.log('📤 ============================================');
+      console.log('📤 DATOS QUE SE ENVÍAN AL BACKEND:');
+      console.log('📤 ============================================');
+      console.log('📤 info_extra:', JSON.stringify(cleanUpdateData.info_extra, null, 2));
+      console.log('📤 informacion_adicional:', JSON.stringify(cleanUpdateData.informacion_adicional, null, 2));
+      if (cleanUpdateData.info_extra) {
+        console.log('📤 ¿Tiene tiempo_conexion?', 'tiempo_conexion' in cleanUpdateData.info_extra);
+        console.log('📤 ¿Tiene usuario_activo?', 'usuario_activo' in cleanUpdateData.info_extra);
+        console.log('📤 Valores de campos temporales:', {
+          tiempo_conexion: cleanUpdateData.info_extra.tiempo_conexion,
+          usuario_activo: cleanUpdateData.info_extra.usuario_activo
+        });
+      }
+      console.log('📤 Otros campos:', Object.keys(cleanUpdateData).filter(k => k !== 'info_extra' && k !== 'informacion_adicional'));
+      console.log('📤 ============================================');
 
       const response = await fetch(
         buildApiUrl(`/usuarios/${userId}`),
@@ -199,11 +257,16 @@ export const userService = {
       const result = await response.json();
       const user = result.data || result;
 
-
-      return {
+      // Transformar informacion_adicional del backend a info_extra para el frontend
+      const userWithInfoExtra = {
         ...user,
-        info_extra: this.processInfoExtra(user.info_extra)
+        info_extra: this.processInfoExtra(user.informacion_adicional || user.info_extra)
       };
+
+      // Eliminar informacion_adicional si existe para mantener consistencia
+      delete userWithInfoExtra.informacion_adicional;
+
+      return userWithInfoExtra;
     } catch (error) {
       console.error('❌ Error actualizando usuario:', error);
       throw error;

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../../types/user';
-import { Loader2, MapPin, Building, CreditCard, Eye, EyeOff, X } from 'lucide-react';
+import { Loader2, MapPin, Building, CreditCard, Eye, EyeOff, X, Calendar, Clock } from 'lucide-react';
 import { userService } from '../../services/userService';
+import { isValidDateFormat, isValidDate, getDaysRemaining, formatDateTimeLocalToCustom, formatCustomToDateTimeLocal, getTimeRemaining } from '../../utils/dateValidation';
 
 interface UserDetailsProps {
   user: User;
@@ -35,6 +36,10 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   const [supervisors, setSupervisors] = useState<User[]>([]);
   const [loadingSupervisors, setLoadingSupervisors] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    tiempo_conexion?: string;
+    usuario_activo?: string;
+  }>({});
 
   // Cargar supervisores al montar el componente
   useEffect(() => {
@@ -56,7 +61,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
   if (!user) return <div>No se seleccionó ningún usuario</div>;
 
   // Función para manejar cambios en info_extra
-  const handleInfoExtraChange = (field: string, value: string) => {
+  const handleInfoExtraChange = (field: string, value: string | boolean) => {
     if (!editedUser) return;
 
     let currentInfoExtra = editedUser.info_extra || {};
@@ -92,12 +97,129 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       [field]: value
     };
 
-    // Si el campo está vacío, eliminarlo del objeto
-    if (!value.trim()) {
+    // Si el campo está vacío (solo para strings), eliminarlo del objeto
+    if (typeof value === 'string' && !value.trim()) {
       delete newInfoExtra[field];
     }
 
+    // Limpiar error de validación cuando el usuario empieza a escribir
+    if (validationErrors[field as keyof typeof validationErrors]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field as keyof typeof validationErrors];
+        return newErrors;
+      });
+    }
+
     onInputChange('info_extra', JSON.stringify(newInfoExtra));
+  };
+
+  // Función para validar antes de guardar
+  const validateBeforeSave = (): boolean => {
+    console.log('🔐 validateBeforeSave INICIADO');
+    const errors: { tiempo_conexion?: string; usuario_activo?: string } = {};
+
+    // Obtener info_extra actualizado
+    let infoExtra = editedUser.info_extra || {};
+    if (typeof infoExtra === 'string') {
+      try {
+        infoExtra = JSON.parse(infoExtra);
+      } catch {
+        infoExtra = {};
+      }
+    }
+
+    console.log('🔐 infoExtra antes de limpiar:', JSON.stringify(infoExtra, null, 2));
+
+    const tiempoConexion = infoExtra.tiempo_conexion;
+    const usuarioActivo = infoExtra.usuario_activo;
+
+    // Si NO tiene tiempo_conexion, el usuario es permanente
+    // Eliminar SOLO campos de usuario temporal antes de guardar
+    // Preservar todos los demás campos (ciudad, banco_nombre, linea_credito, etc.)
+    if (!tiempoConexion || tiempoConexion === '') {
+      delete infoExtra.tiempo_conexion;
+      delete infoExtra.usuario_activo;
+
+      console.log('🔐 infoExtra después de limpiar campos temporales:', JSON.stringify(infoExtra, null, 2));
+      console.log('🔐 Llamando a onInputChange para actualizar editedUser...');
+
+      // Actualizar editedUser con info_extra limpio (sin campos temporales, pero preservando otros)
+      onInputChange('info_extra', JSON.stringify(infoExtra));
+    } else {
+      // Si tiene tiempo_conexion, validar formato
+      if (!isValidDateFormat(tiempoConexion)) {
+        errors.tiempo_conexion = 'El formato debe ser DD/MM/YYYY HH:MM:SS';
+      } else if (!isValidDate(tiempoConexion)) {
+        errors.tiempo_conexion = 'La fecha y hora ingresadas no son válidas';
+      }
+
+      // Validar que usuario_activo sea boolean si está presente (es opcional)
+      if (usuarioActivo !== undefined && typeof usuarioActivo !== 'boolean') {
+        errors.usuario_activo = 'El estado del usuario debe ser activo o inactivo';
+      }
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return false;
+    }
+
+    setValidationErrors({});
+    return true;
+  };
+
+  // Interceptar onSave para validar antes
+  const handleSave = () => {
+    console.log('💾 handleSave en UserDetails - INICIADO');
+    console.log('💾 editedUser.info_extra antes de validar:', editedUser.info_extra);
+
+    if (!validateBeforeSave()) {
+      console.log('❌ Validación falló, no se guarda');
+      return;
+    }
+
+    console.log('✅ Validación pasó, llamando a onSave()');
+    onSave();
+  };
+
+  // Función para obtener el estado del usuario
+  // Lógica según backend:
+  // - Permanente: no tiene tiempo_conexion ni usuario_activo
+  // - Temporal activo: tiene tiempo_conexion y (usuario_activo es true o undefined)
+  // - Temporal inactivo: tiene tiempo_conexion y usuario_activo es false
+  // - Temporal expirado: tiene tiempo_conexion pero la fecha pasó
+  const getUserStatus = (userData: User): { type: 'permanente' | 'temporal'; status: 'activo' | 'inactivo' | 'expirado' } => {
+    const infoExtra = typeof userData.info_extra === 'string'
+      ? JSON.parse(userData.info_extra)
+      : userData.info_extra;
+
+    // Si no tiene tiempo_conexion, es usuario permanente
+    if (!infoExtra?.tiempo_conexion) {
+      return { type: 'permanente', status: 'activo' };
+    }
+
+    const tiempoConexion = infoExtra.tiempo_conexion;
+    const usuarioActivo = infoExtra.usuario_activo; // Puede ser undefined, true o false
+
+    // Validar fecha
+    if (!isValidDate(tiempoConexion)) {
+      return { type: 'temporal', status: 'inactivo' };
+    }
+
+    // Verificar si está expirado (fecha pasó)
+    const daysRemaining = getDaysRemaining(tiempoConexion);
+    if (daysRemaining === null || daysRemaining < 0) {
+      return { type: 'temporal', status: 'expirado' };
+    }
+
+    // Si tiene usuario_activo: false, es inactivo
+    if (usuarioActivo === false) {
+      return { type: 'temporal', status: 'inactivo' };
+    }
+
+    // Si usuario_activo es true o undefined, es activo
+    return { type: 'temporal', status: 'activo' };
   };
 
   // Función para obtener el valor de info_extra de forma segura
@@ -117,14 +239,21 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           try {
             const reconstructedJson = Object.values(infoExtra).join('');
             const parsedJson = JSON.parse(reconstructedJson);
-            return parsedJson?.[field] || '';
+            const value = parsedJson?.[field];
+            // Manejar valores boolean false correctamente
+            if (value === false) return false;
+            return value || '';
           } catch (error) {
             return '';
           }
         }
       }
 
-      return infoExtra?.[field] || '';
+      const value = infoExtra?.[field];
+      // Manejar valores boolean false correctamente (false || '' devuelve '', necesitamos preservar false)
+      if (value === false) return false;
+      if (value === true) return true;
+      return value || '';
     } catch {
       return '';
     }
@@ -285,6 +414,215 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
           </div>
         </div>
 
+        {/* Estado del Usuario - Visualización */}
+        {!isEditing && (
+          <div className="mb-6 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+              Estado del Usuario
+            </h3>
+            {(() => {
+              const status = getUserStatus(user);
+              const infoExtra = typeof user.info_extra === 'string'
+                ? JSON.parse(user.info_extra)
+                : user.info_extra;
+              const tiempoConexion = infoExtra?.tiempo_conexion;
+              const daysRemaining = tiempoConexion ? getDaysRemaining(tiempoConexion) : null;
+
+              // Mensajes según especificación del backend
+              let statusMessage = '';
+              if (status.type === 'permanente') {
+                statusMessage = 'Usuario permanente';
+              } else if (status.status === 'activo') {
+                statusMessage = `Activo hasta: ${tiempoConexion}`;
+              } else if (status.status === 'inactivo') {
+                statusMessage = 'Cuenta desactivada';
+              } else if (status.status === 'expirado') {
+                statusMessage = `Expirado desde: ${tiempoConexion}`;
+              }
+
+              return (
+                <div className="space-y-4">
+                  <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-500 mb-1">Estado del Usuario</p>
+                      <p className={`text-sm font-semibold ${
+                        status.type === 'temporal' ? 'text-yellow-600' : 'text-gray-900'
+                      }`}>
+                        {statusMessage}
+                      </p>
+                    </div>
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                      status.status === 'activo' ? 'bg-green-100 text-green-800' :
+                      status.status === 'inactivo' ? 'bg-gray-100 text-gray-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {status.status === 'activo' ? 'Activo' :
+                       status.status === 'inactivo' ? 'Inactivo' :
+                       status.type === 'permanente' ? 'Permanente' :
+                       'Expirado'}
+                    </span>
+                  </div>
+
+                  {tiempoConexion && status.status === 'activo' && daysRemaining !== null && daysRemaining >= 0 && (() => {
+                    const timeRemaining = getTimeRemaining(tiempoConexion);
+                    return (
+                      <div className="flex items-center p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <Clock className="w-5 h-5 mr-3 text-blue-500" />
+                        <div className="flex-1">
+                          <p className="text-xs text-blue-600 mb-1">Tiempo Restante</p>
+                          <p className={`text-sm font-semibold ${
+                            daysRemaining <= 7 ? 'text-red-600' :
+                            daysRemaining <= 30 ? 'text-yellow-600' :
+                            'text-green-600'
+                          }`}>
+                            {timeRemaining && timeRemaining.days > 0 ? (
+                              <>
+                                {timeRemaining.days} día{timeRemaining.days !== 1 ? 's' : ''}
+                                {timeRemaining.hours > 0 && `, ${timeRemaining.hours} hora${timeRemaining.hours !== 1 ? 's' : ''}`}
+                              </>
+                            ) : timeRemaining && timeRemaining.hours > 0 ? (
+                              <>
+                                {timeRemaining.hours} hora{timeRemaining.hours !== 1 ? 's' : ''}
+                                {timeRemaining.minutes > 0 && `, ${timeRemaining.minutes} minuto${timeRemaining.minutes !== 1 ? 's' : ''}`}
+                              </>
+                            ) : (
+                              <>
+                                {daysRemaining} día{daysRemaining !== 1 ? 's' : ''}
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Usuario Temporal - Edición */}
+        {isEditing && (
+          <div className="mb-6 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+              Usuario Temporal
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Fecha y Hora de Expiración
+                </label>
+                <div className="relative">
+                  <Calendar className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                  <input
+                    type="datetime-local"
+                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      validationErrors.tiempo_conexion ? 'border-red-500' : ''
+                    }`}
+                    value={(() => {
+                      const tiempoConexion = getInfoExtraValue('tiempo_conexion', editedUser);
+                      if (!tiempoConexion) return '';
+                      return formatCustomToDateTimeLocal(String(tiempoConexion));
+                    })()}
+                    onChange={(e) => {
+                      const datetimeLocal = e.target.value;
+                      if (datetimeLocal) {
+                        // Convertir de datetime-local a formato DD/MM/YYYY HH:MM:SS
+                        const customFormat = formatDateTimeLocalToCustom(datetimeLocal);
+                        handleInfoExtraChange('tiempo_conexion', customFormat);
+                      } else {
+                        // Si se borra la fecha, eliminar tiempo_conexion y usuario_activo
+                        // Esto convierte al usuario en permanente
+                        const infoExtra = typeof editedUser.info_extra === 'string'
+                          ? JSON.parse(editedUser.info_extra)
+                          : editedUser.info_extra || {};
+                        delete infoExtra.tiempo_conexion;
+                        delete infoExtra.usuario_activo;
+                        onInputChange('info_extra', JSON.stringify(infoExtra));
+                      }
+                    }}
+                    min={(() => {
+                      // Establecer mínimo como ahora
+                      const now = new Date();
+                      const year = now.getFullYear();
+                      const month = String(now.getMonth() + 1).padStart(2, '0');
+                      const day = String(now.getDate()).padStart(2, '0');
+                      const hours = String(now.getHours()).padStart(2, '0');
+                      const minutes = String(now.getMinutes()).padStart(2, '0');
+                      return `${year}-${month}-${day}T${hours}:${minutes}`;
+                    })()}
+                  />
+                </div>
+                {validationErrors.tiempo_conexion && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.tiempo_conexion}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Dejar vacío para usuario permanente. Si se completa, el usuario será temporal.
+                </p>
+                {getInfoExtraValue('tiempo_conexion', editedUser) && (
+                  <p className="mt-1 text-xs text-gray-600 font-medium">
+                    Formato guardado: {getInfoExtraValue('tiempo_conexion', editedUser)}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Estado del Usuario
+                </label>
+                <select
+                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    validationErrors.usuario_activo ? 'border-red-500' : ''
+                  }`}
+                  value={(() => {
+                    const value = getInfoExtraValue('usuario_activo', editedUser);
+                    // Si el valor es undefined, null, o cadena vacía, retornar 'true' (activo por defecto)
+                    if (value === undefined || value === null || value === '') return 'true';
+                    // Si es boolean, convertirlo a string
+                    if (typeof value === 'boolean') return String(value);
+                    return String(value);
+                  })()}
+                  onChange={(e) => {
+                    if (e.target.value === 'true') {
+                      // Si se selecciona "Activo", eliminar AMBOS campos temporales (usuario permanente)
+                      // Esto hace que el usuario sea permanente y activo por defecto
+                      const infoExtra = typeof editedUser.info_extra === 'string'
+                        ? JSON.parse(editedUser.info_extra)
+                        : editedUser.info_extra || {};
+
+                      console.log('🔄 Seleccionado "Activo" - eliminando campos temporales');
+                      console.log('🔄 infoExtra antes:', JSON.stringify(infoExtra, null, 2));
+
+                      // Eliminar ambos campos temporales para hacer usuario permanente
+                      delete infoExtra.usuario_activo;
+                      delete infoExtra.tiempo_conexion;
+
+                      console.log('🔄 infoExtra después:', JSON.stringify(infoExtra, null, 2));
+
+                      onInputChange('info_extra', JSON.stringify(infoExtra));
+                    } else {
+                      // Si se selecciona "Inactivo", establecer usuario_activo: false
+                      console.log('🔄 Seleccionado "Inactivo" - estableciendo usuario_activo: false');
+                      handleInfoExtraChange('usuario_activo', false);
+                    }
+                  }}
+                >
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+                {validationErrors.usuario_activo && (
+                  <p className="mt-1 text-sm text-red-600">{validationErrors.usuario_activo}</p>
+                )}
+                <p className="mt-1 text-xs text-gray-500">
+                  Selecciona el estado del usuario temporal. Si se borra la fecha, el usuario será permanente.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Información adicional */}
         {(user.info_extra || editedUser.info_extra) && (
           <div className="mb-6 pt-6 border-t border-gray-200">
@@ -385,7 +723,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   : user.info_extra;
 
                 const otherFields = Object.keys(infoExtra).filter(key =>
-                  !['ciudad', 'banco_nombre', 'linea_credito'].includes(key)
+                  !['ciudad', 'banco_nombre', 'linea_credito', 'usuario_activo', 'tiempo_conexion'].includes(key)
                 );
 
                 if (otherFields.length > 0) {
@@ -464,7 +802,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
         {isEditing && (
           <button
             type="button"
-            onClick={onSave}
+            onClick={handleSave}
             disabled={isLoading}
             className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
           >
