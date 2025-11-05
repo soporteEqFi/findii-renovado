@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, Clock } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Modal from '../components/ui/Modal';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,6 +8,7 @@ import { UserTable } from '../components/users/UserTable';
 import { UserDetails } from '../components/users/UserDetails';
 import { NewUserForm } from '../components/users/NewUserForm';
 import { User, CreateUserData, UpdateUserData } from '../types/user';
+import { getTimeRemaining } from '../utils/dateValidation';
 
 const Users = () => {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
@@ -341,16 +342,48 @@ const Users = () => {
         <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-2xl font-semibold text-gray-800">Usuarios</h1>
           <div className="flex items-center space-x-4">
-            {user && (
-              <span className="text-sm text-gray-600">
-                Conectado como: <span className="font-medium">{user.nombre}</span>
-                {user.rol && (
-                  <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
-                    {user.rol}
+            {user && (() => {
+              // Obtener info_extra del usuario
+              const infoExtra = typeof user.info_extra === 'string'
+                ? JSON.parse(user.info_extra)
+                : user.info_extra || {};
+
+              const tiempoConexion = infoExtra?.tiempo_conexion;
+              const timeRemaining = tiempoConexion ? getTimeRemaining(tiempoConexion) : null;
+
+              return (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-600">
+                    Conectado como: <span className="font-medium">{user.nombre}</span>
+                    {user.rol && (
+                      <span className="ml-2 px-2 py-1 bg-gray-100 rounded-full text-xs">
+                        {user.rol}
+                      </span>
+                    )}
                   </span>
-                )}
-              </span>
-            )}
+                  {timeRemaining && timeRemaining.days >= 0 && (
+                    <span className="inline-flex items-center px-3 py-1 bg-yellow-50 border border-yellow-200 rounded-full text-xs text-yellow-800">
+                      <Clock className="w-3 h-3 mr-1" />
+                      {timeRemaining.days > 0 ? (
+                        <>
+                          {timeRemaining.days} día{timeRemaining.days !== 1 ? 's' : ''}
+                          {timeRemaining.hours > 0 && `, ${timeRemaining.hours} hora${timeRemaining.hours !== 1 ? 's' : ''}`}
+                        </>
+                      ) : timeRemaining.hours > 0 ? (
+                        <>
+                          {timeRemaining.hours} hora{timeRemaining.hours !== 1 ? 's' : ''}
+                          {timeRemaining.minutes > 0 && `, ${timeRemaining.minutes} minuto${timeRemaining.minutes !== 1 ? 's' : ''}`}
+                        </>
+                      ) : (
+                        <>
+                          {timeRemaining.minutes} minuto{timeRemaining.minutes !== 1 ? 's' : ''}
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
 
