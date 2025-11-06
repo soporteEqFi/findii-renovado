@@ -196,7 +196,7 @@ export const DynamicFileField: React.FC<DynamicFileFieldProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -225,14 +225,14 @@ export const DynamicFileField: React.FC<DynamicFileFieldProps> = ({
             </span>
           </button>
 
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             Tipos: {allowedTypes.join(', ')} | Máx: {maxSize}MB
           </span>
         </div>
 
         {/* Barra de progreso */}
         {isUploading && (
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
             <div
               className="bg-blue-600 h-2 rounded-full transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}
@@ -244,27 +244,27 @@ export const DynamicFileField: React.FC<DynamicFileFieldProps> = ({
       {/* Lista de archivos */}
       {files.length > 0 && (
         <div className="space-y-3">
-          <h4 className="text-sm font-medium text-gray-700">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Archivos {multiple ? `(${files.length})` : ''}
           </h4>
 
           {files.map((file) => (
-            <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <div key={file.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-3 flex-1">
                   <span className="text-2xl">{getFileIcon(file.type)}</span>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium text-gray-900 truncate">
+                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
                         {file.name}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
                         ({formatFileSize(file.size)})
                       </span>
                     </div>
 
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Subido: {new Date(file.uploaded_at).toLocaleDateString()}
                     </div>
                   </div>
@@ -295,17 +295,17 @@ export const DynamicFileField: React.FC<DynamicFileFieldProps> = ({
 
               {/* Campos adicionales configurados */}
               {requiredFields.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
+                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700 space-y-2">
                   {requiredFields.map(field => (
                     <div key={field}>
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
                         {field.charAt(0).toUpperCase() + field.slice(1)}
                       </label>
                       <input
                         type="text"
                         value={file[field] || ''}
                         onChange={(e) => updateFileField(file.id, field, e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder={`Ingrese ${field}`}
                       />
                     </div>

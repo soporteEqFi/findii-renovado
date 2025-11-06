@@ -26,7 +26,7 @@ export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
 }) => {
   if (!esquema || esquema.length === 0) {
     return (
-      <div className={`p-4 text-center text-gray-500 ${className}`}>
+      <div className={`p-4 text-center text-gray-500 dark:text-gray-400 ${className}`}>
         No hay campos dinámicos configurados
       </div>
     );
@@ -48,7 +48,7 @@ export const FormularioDinamico: React.FC<FormularioDinamicoProps> = ({
   return (
     <div className={`space-y-4 ${className}`}>
       {titulo && (
-        <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-3">
+        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 border-b dark:border-gray-700 pb-2 mb-3">
           {titulo}
         </h3>
       )}

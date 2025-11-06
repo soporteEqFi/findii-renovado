@@ -222,7 +222,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                     }}
                     required={subcampo.required}
                     disabled={disabled}
-                    className="border border-gray-300 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5"
+                    className="border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     step={subcampo.type === 'integer' ? '1' : '0.01'}
                   />
                 );
@@ -239,7 +239,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
       error
         ? 'border-red-500 focus:ring-red-500'
         : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
-    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`; 
+    } bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500`;
 
     // Campos especiales que usan configuraciones
     if (campo.key === 'ciudad_solicitud') {
@@ -780,7 +780,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
               type="checkbox"
               checked={efectiveValue || false}
               onChange={(e) => handleChange(e.target.checked)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
               required={campo.required}
               disabled={disabled}
             />
