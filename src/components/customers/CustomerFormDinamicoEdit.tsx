@@ -895,6 +895,37 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     }
   };
 
+  // Función auxiliar para descargar un archivo desde una URL y convertirlo a File
+  const downloadFileFromUrl = async (url: string, fileName: string): Promise<File> => {
+    try {
+      const headers: HeadersInit = {};
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(url, { headers });
+      if (!response.ok) {
+        throw new Error(`Error al descargar archivo: ${response.status}`);
+      }
+
+      const blob = await response.blob();
+
+      // Obtener la extensión del archivo desde la URL o el nombre
+      const urlExtension = url.split('.').pop()?.split('?')[0] || '';
+      const nameExtension = fileName.split('.').pop() || '';
+      const extension = nameExtension || urlExtension || 'pdf';
+      const finalFileName = fileName.includes('.') ? fileName : `${fileName}.${extension}`;
+
+      // Crear un objeto File desde el Blob
+      const file = new File([blob], finalFileName, { type: blob.type || 'application/octet-stream' });
+      return file;
+    } catch (error) {
+      console.error('❌ Error al descargar archivo:', error);
+      throw error;
+    }
+  };
+
   // 10.b) Guardar como nuevo registro
   const handleSaveAsNew = async () => {
     if (!editedData) return;
@@ -909,8 +940,45 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     try {
       const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
 
-      // 🔍 LOG: Ver qué datos están disponibles en editedData
-      // Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
+      // 1. Obtener documentos del solicitante original antes de crear el nuevo
+      console.log('📥 === OBTENIENDO DOCUMENTOS DEL SOLICITANTE ORIGINAL ===');
+      console.log('🆔 Solicitante ID original:', solicitanteId);
+
+      let documentosOriginales: any[] = [];
+      let archivosDescargados: File[] = [];
+
+      try {
+        documentosOriginales = await documentService.getDocuments(solicitanteId);
+        console.log('📄 Documentos encontrados:', documentosOriginales.length);
+
+        // Descargar cada archivo desde su URL
+        if (documentosOriginales.length > 0) {
+          console.log('⬇️ === DESCARGANDO ARCHIVOS PARA COPIAR ===');
+          for (const doc of documentosOriginales) {
+            try {
+              const possibleNames = [doc.nombre, doc.filename, doc.original_filename, doc.file_name, doc.name];
+              const fileName = possibleNames.find((n: any) => n && n !== '') || `Documento_${doc.id}`;
+              const fileUrl = doc.documento_url || doc.url || doc.link || doc.file_url;
+
+              if (fileUrl) {
+                console.log(`📥 Descargando: ${fileName} desde ${fileUrl}`);
+                const file = await downloadFileFromUrl(fileUrl, fileName);
+                archivosDescargados.push(file);
+                console.log(`✅ Archivo descargado: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+              }
+            } catch (error) {
+              console.error(`❌ Error al descargar archivo ${doc.nombre}:`, error);
+              // Continuar con los demás archivos aunque uno falle
+            }
+          }
+          console.log(`✅ Total archivos descargados: ${archivosDescargados.length}`);
+        }
+      } catch (error) {
+        console.error('⚠️ Error al obtener documentos originales (continuando sin copiar archivos):', error);
+        // Continuar sin copiar archivos si hay error
+      }
+
+      // 2. Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
       const datosPlanos = convertirDatosAFormatoPlano(editedData);
 
       // Extraer referencias para enviar por separado (como en CustomerFormDinamico)
@@ -921,13 +989,161 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       if (datosPlanos.id) delete datosPlanos.id;
       if (datosPlanos.solicitante_id) delete datosPlanos.solicitante_id;
 
-      // Crear nuevo registro usando el mismo servicio que el formulario de creación
+      // 3. Crear nuevo registro usando el mismo servicio que el formulario de creación
+      console.log('📝 === CREANDO NUEVO REGISTRO ===');
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
         datosPlanos,
         esquemas,
         empresaId
       );
-      toast.success('Nuevo registro creado correctamente');
+
+      // Extraer solicitante_id del registro creado
+      let nuevoSolicitanteId = null;
+      if (resultado?.data?.solicitante_id) {
+        nuevoSolicitanteId = resultado.data.solicitante_id;
+      } else if (resultado?.data?.solicitante?.id) {
+        nuevoSolicitanteId = resultado.data.solicitante.id;
+      } else if (resultado?.data?.id) {
+        nuevoSolicitanteId = resultado.data.id;
+      }
+
+      if (!nuevoSolicitanteId) {
+        console.error('❌ No se pudo encontrar solicitante_id en la respuesta');
+        throw new Error('No se pudo obtener el ID del nuevo solicitante');
+      }
+
+      console.log('✅ Nuevo registro creado con ID:', nuevoSolicitanteId);
+
+      // 4. Agregar referencias al nuevo registro
+      if (referenciasParaEnviar.length > 0 && nuevoSolicitanteId) {
+        try {
+          console.log('🔄 Agregando referencias al nuevo registro...');
+          const referenciasCandidatas = referenciasParaEnviar
+            .map((r: any) => {
+              const { detalle_referencia, referencia_id, id, ...rest } = (r || {}) as any;
+              const flatDetalle = detalle_referencia && typeof detalle_referencia === 'object' ? detalle_referencia : {};
+              const tipo = (r as any)?.tipo_referencia || (r as any)?.tipo || undefined;
+              const plano: Record<string, any> = { ...rest, ...flatDetalle };
+              if (tipo) plano.tipo_referencia = tipo;
+              delete (plano as any).id;
+              delete (plano as any).referencia_id;
+              return plano;
+            })
+            .filter((plano: Record<string, any>) => {
+              const camposClave = [
+                'nombre_referencia',
+                'nombre_referencia1',
+                'celular_referencia',
+                'direccion_referencia',
+                'direccion_referencia1',
+                'relacion_referencia',
+                'relacion_referencia1',
+              ];
+              return camposClave.some((k) => {
+                const v = (plano as any)[k];
+                return v !== undefined && v !== null && String(v).trim() !== '';
+              });
+            });
+
+          if (referenciasCandidatas.length > 0) {
+            await Promise.all(
+              referenciasCandidatas.map(async (ref: Record<string, any>) => {
+                try {
+                  await referenciaService.addReferencia(Number(nuevoSolicitanteId), ref as any);
+                } catch (err) {
+                  console.error('❌ Error agregando referencia:', ref, err);
+                  throw err;
+                }
+              })
+            );
+            console.log('✅ Referencias agregadas al nuevo registro');
+          }
+        } catch (refsError) {
+          console.error('❌ Error al agregar referencias:', refsError);
+          toast.error('Registro creado pero hubo errores agregando las referencias');
+        }
+      }
+
+      // 5. Subir archivos descargados al nuevo solicitante
+      if (archivosDescargados.length > 0 && nuevoSolicitanteId) {
+        try {
+          console.log('📤 === SUBIENDO ARCHIVOS AL NUEVO REGISTRO ===');
+          console.log(`📁 Subiendo ${archivosDescargados.length} archivo(s) al solicitante ${nuevoSolicitanteId}`);
+
+          await documentService.uploadMultipleDocuments(archivosDescargados, nuevoSolicitanteId);
+
+          console.log('✅ Archivos copiados exitosamente al nuevo registro');
+          toast.success(`Nuevo registro creado y ${archivosDescargados.length} archivo(s) copiado(s) exitosamente`);
+        } catch (uploadError) {
+          console.error('❌ Error al subir archivos al nuevo registro:', uploadError);
+          toast.error('Registro creado pero hubo un error al copiar los archivos');
+          // Continuar aunque falle la subida de archivos
+        }
+      }
+
+      // 6. Enviar emails (después de subir todos los documentos)
+      if (nuevoSolicitanteId) {
+        try {
+          console.log('📧 === INICIANDO ENVÍO DE EMAILS ===');
+          console.log('📁 Solicitante ID:', nuevoSolicitanteId);
+
+          const emailData: any = {};
+
+          // Agregar datos opcionales si están disponibles
+          if (datosPlanos.correo_asesor) {
+            emailData.correo_asesor = datosPlanos.correo_asesor;
+          }
+          if (datosPlanos.nombre_asesor) {
+            emailData.nombre_asesor = datosPlanos.nombre_asesor;
+          }
+          if (datosPlanos.correo_banco_usuario) {
+            emailData.correo_banco_usuario = datosPlanos.correo_banco_usuario;
+          }
+          if (datosPlanos.nombre_banco_usuario) {
+            emailData.nombre_banco_usuario = datosPlanos.nombre_banco_usuario;
+          }
+
+          console.log('📤 Datos de email a enviar:', emailData);
+
+          const endpoint = API_CONFIG.ENDPOINTS.ENVIAR_EMAILS.replace('{id}', nuevoSolicitanteId.toString());
+          const url = buildApiUrl(`${endpoint}?empresa_id=${empresaId}`);
+
+          const emailsResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': localStorage.getItem('user_id') || '1',
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(emailData)
+          });
+
+          if (!emailsResponse.ok) {
+            const errorText = await emailsResponse.text();
+            console.error('❌ Error al enviar emails:', errorText);
+            throw new Error(`Error ${emailsResponse.status}: ${errorText}`);
+          }
+
+          const emailsResult = await emailsResponse.json();
+          console.log('✅ === EMAILS ENVIADOS EXITOSAMENTE ===');
+          console.log('📊 Resultado:', emailsResult);
+
+          if (archivosDescargados.length > 0) {
+            toast.success(`Registro creado, ${archivosDescargados.length} archivo(s) copiado(s) y emails enviados exitosamente`);
+          } else {
+            toast.success('Registro creado y emails enviados exitosamente');
+          }
+        } catch (emailError) {
+          console.error('❌ === ERROR EN ENVÍO DE EMAILS ===');
+          console.error('📋 Error completo:', emailError);
+          // No interrumpir el flujo principal si falla el envío de emails
+          toast.error('Registro creado pero hubo un error al enviar los emails');
+        }
+      } else {
+        // Si no hay solicitanteId, mostrar mensaje de éxito básico
+        toast.success('Nuevo registro creado correctamente');
+      }
+
       if (onSaved) onSaved();
     } catch (e: any) {
       console.error(e);
