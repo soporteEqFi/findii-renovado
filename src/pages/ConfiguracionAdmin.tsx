@@ -420,7 +420,7 @@ const ConfiguracionAdmin: React.FC = () => {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Cargando configuración...</div>
+          <div className="text-gray-500 dark:text-gray-400">Cargando configuración...</div>
         </div>
       </div>
     );
@@ -487,7 +487,7 @@ const ConfiguracionAdmin: React.FC = () => {
                 </h2>
                 <button
                   onClick={() => { setShowForm(false); setEditing(null); setSelectedGroup(null); }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   ✕
                 </button>
@@ -577,13 +577,13 @@ const ConfiguracionAdmin: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm">
                       <button
                         onClick={() => handleEdit(group)}
-                        className="text-blue-600 hover:text-blue-800 mr-4 font-medium"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-4 font-medium"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(group)}
-                        className="text-red-600 hover:text-red-800 font-medium"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium"
                       >
                         Eliminar
                       </button>
@@ -609,22 +609,22 @@ const ConfiguracionAdmin: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="text-sm text-gray-700">
+                  <div className="text-sm text-gray-700 dark:text-gray-300">
                     <p className="line-clamp-2">{group.description}</p>
                   </div>
 
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="text-sm text-gray-600">{group.fieldCount} campos</span>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{group.fieldCount} campos</span>
                     <div className="flex space-x-3">
                       <button
                         onClick={() => handleEdit(group)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
                       >
                         Editar
                       </button>
                       <button
                         onClick={() => handleDelete(group)}
-                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
                       >
                         Eliminar
                       </button>

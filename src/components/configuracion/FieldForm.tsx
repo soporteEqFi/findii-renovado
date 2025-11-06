@@ -176,7 +176,7 @@ const NestedArrayConfiguration: React.FC<{
                 <button
                   type="button"
                   onClick={() => handleRemoveOption(index)}
-                  className="text-red-600 hover:text-red-800"
+                  className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                 >
                   <Trash2 size={12} />
                 </button>
@@ -375,7 +375,7 @@ const ObjectConfiguration: React.FC<{
               <option value="array">Lista/Array</option>
               <option value="object">Objeto</option>
             </select>
-            <label className="flex items-center text-sm">
+            <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
               <input
                 type="checkbox"
                 checked={field.required}
@@ -384,7 +384,7 @@ const ObjectConfiguration: React.FC<{
                   newStructure[index].required = e.target.checked;
                   onChange(newStructure);
                 }}
-                className="mr-1"
+                className="mr-1 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
               />
               Req.
             </label>
@@ -394,7 +394,7 @@ const ObjectConfiguration: React.FC<{
                 const newStructure = structure.filter((_, i) => i !== index);
                 onChange(newStructure);
               }}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
             >
               <Trash2 size={14} />
             </button>
@@ -479,7 +479,7 @@ const ObjectConfiguration: React.FC<{
                         <option value="boolean">Sí/No</option>
                         <option value="date">Fecha</option>
                       </select>
-                      <label className="flex items-center text-xs">
+                      <label className="flex items-center text-xs text-gray-700 dark:text-gray-300">
                         <input
                           type="checkbox"
                           checked={subField.required}
@@ -490,7 +490,7 @@ const ObjectConfiguration: React.FC<{
                             newStructure[index].objectStructure = newSubStructure;
                             onChange(newStructure);
                           }}
-                          className="mr-1"
+                          className="mr-1 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                         />
                         Req.
                       </label>
@@ -508,7 +508,7 @@ const ObjectConfiguration: React.FC<{
                             onChange(newStructure);
                           }
                         }}
-                        className="text-red-600 hover:text-red-800 text-xs"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-xs"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -661,12 +661,12 @@ const FileConfiguration: React.FC<{
 
       {/* Múltiples archivos */}
       <div className="mb-4">
-        <label className="flex items-center text-sm">
+        <label className="flex items-center text-sm text-gray-700 dark:text-gray-300">
           <input
             type="checkbox"
             checked={value.multiple}
             onChange={(e) => onChange({ ...value, multiple: e.target.checked })}
-            className="mr-2"
+            className="mr-2 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
           />
           Permitir múltiples archivos
         </label>
@@ -1254,7 +1254,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               type="checkbox"
               checked={form.required}
               onChange={(e) => setForm(prev => ({ ...prev, required: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
             />
             <label htmlFor="required" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Obligatorio (REQ)</label>
           </div>
@@ -1265,7 +1265,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               type="checkbox"
               checked={form.isActive ?? true}
               onChange={(e) => setForm(prev => ({ ...prev, isActive: e.target.checked }))}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
             />
             <label htmlFor="isActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Activo</label>
           </div>
@@ -1392,7 +1392,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             type="checkbox"
             checked={groupForm.isActive}
             onChange={handleGroupFormChange}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
           />
           <label htmlFor="active" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Activo</label>
         </div>
@@ -1491,7 +1491,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
                         onClick={() => {
                           if (onEditField) {
                             onEditField(field);
@@ -1502,7 +1502,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                       </button>
                       <button
                          type="button"
-                         className="text-green-600 hover:text-green-800 text-sm"
+                         className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 text-sm"
                          onClick={() => {
                            setFieldToConfigure(field);
                            setShowConditionalModal(true);
@@ -1513,7 +1513,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                        </button>
                       <button
                         type="button"
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 text-sm"
                         onClick={() => handleRemoveField(field)}
                       >
                         <Trash2 size={16} />
@@ -1601,9 +1601,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                     type="checkbox"
                     checked={newFieldForm.required}
                     onChange={handleNewFieldChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                   />
-                  <label htmlFor="fieldRequired" className="ml-2 block text-sm text-gray-700">Obligatorio (REQ)</label>
+                  <label htmlFor="fieldRequired" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Obligatorio (REQ)</label>
                 </div>
 
                 <div className="flex items-center">
@@ -1613,9 +1613,9 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                     type="checkbox"
                     checked={newFieldForm.isActive ?? true}
                     onChange={(e) => setNewFieldForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700"
                   />
-                  <label htmlFor="fieldActive" className="ml-2 block text-sm text-gray-700">Activo</label>
+                  <label htmlFor="fieldActive" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">Activo</label>
                 </div>
               </div>
             </div>
@@ -1654,7 +1654,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
               <button
                 type="button"
                 onClick={() => setShowAddField(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded text-sm hover:bg-gray-50"
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800"
               >
                 Cancelar
               </button>
@@ -1665,7 +1665,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             <button
               type="button"
               onClick={() => setShowAddField(true)}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 flex items-center gap-2"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800 flex items-center gap-2"
             >
               <Plus size={16} />
               Agregar Nuevo Campo
@@ -1674,8 +1674,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
         )}
       </div>
 
-      <div className="flex justify-end gap-3 pt-4 border-t">
-        <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50">
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+        <button type="button" onClick={onCancel} className="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 bg-white dark:bg-gray-800">
           Cancelar
         </button>
         <button
@@ -1694,7 +1694,7 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
       {/* Modal de Configuración de Condiciones */}
       {showConditionalModal && fieldToConfigure && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <ConditionalFieldConfig
               campo={fieldToConfigure}
               camposDisponibles={selectedGroup?.fields || []}

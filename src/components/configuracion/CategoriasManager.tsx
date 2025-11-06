@@ -173,7 +173,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Cargando categorías...</div>
+        <div className="text-gray-500 dark:text-gray-400">Cargando categorías...</div>
       </div>
     );
   }
@@ -271,7 +271,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
                         className={`font-medium flex items-center gap-1 ${
                           loadingDetails === categoria.categoria
                             ? 'text-gray-400 cursor-not-allowed'
-                            : 'text-blue-600 hover:text-blue-800'
+                            : 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
                         }`}
                         title="Editar"
                       >
@@ -289,7 +289,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
                       </button>
                       <button
                         onClick={() => handleDelete(categoria.categoria)}
-                        className="text-red-600 hover:text-red-800 font-medium flex items-center gap-1"
+                        className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium flex items-center gap-1"
                         title="Eliminar"
                       >
                         <Trash2 size={16} />
@@ -315,7 +315,7 @@ const CategoriasManager: React.FC<CategoriasManagerProps> = () => {
                 </h2>
                 <button
                   onClick={() => { setShowForm(false); setEditingCategoria(null); }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   ✕
                 </button>
