@@ -9,6 +9,7 @@ import { esquemaService } from '../../services/esquemaService';
 import { documentService } from '../../services/documentService';
 import { referenciaService } from '../../services/referenciaService';
 import { userService } from '../../services/userService';
+import { buildApiUrl, API_CONFIG } from '../../config/constants';
 
 interface CustomerFormDinamicoProps {
   onSubmit: () => Promise<void>;
@@ -600,7 +601,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         toast.error('Se creó la solicitud pero hubo errores agregando las referencias');
       }
 
-      // Subir archivos si hay archivos seleccionados y se obtuvo el solicitante_id
+      // 2. Subir documentos (antes de enviar emails)
       if (selectedFiles.length > 0 && solicitanteId) {
         console.log('🚀 === INICIANDO PROCESO DE SUBIDA DE ARCHIVOS ===');
         console.log('📁 Solicitante ID obtenido:', solicitanteId);
@@ -623,14 +624,14 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             solicitante_id: solicitanteId
           });
 
+          // Subir todos los documentos (en paralelo, pero esperamos a que todos terminen)
           const uploadResults = await documentService.uploadMultipleDocuments(
             selectedFiles,
             solicitanteId
           );
 
           console.log('✅ === ARCHIVOS SUBIDOS EXITOSAMENTE ===');
-          console.log('📊 Resultados de subida:', uploadResults);
-          console.log('📈 Total archivos procesados:', uploadResults.length);
+          console.log('📈 Total archivos procesados:', selectedFiles.length);
 
           toast.success(`Solicitud creada y ${selectedFiles.length} archivo(s) subido(s) exitosamente`);
         } catch (uploadError) {
@@ -649,8 +650,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           }
 
           toast.error('Solicitud creada pero hubo un error al subir los archivos');
+          // Continuar con el envío de emails incluso si hay error en archivos
         }
-      } else if (selectedFiles.length > 0 && !resultado?.solicitante?.id) {
+      } else if (selectedFiles.length > 0 && !solicitanteId) {
         console.warn('⚠️ === ARCHIVOS SELECCIONADOS PERO SIN SOLICITANTE_ID ===');
         console.warn('📂 Archivos seleccionados:', selectedFiles.length);
         console.warn('🆔 Resultado completo:', resultado);
@@ -658,7 +660,77 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         toast.error('Solicitud creada pero no se pudo obtener el ID para subir archivos');
       } else {
         console.log('ℹ️ No hay archivos para subir');
-        toast.success('Solicitud creada exitosamente');
+      }
+
+      // 3. Enviar emails (después de subir todos los documentos)
+      if (solicitanteId) {
+        try {
+          console.log('📧 === INICIANDO ENVÍO DE EMAILS ===');
+          console.log('📁 Solicitante ID:', solicitanteId);
+
+          const emailData: any = {};
+
+          // Agregar datos opcionales si están disponibles en el formulario
+          if (datosFormulario.correo_asesor) {
+            emailData.correo_asesor = datosFormulario.correo_asesor;
+          }
+          if (datosFormulario.nombre_asesor) {
+            emailData.nombre_asesor = datosFormulario.nombre_asesor;
+          }
+          if (datosFormulario.correo_banco_usuario) {
+            emailData.correo_banco_usuario = datosFormulario.correo_banco_usuario;
+          }
+          if (datosFormulario.nombre_banco_usuario) {
+            emailData.nombre_banco_usuario = datosFormulario.nombre_banco_usuario;
+          }
+
+          console.log('📤 Datos de email a enviar:', emailData);
+
+          const empresaIdToUse = parseInt(localStorage.getItem('empresa_id') || '1', 10);
+          const endpoint = API_CONFIG.ENDPOINTS.ENVIAR_EMAILS.replace('{id}', solicitanteId.toString());
+          const url = buildApiUrl(`${endpoint}?empresa_id=${empresaIdToUse}`);
+
+          const emailsResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-User-Id': localStorage.getItem('user_id') || '1',
+              'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify(emailData)
+          });
+
+          if (!emailsResponse.ok) {
+            const errorText = await emailsResponse.text();
+            console.error('❌ Error al enviar emails:', errorText);
+            throw new Error(`Error ${emailsResponse.status}: ${errorText}`);
+          }
+
+          const emailsResult = await emailsResponse.json();
+          console.log('✅ === EMAILS ENVIADOS EXITOSAMENTE ===');
+          console.log('📊 Resultado:', emailsResult);
+
+          if (selectedFiles.length > 0) {
+            toast.success(`Solicitud creada, ${selectedFiles.length} archivo(s) subido(s) y emails enviados exitosamente`);
+          } else {
+            toast.success('Solicitud creada y emails enviados exitosamente');
+          }
+        } catch (emailError) {
+          console.error('❌ === ERROR EN ENVÍO DE EMAILS ===');
+          console.error('📋 Error completo:', emailError);
+
+          if (emailError instanceof Error) {
+            console.error('📝 Mensaje del error:', emailError.message);
+          }
+
+          // No interrumpir el flujo principal si falla el envío de emails
+          toast.error('Solicitud creada pero hubo un error al enviar los emails');
+        }
+      } else {
+        console.log('ℹ️ No hay solicitanteId, no se pueden enviar emails');
+        if (selectedFiles.length === 0) {
+          toast.success('Solicitud creada exitosamente');
+        }
       }
 
       // Llamar al callback del padre para cerrar el modal y recargar datos
