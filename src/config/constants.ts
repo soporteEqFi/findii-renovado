@@ -50,6 +50,9 @@ export const API_CONFIG = {
     // Endpoint unificado para crear registro completo
     CREAR_REGISTRO_COMPLETO: '/solicitantes/crear-registro-completo',
 
+    // Endpoint para enviar emails después de crear registro completo
+    ENVIAR_EMAILS: '/solicitantes/{id}/enviar-emails',
+
     // Endpoint para editar registro completo
     EDITAR_REGISTRO_COMPLETO: '/solicitantes/{id}/editar-registro-completo',
 
