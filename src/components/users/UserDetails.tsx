@@ -292,8 +292,8 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
 
         {/* Error message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 p-4 rounded-lg">
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-lg">
+            <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
           </div>
         )}
 
@@ -374,7 +374,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Supervisor</label>
                 {isEditing ? (
                   <select
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:bg-gray-50 dark:disabled:bg-gray-800"
                     value={editedUser.reports_to_id || ''}
                     onChange={(e) => onInputChange('reports_to_id', e.target.value ? parseInt(e.target.value) : null)}
                     disabled={loadingSupervisors}
@@ -515,11 +515,11 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   Fecha y Hora de Expiración
                 </label>
                 <div className="relative">
-                  <Calendar className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                  <Calendar className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 z-10" />
                   <input
                     type="datetime-local"
-                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                      validationErrors.tiempo_conexion ? 'border-red-500' : ''
+                    className={`w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                      validationErrors.tiempo_conexion ? 'border-red-500 dark:border-red-500' : ''
                     }`}
                     value={(() => {
                       const tiempoConexion = getInfoExtraValue('tiempo_conexion', editedUser);
@@ -556,13 +556,13 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   />
                 </div>
                 {validationErrors.tiempo_conexion && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.tiempo_conexion}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.tiempo_conexion}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Dejar vacío para usuario permanente. Si se completa, el usuario será temporal.
                 </p>
                 {getInfoExtraValue('tiempo_conexion', editedUser) && (
-                  <p className="mt-1 text-xs text-gray-600 font-medium">
+                  <p className="mt-1 text-xs text-gray-600 dark:text-gray-300 font-medium">
                     Formato guardado: {getInfoExtraValue('tiempo_conexion', editedUser)}
                   </p>
                 )}
@@ -573,8 +573,8 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   Estado del Usuario
                 </label>
                 <select
-                  className={`w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    validationErrors.usuario_activo ? 'border-red-500' : ''
+                  className={`w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                    validationErrors.usuario_activo ? 'border-red-500 dark:border-red-500' : ''
                   }`}
                   value={(() => {
                     const value = getInfoExtraValue('usuario_activo', editedUser);
@@ -613,7 +613,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                   <option value="false">Inactivo</option>
                 </select>
                 {validationErrors.usuario_activo && (
-                  <p className="mt-1 text-sm text-red-600">{validationErrors.usuario_activo}</p>
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{validationErrors.usuario_activo}</p>
                 )}
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   Selecciona el estado del usuario temporal. Si se borra la fecha, el usuario será permanente.
@@ -729,9 +729,9 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
                 if (otherFields.length > 0) {
                   return (
                     <div className="mt-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">Otros Campos</h4>
-                      <div className="p-3 bg-gray-50 rounded-md">
-                        <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Otros Campos</h4>
+                      <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
+                        <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                           {JSON.stringify(
                             Object.fromEntries(
                               otherFields.map(key => [key, infoExtra[key]])
@@ -754,21 +754,21 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
       )}
 
       {/* Sección de cambio de contraseña */}
-      {isEditing && (
-        <div className="mb-6 pt-6 border-t border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
-            <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
-            Cambiar Contraseña
-            <span className="ml-2 text-sm font-normal text-gray-500">(Opcional)</span>
+        {isEditing && (
+          <div className="mb-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-4 flex items-center">
+              <span className="w-1 h-6 bg-blue-500 mr-3 rounded"></span>
+              Cambiar Contraseña
+            <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">(Opcional)</span>
           </h3>
           <div className="relative">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Nueva Contraseña
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                className="w-full px-4 py-2.5 pr-12 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-2.5 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 value={editedUser.contraseña || ''}
                 onChange={(e) => onInputChange('contraseña', e.target.value)}
                 placeholder="Dejar en blanco para no cambiar"
@@ -776,7 +776,7 @@ export const UserDetails: React.FC<UserDetailsProps> = ({
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
