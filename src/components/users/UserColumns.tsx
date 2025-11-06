@@ -99,11 +99,11 @@ export const columns = [
     header: 'Rol',
     cell: (info) => {
       const roles = {
-        admin: 'bg-purple-100 text-purple-800',
-        banco: 'bg-green-100 text-green-800',
-        asesor: 'bg-blue-100 text-blue-800',
-        supervisor: 'bg-yellow-100 text-yellow-800',
-        default: 'bg-gray-100 text-gray-800'
+        admin: 'bg-purple-200 text-purple-900 dark:bg-purple-600 dark:text-white',
+        banco: 'bg-green-200 text-green-900 dark:bg-green-600 dark:text-white',
+        asesor: 'bg-blue-200 text-blue-900 dark:bg-blue-600 dark:text-white',
+        supervisor: 'bg-yellow-200 text-yellow-900 dark:bg-yellow-600 dark:text-white',
+        default: 'bg-gray-200 text-gray-900 dark:bg-gray-600 dark:text-white'
       };
 
       const role = info.getValue();
@@ -144,10 +144,10 @@ export const columns = [
         <div className="flex flex-col space-y-1">
           <div className="flex items-center space-x-2">
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-              status.status === 'activo' ? 'bg-green-100 text-green-800' :
-              status.status === 'inactivo' ? 'bg-gray-100 text-gray-800' :
-              status.type === 'permanente' ? 'bg-blue-100 text-blue-800' :
-              'bg-red-100 text-red-800'
+              status.status === 'activo' ? 'bg-green-200 text-green-900 dark:bg-green-600 dark:text-white' :
+              status.status === 'inactivo' ? 'bg-gray-200 text-gray-900 dark:bg-gray-600 dark:text-white' :
+              status.type === 'permanente' ? 'bg-blue-200 text-blue-900 dark:bg-blue-600 dark:text-white' :
+              'bg-red-200 text-red-900 dark:bg-red-600 dark:text-white'
             }`}>
               {status.type === 'permanente' ? 'Permanente' :
                status.status === 'activo' ? 'Activo' :

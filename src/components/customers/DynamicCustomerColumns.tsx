@@ -56,14 +56,15 @@ const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
   const [isOpen, setIsOpen] = useState(false);
   const { canChangeStatus } = usePermissions();
   const colorClasses = {
-    'Pendiente': 'bg-yellow-100 text-yellow-800',
-    'En estudio': 'bg-blue-100 text-blue-800',
-    'Pendiente información adicional': 'bg-orange-100 text-orange-800',
-    'Aprobado': 'bg-green-100 text-green-800',
-    'Desembolsado': 'bg-purple-100 text-purple-800',
-    'Pagado': 'bg-emerald-100 text-emerald-800',
-    'Negado': 'bg-red-100 text-red-800',
-    'Desistido': 'bg-gray-100 text-gray-800'
+    // Más vivos en dark mode manteniendo legibilidad en light mode
+    'Pendiente': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500 dark:text-white',
+    'En estudio': 'bg-blue-100 text-blue-800 dark:bg-blue-500 dark:text-white',
+    'Pendiente información adicional': 'bg-orange-100 text-orange-800 dark:bg-orange-500 dark:text-white',
+    'Aprobado': 'bg-green-100 text-green-800 dark:bg-green-600 dark:text-white',
+    'Desembolsado': 'bg-purple-100 text-purple-800 dark:bg-purple-600 dark:text-white',
+    'Pagado': 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600 dark:text-white',
+    'Negado': 'bg-red-100 text-red-800 dark:bg-red-600 dark:text-white',
+    'Desistido': 'bg-gray-100 text-gray-800 dark:bg-gray-500 dark:text-white'
   };
 
   const currentState = info.getValue() || 'Pendiente';
@@ -107,7 +108,7 @@ const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
   // Solo mostrar el dropdown si el usuario tiene permisos para cambiar estado
   if (!canChangeStatus()) {
     return (
-      <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium ${
+      <span className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium shadow-sm ${
         colorClasses[currentState as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800'
       }`}>
         {info.getValue() || 'Pendiente'}
@@ -118,7 +119,7 @@ const StatusCell = ({ info, estados }: { info: any; estados: string[] }) => {
   return (
     <div className="relative" onClick={(e) => e.stopPropagation()}>
       <button
-        className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium cursor-pointer ${
+        className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium cursor-pointer shadow-sm ${
           colorClasses[currentState as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800'
         }`}
         onClick={(e) => {

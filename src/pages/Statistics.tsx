@@ -111,6 +111,20 @@ const Statistics: React.FC = () => {
           />
         </div>
 
+        {/* KPIs rápidos nuevos */}
+        {(estadisticasGenerales.total_creditos !== undefined || estadisticasGenerales.total_monto !== undefined) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <StatisticsCard
+              title="Total créditos radicados"
+              value={(estadisticasGenerales.total_creditos ?? 0).toLocaleString('es-CO')}
+            />
+            <StatisticsCard
+              title="Monto total radicado"
+              value={`$${(estadisticasGenerales.total_monto ?? 0).toLocaleString('es-CO')}`}
+            />
+          </div>
+        )}
+
         {/* Gráfico de línea de tiempo - Solicitudes por día */}
         {estadisticasGenerales.solicitudes_por_dia && Object.keys(estadisticasGenerales.solicitudes_por_dia).length > 0 && (
           <div className="flex justify-center">
@@ -126,6 +140,65 @@ const Statistics: React.FC = () => {
 
         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Radicaciones por Estado (cantidad) */}
+          {(
+            (estadisticasGenerales.radicaciones_por_estado && Object.keys(estadisticasGenerales.radicaciones_por_estado).length > 0) ||
+            Object.keys(estadisticasGenerales.solicitudes_por_estado).length > 0
+          ) && (
+            <ChartCard title="Radicaciones por Estado">
+              <SimpleChart
+                data={
+                  (estadisticasGenerales.radicaciones_por_estado && Object.keys(estadisticasGenerales.radicaciones_por_estado).length > 0)
+                    ? estadisticasGenerales.radicaciones_por_estado
+                    : estadisticasGenerales.solicitudes_por_estado
+                }
+                type="bar"
+                colors={['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6']}
+              />
+            </ChartCard>
+          )}
+
+          {/* Radicaciones por Banco (cantidad) */}
+          {(
+            (estadisticasGenerales.radicaciones_por_banco && Object.keys(estadisticasGenerales.radicaciones_por_banco).length > 0) ||
+            Object.keys(estadisticasGenerales.solicitudes_por_banco).length > 0
+          ) && (
+            <ChartCard title="Radicaciones por Banco">
+              <SimpleChart
+                data={
+                  (estadisticasGenerales.radicaciones_por_banco && Object.keys(estadisticasGenerales.radicaciones_por_banco).length > 0)
+                    ? estadisticasGenerales.radicaciones_por_banco
+                    : estadisticasGenerales.solicitudes_por_banco
+                }
+                type="bar"
+                colors={['#3B82F6', '#10B981', '#F59E0B']}
+              />
+            </ChartCard>
+          )}
+
+          {/* Monto por Estado (dona/pie) */}
+          {estadisticasGenerales.monto_por_estado && Object.keys(estadisticasGenerales.monto_por_estado).length > 0 && (
+            <ChartCard title="Monto por Estado">
+              <SimpleChart
+                data={estadisticasGenerales.monto_por_estado}
+                type="pie"
+                colors={['#22c55e','#ef4444','#f59e0b','#6366f1','#06b6d4']}
+              />
+            </ChartCard>
+          )}
+
+          {/* Monto por Banco (barras) */}
+          {estadisticasGenerales.monto_por_banco && Object.keys(estadisticasGenerales.monto_por_banco).length > 0 && (
+            <ChartCard title="Monto por Banco">
+              <SimpleChart
+                data={estadisticasGenerales.monto_por_banco}
+                type="bar"
+                colors={['#f59e0b']}
+              />
+            </ChartCard>
+          )}
+
+          {/* Solicitudes por Estado (gráfico original - pie) */}
           {Object.keys(estadisticasGenerales.solicitudes_por_estado).length > 0 && (
             <ChartCard title="Solicitudes por Estado">
               <SimpleChart
@@ -136,6 +209,7 @@ const Statistics: React.FC = () => {
             </ChartCard>
           )}
 
+          {/* Solicitudes por Banco (gráfico original - barras) */}
           {Object.keys(estadisticasGenerales.solicitudes_por_banco).length > 0 && (
             <ChartCard title="Solicitudes por Banco">
               <SimpleChart
@@ -146,6 +220,7 @@ const Statistics: React.FC = () => {
             </ChartCard>
           )}
 
+          {/* Fallback existente: Solicitudes por Ciudad */}
           {Object.keys(estadisticasGenerales.solicitudes_por_ciudad).length > 0 && (
             <ChartCard title="Solicitudes por Ciudad">
               <SimpleChart
@@ -275,6 +350,19 @@ const Statistics: React.FC = () => {
               value={`${periodDays} días`}
             />
           </div>
+
+          {(estadisticasCompletas.generales.total_creditos !== undefined || estadisticasCompletas.generales.total_monto !== undefined) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <StatisticsCard
+                title="Total créditos radicados"
+                value={(estadisticasCompletas.generales.total_creditos ?? 0).toLocaleString('es-CO')}
+              />
+              <StatisticsCard
+                title="Monto total radicado"
+                value={`$${(estadisticasCompletas.generales.total_monto ?? 0).toLocaleString('es-CO')}`}
+              />
+            </div>
+          )}
         </div>
 
         {/* Estadísticas de Rendimiento */}
@@ -309,6 +397,7 @@ const Statistics: React.FC = () => {
 
         {/* Gráficos combinados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Estados de Solicitudes (gráfico original - pie) */}
           {Object.keys(estadisticasCompletas.generales.solicitudes_por_estado).length > 0 && (
             <ChartCard title="Estados de Solicitudes">
               <SimpleChart
@@ -317,7 +406,61 @@ const Statistics: React.FC = () => {
               />
             </ChartCard>
           )}
+          {/* Radicaciones por Estado */}
+          {(
+            (estadisticasCompletas.generales.radicaciones_por_estado && Object.keys(estadisticasCompletas.generales.radicaciones_por_estado).length > 0) ||
+            Object.keys(estadisticasCompletas.generales.solicitudes_por_estado).length > 0
+          ) && (
+            <ChartCard title="Radicaciones por Estado">
+              <SimpleChart
+                data={
+                  (estadisticasCompletas.generales.radicaciones_por_estado && Object.keys(estadisticasCompletas.generales.radicaciones_por_estado).length > 0)
+                    ? estadisticasCompletas.generales.radicaciones_por_estado
+                    : estadisticasCompletas.generales.solicitudes_por_estado
+                }
+                type="bar"
+              />
+            </ChartCard>
+          )}
 
+          {/* Radicaciones por Banco */}
+          {(
+            (estadisticasCompletas.generales.radicaciones_por_banco && Object.keys(estadisticasCompletas.generales.radicaciones_por_banco).length > 0) ||
+            Object.keys(estadisticasCompletas.generales.solicitudes_por_banco).length > 0
+          ) && (
+            <ChartCard title="Radicaciones por Banco">
+              <SimpleChart
+                data={
+                  (estadisticasCompletas.generales.radicaciones_por_banco && Object.keys(estadisticasCompletas.generales.radicaciones_por_banco).length > 0)
+                    ? estadisticasCompletas.generales.radicaciones_por_banco
+                    : estadisticasCompletas.generales.solicitudes_por_banco
+                }
+                type="bar"
+              />
+            </ChartCard>
+          )}
+
+          {/* Monto por Estado */}
+          {estadisticasCompletas.generales.monto_por_estado && Object.keys(estadisticasCompletas.generales.monto_por_estado).length > 0 && (
+            <ChartCard title="Monto por Estado">
+              <SimpleChart
+                data={estadisticasCompletas.generales.monto_por_estado}
+                type="pie"
+              />
+            </ChartCard>
+          )}
+
+          {/* Monto por Banco */}
+          {estadisticasCompletas.generales.monto_por_banco && Object.keys(estadisticasCompletas.generales.monto_por_banco).length > 0 && (
+            <ChartCard title="Monto por Banco">
+              <SimpleChart
+                data={estadisticasCompletas.generales.monto_por_banco}
+                type="bar"
+              />
+            </ChartCard>
+          )}
+
+          {/* Rangos de ingresos (ya existente) */}
           {Object.keys(estadisticasCompletas.financieras.rangos_ingresos).length > 0 && (
             <ChartCard title="Rangos de Ingresos">
               <SimpleChart

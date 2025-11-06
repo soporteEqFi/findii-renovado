@@ -204,30 +204,30 @@ export const ObservacionesSolicitud: React.FC<ObservacionesSolicitudProps> = ({
       {/* Lista de observaciones */}
       <div className="space-y-4">
         {observacionesLocales.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             <div className="text-4xl mb-2">📝</div>
             <p>No hay observaciones registradas</p>
             <p className="text-sm">Agrega la primera observación para comenzar el historial</p>
           </div>
         ) : (
           observacionesLocales.map((obs: ObservacionBackend, index: number) => (
-            <div key={obs.id || index} className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
+            <div key={obs.id || index} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border-l-4 border-blue-500 dark:border-blue-400">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {obs.usuario_nombre || (obs.tipo === 'comentario' ? 'Usuario' : obs.tipo)}
                   </span>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
                     {formatFecha(obs.fecha)}
                   </span>
                 </div>
                 {obs.tipo && (
-                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-full">
                     {obs.tipo}
                   </span>
                 )}
               </div>
-              <p className="text-gray-700 text-sm leading-relaxed">
+              <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 {obs.observacion}
               </p>
             </div>

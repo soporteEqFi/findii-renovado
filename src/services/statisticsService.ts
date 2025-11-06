@@ -8,6 +8,13 @@ export interface EstadisticasGenerales {
   solicitudes_por_ciudad: Record<string, number>;
   total_documentos: number;
   solicitudes_por_dia: Record<string, number>;
+  // Nuevas métricas (opcionales) provistas por /estadisticas/generales
+  total_creditos?: number;
+  radicaciones_por_banco?: Record<string, number>;
+  radicaciones_por_estado?: Record<string, number>;
+  total_monto?: number;
+  monto_por_banco?: Record<string, number>;
+  monto_por_estado?: Record<string, number>;
 }
 
 export interface EstadisticasRendimiento {

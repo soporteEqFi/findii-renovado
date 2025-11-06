@@ -27,12 +27,33 @@ interface SimpleChartProps {
   colors?: string[];
 }
 
+// Helper para normalizar valores a número (soporta strings con símbolos y objetos comunes)
+const normalizeValue = (value: any): number => {
+  if (typeof value === 'number' && isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const cleaned = value.replace(/[^0-9.,-]/g, '').replace(/(,)(?=\d{3}(?:\D|$))/g, ''); // quita separadores de miles
+    const withDot = cleaned.replace(',', '.');
+    const n = Number(withDot);
+    return isFinite(n) ? n : 0;
+  }
+  if (value && typeof value === 'object') {
+    const candidates = ['y', 'monto', 'valor', 'value', 'total', 'count', 'cantidad'];
+    for (const k of candidates) {
+      const v = (value as any)[k];
+      const n = normalizeValue(v);
+      if (n) return n;
+    }
+  }
+  return 0;
+};
+
 const SimpleChart: React.FC<SimpleChartProps> = ({
   data,
   type,
   colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316']
 }) => {
   const entries = Object.entries(data);
+  const normalizedEntries = entries.map(([label, v]) => [label, normalizeValue(v)]) as [string, number][];
 
   // Detectar modo oscuro (Tailwind dark class en <html>)
   const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -50,12 +71,12 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
   }
 
   const chartData = {
-    labels: entries.map(([label]) => label),
+    labels: normalizedEntries.map(([label]) => label),
     datasets: [
       {
-        data: entries.map(([, value]) => value),
-        backgroundColor: colors.slice(0, entries.length),
-        borderColor: colors.slice(0, entries.length).map(color => color),
+        data: normalizedEntries.map(([, value]) => value),
+        backgroundColor: colors.slice(0, normalizedEntries.length),
+        borderColor: colors.slice(0, normalizedEntries.length).map(color => color),
         borderWidth: type === 'pie' ? 2 : 1,
         borderRadius: type === 'bar' ? 4 : 0,
       },
@@ -86,9 +107,11 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
         displayColors: true,
         callbacks: {
           label: (context: any) => {
-            const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = ((context.parsed * 100) / total).toFixed(1);
-            return `${context.label}: ${context.parsed} (${percentage}%)`;
+            const ds = context.dataset?.data as any[];
+            const value = normalizeValue(ds?.[context.dataIndex]);
+            const total = (ds || []).map(normalizeValue).reduce((a: number, b: number) => a + b, 0);
+            const percentage = total ? ((value * 100) / total).toFixed(1) : '0.0';
+            return `${context.label}: ${value.toLocaleString('es-CO')} (${percentage}%)`;
           },
         },
       },
@@ -164,7 +187,8 @@ const SimpleChart: React.FC<SimpleChartProps> = ({
             size: 11,
           },
           callback: function(value: any) {
-            return Number.isInteger(value) ? value : '';
+            const n = Number(value);
+            return Number.isFinite(n) ? n.toLocaleString('es-CO') : '';
           },
         },
       },

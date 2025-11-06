@@ -203,26 +203,26 @@ const NotificationForm: React.FC<{
     <Modal isOpen={isOpen} onClose={onClose} title={notification ? 'Editar Notificación' : 'Nueva Notificación'}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Título
           </label>
           <input
             type="text"
             value={formData.titulo}
             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Mensaje
           </label>
           <textarea
             value={formData.mensaje}
             onChange={(e) => setFormData({ ...formData, mensaje: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             rows={3}
             required
           />
@@ -230,13 +230,13 @@ const NotificationForm: React.FC<{
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Tipo de Notificación
             </label>
             <select
               value={formData.tipo}
               onChange={(e) => handleTipoChange(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               required
             >
               {notificationConfig.tipos.map(type => (
@@ -248,13 +248,13 @@ const NotificationForm: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Prioridad
             </label>
             <select
               value={formData.prioridad}
               onChange={(e) => setFormData({ ...formData, prioridad: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             >
               {notificationConfig.prioridades.map(priority => (
                 <option key={priority} value={priority}>
@@ -267,13 +267,13 @@ const NotificationForm: React.FC<{
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Estado
             </label>
             <select
               value={formData.estado}
               onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             >
               {notificationConfig.estados.map(state => (
                 <option key={state} value={state}>
@@ -284,13 +284,13 @@ const NotificationForm: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Estado Actual (Metadata)
             </label>
             <select
               value={metadata.estado_actual}
               onChange={(e) => setMetadata({ ...metadata, estado_actual: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             >
               {notificationConfig.estadosActuales.map(estado => (
                 <option key={estado} value={estado}>
@@ -303,38 +303,38 @@ const NotificationForm: React.FC<{
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Fecha Recordatorio
             </label>
             <input
               type="datetime-local"
               value={formData.fecha_recordatorio}
               onChange={(e) => setFormData({ ...formData, fecha_recordatorio: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Fecha Vencimiento
             </label>
             <input
               type="datetime-local"
               value={formData.fecha_vencimiento}
               onChange={(e) => setFormData({ ...formData, fecha_vencimiento: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
         </div>
 
                  <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">
+           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
              Acción Requerida (Metadata)
            </label>
            <select
              value={metadata.accion_requerida}
              onChange={(e) => setMetadata({ ...metadata, accion_requerida: e.target.value })}
-             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
              required
            >
              {notificationConfig.accionesRequeridas.map(accion => (
@@ -479,11 +479,11 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
 
   const getPriorityColor = (prioridad: string) => {
     switch (prioridad) {
-      case 'urgente': return 'bg-red-100 text-red-800';
-      case 'alta': return 'bg-orange-100 text-orange-800';
-      case 'normal': return 'bg-yellow-100 text-yellow-800';
-      case 'baja': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'urgente': return 'bg-red-100 text-red-800 dark:bg-red-600 dark:text-white';
+      case 'alta': return 'bg-orange-100 text-orange-800 dark:bg-orange-600 dark:text-white';
+      case 'normal': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600 dark:text-white';
+      case 'baja': return 'bg-green-100 text-green-800 dark:bg-green-600 dark:text-white';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white';
     }
   };
 
@@ -493,10 +493,10 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
 
   const getStatusColor = (estado: string) => {
     switch (estado) {
-      case 'pendiente': return 'bg-blue-100 text-blue-800';
-      case 'leida': return 'bg-gray-100 text-gray-800';
-      case 'completada': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pendiente': return 'bg-blue-100 text-blue-800 dark:bg-blue-600 dark:text-white';
+      case 'leida': return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white';
+      case 'completada': return 'bg-green-100 text-green-800 dark:bg-green-600 dark:text-white';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-white';
     }
   };
 
@@ -504,10 +504,10 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
     return (
       <Card>
         <div className="p-4">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Historial de Notificaciones</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Historial de Notificaciones</h3>
           <div className="text-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">Cargando notificaciones...</p>
+            <p className="mt-2 text-gray-600 dark:text-gray-300">Cargando notificaciones...</p>
           </div>
         </div>
       </Card>
@@ -519,7 +519,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
       <Card>
         <div className="p-4">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-medium text-gray-900">Historial de Notificaciones</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Historial de Notificaciones</h3>
             <Button
               size="sm"
               variant="primary"
@@ -530,14 +530,14 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
           </div>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-              <p className="text-red-700 text-sm">{error}</p>
+            <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-md p-3 mb-4">
+              <p className="text-red-700 dark:text-red-300 text-sm">{error}</p>
             </div>
           )}
 
           {notifications.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">No hay notificaciones para esta solicitud</p>
+              <p className="text-gray-500 dark:text-gray-400">No hay notificaciones para esta solicitud</p>
             </div>
                      ) : (
              <div className="space-y-3">
@@ -546,12 +546,12 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                  .map((notification) => (
                 <div
                   key={notification.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors notification-card-mobile"
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors notification-card-mobile"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
-                      <h4 className="font-medium text-gray-900 text-left">{notification.titulo}</h4>
-                      <p className="text-sm text-gray-600 mt-1 text-left">{notification.mensaje}</p>
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100 text-left">{notification.titulo}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 text-left">{notification.mensaje}</p>
                     </div>
                                          <div className="flex space-x-2 ml-4">
                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(notification.prioridad)}`}>
@@ -563,7 +563,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                      </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-500 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-500 dark:text-gray-400 mb-3">
                     <div>
                       <span className="font-medium">Recordatorio:</span>
                       <br />
@@ -577,7 +577,7 @@ export const NotificationHistory: React.FC<NotificationHistoryProps> = ({
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
-                    <div className="text-xs text-gray-400">
+                    <div className="text-xs text-gray-400 dark:text-gray-500">
                       Creada: {formatDate(notification.created_at)}
                     </div>
                     <div className="flex flex-wrap gap-2 notification-actions-mobile">

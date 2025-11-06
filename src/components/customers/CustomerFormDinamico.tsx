@@ -29,7 +29,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
-  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([]);
+  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Configuración de esquemas completos - consultar campos fijos + dinámicos
@@ -301,7 +301,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     setSelectedFiles([]);
     setAceptaTerminos(false);
     setAceptaAcuerdoFirma(false);
-    setReferencias([]);
+    setReferencias([{}]);
   };
 
   // Limpiar formulario cuando se monta el componente
@@ -433,6 +433,38 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
     if (!aceptaAcuerdoFirma) {
       toast.error('Debes aceptar el acuerdo de firma para continuar');
+      return;
+    }
+
+    const referenciasCandidatasPrevias = (Array.isArray(referencias) ? referencias : [])
+      .map((r) => {
+        const { detalle_referencia, referencia_id, id, ...rest } = (r || {}) as any;
+        const flatDetalle = detalle_referencia && typeof detalle_referencia === 'object' ? detalle_referencia : {};
+        const tipo = (r as any)?.tipo_referencia || (r as any)?.tipo || undefined;
+        const plano: Record<string, any> = { ...rest, ...flatDetalle };
+        if (tipo) (plano as any).tipo_referencia = tipo;
+        delete (plano as any).id;
+        delete (plano as any).referencia_id;
+        return plano;
+      })
+      .filter((plano) => {
+        const camposClave = [
+          'nombre_referencia',
+          'nombre_referencia1',
+          'celular_referencia',
+          'direccion_referencia',
+          'direccion_referencia1',
+          'relacion_referencia',
+          'relacion_referencia1',
+        ];
+        return camposClave.some((k) => {
+          const v = (plano as any)[k];
+          return v !== undefined && v !== null && String(v).trim() !== '';
+        });
+      });
+
+    if (referenciasCandidatasPrevias.length === 0) {
+      toast.error('Debes registrar al menos una referencia');
       return;
     }
 
@@ -914,7 +946,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
         {/* Sección de Referencias Múltiples */}
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-gray-900">Información de Referencias</h3>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">Información de Referencias</h3>
 
           {referencias.map((referencia, index) => (
             <div key={index} className="p-4 border border-gray-200 rounded-lg relative">
@@ -933,7 +965,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                 </button>
               )}
 
-              <h4 className="text-md font-medium text-gray-800 mb-4">Referencia {index + 1}</h4>
+              <h4 className="text-md font-medium text-gray-800 dark:text-gray-100 mb-4">Referencia {index + 1}</h4>
 
               {esquemas.referencia?.esquema?.campos_fijos && esquemas.referencia.esquema.campos_dinamicos ? (
                 <FormularioCompleto
