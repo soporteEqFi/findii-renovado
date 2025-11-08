@@ -1,5 +1,5 @@
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Users, Settings, LogOut, UserCog, User, BarChart3, GraduationCap, Moon, Sun } from 'lucide-react';
+import { Users, Settings, LogOut, UserCog, User, BarChart3, GraduationCap, Moon, Sun, Car } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { NotificationManager } from './NotificationManager';
@@ -21,6 +21,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen = true, onClose }) => {
   const menuItems = [
     { icon: Users, label: 'Inicio', path: '/' },
     { icon: BarChart3, label: 'Estadísticas', path: '/statistics' },
+    { icon: Car, label: 'Simulador de crédito', path: '/simulador' },
     { icon: GraduationCap, label: 'Academia', path: 'https://drive.google.com/drive/folders/1jvqpFn5aad7_So20lwKaWrlG2wMXpPES?usp=sharing', external: true },
     { icon: User, label: 'Perfil', path: '/profile' },
     // { icon: Settings, label: 'Test', path: '/test' }, // Ocultado

@@ -16,6 +16,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'react-hot-toast';
 import { CreditTracking } from './components/tracking/CreditTracking';
 import ConfiguracionAdmin from './pages/ConfiguracionAdmin';
+import SimuladorCredito from './pages/SimuladorCredito';
 
 // Componente para proteger rutas que requieren autenticación
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -68,39 +69,40 @@ function App() {
         <TableConfigProvider>
           <BrowserRouter>
             <Routes>
-            {/* Ruta pública de login */}
-            <Route path="/login" element={<Login />} />
+              {/* Ruta pública de login */}
+              <Route path="/login" element={<Login />} />
 
-            {/* Ruta pública de seguimiento */}
-            <Route path="/seguimiento" element={<CreditTracking />} />
+              {/* Ruta pública de seguimiento */}
+              <Route path="/seguimiento" element={<CreditTracking />} />
 
-            {/* Ruta pública de términos y condiciones */}
-            <Route path="/terminos-condiciones" element={<TermsAndConditions />} />
+              {/* Ruta pública de términos y condiciones */}
+              <Route path="/terminos-condiciones" element={<TermsAndConditions />} />
 
-            {/* Ruta pública de acuerdo de firma */}
-            <Route path="/acuerdo-firma" element={<AcuerdoFirma />} />
+              {/* Ruta pública de acuerdo de firma */}
+              <Route path="/acuerdo-firma" element={<AcuerdoFirma />} />
 
-            {/* Rutas protegidas dentro del Layout */}
-            <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-              {/* Ruta principal (índice) muestra Customers */}
-              <Route index element={<Customers />} />
+              {/* Rutas protegidas dentro del Layout */}
+              <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                {/* Ruta principal (índice) muestra Customers */}
+                <Route index element={<Customers />} />
 
-              {/* Rutas solo para administradores */}
-              <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
+                {/* Rutas solo para administradores */}
+                <Route path="users" element={<AdminRoute><Users /></AdminRoute>} />
 
-              {/* Rutas accesibles para todos los usuarios autenticados */}
-              {/* <Route path="customers" element={<Customers />} /> */}
-              {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
-              <Route path="profile" element={<Profile />} />
-              <Route path="statistics" element={<Statistics />} />
-              {/* <Route path="test" element={<TestPage />} /> */} {/* Ocultado */}
+                {/* Rutas accesibles para todos los usuarios autenticados */}
+                {/* <Route path="customers" element={<Customers />} /> */}
+                {/* <Route path="settings" element={<div>Settings (Coming Soon)</div>} /> */}
+                <Route path="profile" element={<Profile />} />
+                <Route path="statistics" element={<Statistics />} />
+                <Route path="simulador" element={<SimuladorCredito />} />
+                {/* <Route path="test" element={<TestPage />} /> */} {/* Ocultado */}
 
-              {/* Ruta para la administración de configuración de campos (solo admin) */}
-              <Route path="config" element={
-                <AdminRoute>
-                  <ConfiguracionAdmin />
-                </AdminRoute>
-              } />
+                {/* Ruta para la administración de configuración de campos (solo admin) */}
+                <Route path="config" element={
+                  <AdminRoute>
+                    <ConfiguracionAdmin />
+                  </AdminRoute>
+                } />
 
             </Route>
 

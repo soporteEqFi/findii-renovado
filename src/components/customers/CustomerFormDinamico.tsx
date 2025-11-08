@@ -26,10 +26,17 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados para archivos y checkboxes
+  // Legacy múltiple (para Pensionado)
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  // Slots de documentos (Opción B)
+  const [fileCC, setFileCC] = useState<File | null>(null);
+  const [fileCartaLaboral, setFileCartaLaboral] = useState<File | null>(null);
+  const [filesDesprendibles, setFilesDesprendibles] = useState<File[]>([]); // requeridos 2 para Empleado
+  const [fileDeclaracionRenta, setFileDeclaracionRenta] = useState<File | null>(null);
+  const [filesExtractos, setFilesExtractos] = useState<File[]>([]); // requeridos 3 para Independiente
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
-  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}]);
+  const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}, {}]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Configuración de esquemas completos - consultar campos fijos + dinámicos
@@ -48,9 +55,32 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
   const { estados, loading: loadingEstados } = useEstados(empresaId);
 
-  // Configuraciones de ciudades/bancos (no utilizadas actualmente) removidas para evitar lints
+  // Manejo de archivos (legacy + slots)
+  // Legacy (solo para Pensionado)
+  const handleLegacyFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setSelectedFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+  const handleLegacyRemoveFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
-    // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DATOS DE PRUEBA COMPLETOS
+  // Handlers para slots
+  const handleSelectSingle = (setter: (f: File | null) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] || null;
+    setter(f);
+  };
+  const handleSelectMultiple = (setter: (fs: File[]) => void, max?: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const arr = Array.from(e.target.files || []);
+    setter(typeof max === 'number' ? arr.slice(0, max) : arr);
+  };
+  const removeFromList = (list: File[], index: number, setter: (fs: File[]) => void) => {
+    setter(list.filter((_, i) => i !== index));
+  };
+
+  // ✅ AUTO-LLENAR TODOS LOS CAMPOS CON DATOS DE PRUEBA COMPLETOS
   const autoLlenarTodosLosCampos = () => {
     const nuevosValores: Record<string, any> = { ...datosFormulario };
 
@@ -299,9 +329,14 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     setDatosFormulario(formularioLimpio);
     setErrores({});
     setSelectedFiles([]);
+    setFileCC(null);
+    setFileCartaLaboral(null);
+    setFilesDesprendibles([]);
+    setFileDeclaracionRenta(null);
+    setFilesExtractos([]);
     setAceptaTerminos(false);
     setAceptaAcuerdoFirma(false);
-    setReferencias([{}]);
+    setReferencias([{}, {}]);
   };
 
   // Limpiar formulario cuando se monta el componente
@@ -401,26 +436,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     }
   };
 
-
-
-  // Manejo de archivos
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setSelectedFiles(prev => [...prev, ...filesArray]);
-    }
-  };
-
-  const handleRemoveFile = (index: number) => {
-    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
   // Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,18 +451,56 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       return;
     }
 
+    // Validación de documentos por tipo de actividad (Opción B)
+    const tipoActividad: string = (datosFormulario.tipo_actividad || datosFormulario.tipo_actividad_economica || '').toString().toLowerCase();
+    const isEmpleado = tipoActividad.includes('empleado');
+    const isIndependiente = tipoActividad.includes('independ');
+    const isPensionado = tipoActividad.includes('pension');
+
+    if (!isPensionado) {
+      // Validación por slots
+      if (!fileCC) {
+        toast.error('Debes adjuntar la Cédula (CC)');
+        return;
+      }
+
+      if (isEmpleado) {
+        if (!fileCartaLaboral) {
+          toast.error('Para Empleado: adjunta la Carta laboral');
+          return;
+        }
+        if (filesDesprendibles.length < 2) {
+          toast.error('Para Empleado: adjunta 2 desprendibles de nómina');
+          return;
+        }
+      }
+
+      if (isIndependiente) {
+        if (!fileDeclaracionRenta) {
+          toast.error('Para Independiente: adjunta la Declaración de renta');
+          return;
+        }
+        if (filesExtractos.length < 3) {
+          toast.error('Para Independiente: adjunta extractos del último trimestre (mínimo 3)');
+          return;
+        }
+      }
+    }
+
     const referenciasCandidatasPrevias = (Array.isArray(referencias) ? referencias : [])
       .map((r) => {
         const { detalle_referencia, referencia_id, id, ...rest } = (r || {}) as any;
         const flatDetalle = detalle_referencia && typeof detalle_referencia === 'object' ? detalle_referencia : {};
         const tipo = (r as any)?.tipo_referencia || (r as any)?.tipo || undefined;
         const plano: Record<string, any> = { ...rest, ...flatDetalle };
-        if (tipo) (plano as any).tipo_referencia = tipo;
+        if (tipo) plano.tipo_referencia = tipo;
         delete (plano as any).id;
-        delete (plano as any).referencia_id;
+        delete (plano as any).referencia_id; // dejar que el backend asigne
         return plano;
       })
       .filter((plano) => {
+        // Permitir envío solo si el usuario llenó al menos un CAMPO CLAVE
+        // Excluimos campos que suelen tener defaults o poco significativos.
         const camposClave = [
           'nombre_referencia',
           'nombre_referencia1',
@@ -463,8 +516,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         });
       });
 
-    if (referenciasCandidatasPrevias.length === 0) {
-      toast.error('Debes registrar al menos una referencia');
+    if (referenciasCandidatasPrevias.length < 2) {
+      toast.error('Debes registrar al menos dos referencias');
       return;
     }
 
@@ -634,13 +687,24 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       }
 
       // 2. Subir documentos (antes de enviar emails)
-      if (selectedFiles.length > 0 && solicitanteId) {
+      // Compilar lista de archivos desde slots o legacy si es Pensionado
+      const filesParaSubir: File[] = isPensionado
+        ? selectedFiles
+        : [
+            ...([fileCC].filter(Boolean) as File[]),
+            ...([fileCartaLaboral].filter(Boolean) as File[]),
+            ...filesDesprendibles,
+            ...([fileDeclaracionRenta].filter(Boolean) as File[]),
+            ...filesExtractos,
+          ];
+
+      if (filesParaSubir.length > 0 && solicitanteId) {
         console.log('🚀 === INICIANDO PROCESO DE SUBIDA DE ARCHIVOS ===');
         console.log('📁 Solicitante ID obtenido:', solicitanteId);
-        console.log('📂 Número de archivos a subir:', selectedFiles.length);
+        console.log('📂 Número de archivos a subir:', filesParaSubir.length);
 
         // Log detallado de cada archivo
-        selectedFiles.forEach((file, index) => {
+        filesParaSubir.forEach((file, index) => {
           console.log(`📄 Archivo ${index + 1}:`, {
             nombre: file.name,
             tamaño: `${(file.size / 1024).toFixed(2)} KB`,
@@ -652,20 +716,20 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         try {
           console.log('🔄 Llamando documentService.uploadMultipleDocuments...');
           console.log('📤 Parámetros de subida:', {
-            archivos: selectedFiles.map(f => ({ nombre: f.name, tamaño: f.size })),
+            archivos: filesParaSubir.map(f => ({ nombre: f.name, tamaño: f.size })),
             solicitante_id: solicitanteId
           });
 
           // Subir todos los documentos (en paralelo, pero esperamos a que todos terminen)
           const uploadResults = await documentService.uploadMultipleDocuments(
-            selectedFiles,
+            filesParaSubir,
             solicitanteId
           );
 
           console.log('✅ === ARCHIVOS SUBIDOS EXITOSAMENTE ===');
-          console.log('📈 Total archivos procesados:', selectedFiles.length);
+          console.log('📈 Total archivos procesados:', filesParaSubir.length);
 
-          toast.success(`Solicitud creada y ${selectedFiles.length} archivo(s) subido(s) exitosamente`);
+          toast.success(`Solicitud creada y ${filesParaSubir.length} archivo(s) subido(s) exitosamente`);
         } catch (uploadError) {
           console.error('❌ === ERROR EN SUBIDA DE ARCHIVOS ===');
           console.error('🔍 Tipo de error:', typeof uploadError);
@@ -684,9 +748,9 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           toast.error('Solicitud creada pero hubo un error al subir los archivos');
           // Continuar con el envío de emails incluso si hay error en archivos
         }
-      } else if (selectedFiles.length > 0 && !solicitanteId) {
+      } else if (filesParaSubir.length > 0 && !solicitanteId) {
         console.warn('⚠️ === ARCHIVOS SELECCIONADOS PERO SIN SOLICITANTE_ID ===');
-        console.warn('📂 Archivos seleccionados:', selectedFiles.length);
+        console.warn('📂 Archivos seleccionados:', filesParaSubir.length);
         console.warn('🆔 Resultado completo:', resultado);
         console.warn('🔍 Estructura del resultado:', Object.keys(resultado || {}));
         toast.error('Solicitud creada pero no se pudo obtener el ID para subir archivos');
@@ -742,8 +806,8 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           console.log('✅ === EMAILS ENVIADOS EXITOSAMENTE ===');
           console.log('📊 Resultado:', emailsResult);
 
-          if (selectedFiles.length > 0) {
-            toast.success(`Solicitud creada, ${selectedFiles.length} archivo(s) subido(s) y emails enviados exitosamente`);
+          if (filesParaSubir.length > 0) {
+            toast.success(`Solicitud creada, ${filesParaSubir.length} archivo(s) subido(s) y emails enviados exitosamente`);
           } else {
             toast.success('Solicitud creada y emails enviados exitosamente');
           }
@@ -760,7 +824,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
         }
       } else {
         console.log('ℹ️ No hay solicitanteId, no se pueden enviar emails');
-        if (selectedFiles.length === 0) {
+        if (filesParaSubir.length === 0) {
           toast.success('Solicitud creada exitosamente');
         }
       }
@@ -850,6 +914,12 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       </div>
     );
   }
+
+  // Derivar tipo de actividad para mostrar notas y requisitos en UI
+  const actividadStr = (datosFormulario.tipo_actividad || datosFormulario.tipo_actividad_economica || '').toString().toLowerCase();
+  const isEmpleadoUI = actividadStr.includes('empleado');
+  const isIndependienteUI = actividadStr.includes('independ');
+  const isPensionadoUI = actividadStr.includes('pension');
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -950,7 +1020,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
           {referencias.map((referencia, index) => (
             <div key={index} className="p-4 border border-gray-200 rounded-lg relative">
-              {referencias.length > 1 && (
+              {referencias.length > 2 && (
                 <button
                   type="button"
                   onClick={() => {
@@ -1020,7 +1090,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
               type="button"
               onClick={() => setReferencias([...referencias, {}])}
               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              disabled={referencias.length >= 3}
+              disabled={false}
             >
               + Agregar Referencia
             </button>
@@ -1044,57 +1114,139 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           </div>
         )}
 
-                 {/* Archivos Adjuntos */}
-         <div>
-           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">Archivos Adjuntos</h3>
-          <div className="mt-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileSelect}
-              className="hidden"
-              multiple
-              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-            />
-            <div className="flex flex-col space-y-2">
-              <button
-                type="button"
-                onClick={triggerFileInput}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                Seleccionar Archivos
-              </button>
+        {/* Archivos Adjuntos - Condicional por tipo de actividad */}
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">Archivos Adjuntos</h3>
+          {!isPensionadoUI && (
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded mb-4 text-sm text-blue-800 dark:text-blue-200">
+              Empleados: CC, Carta laboral y últimos dos desprendibles de nómina. Independientes: CC, Declaración de renta y Extractos del último trimestre.
+            </div>
+          )}
 
+          {/* Pensionado: flujo legacy de múltiples archivos */}
+          {isPensionadoUI ? (
+            <div className="space-y-3">
+              <div>
+                <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" onChange={handleLegacyFileSelect} />
+              </div>
               {selectedFiles.length > 0 && (
-                <div className="mt-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Archivos seleccionados: ({selectedFiles.length})
-                  </h4>
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Archivos seleccionados: ({selectedFiles.length})</h4>
                   <ul className="space-y-2">
                     {selectedFiles.map((file, index) => (
-                      <li key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded-md">
+                      <li key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
                         <div className="flex items-center">
                           <File className="w-4 h-4 mr-2 text-gray-500" />
-                          <span className="text-sm text-gray-800 dark:text-gray-200">{file.name}</span>
-                          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                            ({(file.size / 1024).toFixed(1)} KB)
-                          </span>
+                          <span className="text-sm">{file.name}</span>
+                          <span className="ml-2 text-xs text-gray-500">({(file.size/1024).toFixed(1)} KB)</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFile(index)}
-                          className="text-gray-500 hover:text-red-500"
-                        >
-                          <XIcon className="w-4 h-4" />
-                        </button>
+                        <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => handleLegacyRemoveFile(index)}><XIcon className="w-4 h-4" /></button>
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
+              <div className="text-xs text-gray-500">Puedes subir múltiples archivos como en el flujo anterior.</div>
             </div>
+          ) : (
+          <div className="space-y-4">
+            {/* CC */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cédula (CC) <span className="text-red-500">*</span></label>
+              <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xls,.xlsx" onChange={handleSelectSingle(setFileCC)} />
+              {fileCC && (
+                <div className="mt-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
+                  <div className="flex items-center">
+                    <File className="w-4 h-4 mr-2 text-gray-500" />
+                    <span className="text-sm">{fileCC.name}</span>
+                    <span className="ml-2 text-xs text-gray-500">({(fileCC.size/1024).toFixed(1)} KB)</span>
+                  </div>
+                  <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => setFileCC(null)}><XIcon className="w-4 h-4" /></button>
+                </div>
+              )}
+            </div>
+
+            {/* Carta laboral (si empleado) */}
+            {isEmpleadoUI && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Carta laboral <span className="text-red-500">*</span></label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={handleSelectSingle(setFileCartaLaboral)} />
+                {fileCartaLaboral && (
+                  <div className="mt-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
+                    <div className="flex items-center">
+                      <File className="w-4 h-4 mr-2 text-gray-500" />
+                      <span className="text-sm">{fileCartaLaboral.name}</span>
+                      <span className="ml-2 text-xs text-gray-500">({(fileCartaLaboral.size/1024).toFixed(1)} KB)</span>
+                    </div>
+                    <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => setFileCartaLaboral(null)}><XIcon className="w-4 h-4" /></button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Desprendibles (2) - si empleado */}
+            {isEmpleadoUI && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Desprendibles de nómina (2) <span className="text-red-500">*</span></label>
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={handleSelectMultiple(setFilesDesprendibles, 2)} />
+                {filesDesprendibles.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {filesDesprendibles.map((f, idx) => (
+                      <li key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
+                        <div className="flex items-center">
+                          <File className="w-4 h-4 mr-2 text-gray-500" />
+                          <span className="text-sm">{f.name}</span>
+                          <span className="ml-2 text-xs text-gray-500">({(f.size/1024).toFixed(1)} KB)</span>
+                        </div>
+                        <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => removeFromList(filesDesprendibles, idx, setFilesDesprendibles)}><XIcon className="w-4 h-4" /></button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Declaración de renta - si independiente */}
+            {isIndependienteUI && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Declaración de renta <span className="text-red-500">*</span></label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={handleSelectSingle(setFileDeclaracionRenta)} />
+                {fileDeclaracionRenta && (
+                  <div className="mt-2 flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
+                    <div className="flex items-center">
+                      <File className="w-4 h-4 mr-2 text-gray-500" />
+                      <span className="text-sm">{fileDeclaracionRenta.name}</span>
+                      <span className="ml-2 text-xs text-gray-500">({(fileDeclaracionRenta.size/1024).toFixed(1)} KB)</span>
+                    </div>
+                    <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => setFileDeclaracionRenta(null)}><XIcon className="w-4 h-4" /></button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Extractos (3) - si independiente */}
+            {isIndependienteUI && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Extractos del último trimestre (mínimo 3) <span className="text-red-500">*</span></label>
+                <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={handleSelectMultiple(setFilesExtractos)} />
+                {filesExtractos.length > 0 && (
+                  <ul className="mt-2 space-y-2">
+                    {filesExtractos.map((f, idx) => (
+                      <li key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-2 rounded">
+                        <div className="flex items-center">
+                          <File className="w-4 h-4 mr-2 text-gray-500" />
+                          <span className="text-sm">{f.name}</span>
+                          <span className="ml-2 text-xs text-gray-500">({(f.size/1024).toFixed(1)} KB)</span>
+                        </div>
+                        <button type="button" className="text-gray-500 hover:text-red-500" onClick={() => removeFromList(filesExtractos, idx, setFilesExtractos)}><XIcon className="w-4 h-4" /></button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
           </div>
+          )}
         </div>
       </div>
 
