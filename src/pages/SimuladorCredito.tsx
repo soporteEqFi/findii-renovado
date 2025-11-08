@@ -11,6 +11,15 @@ type Pago = {
   saldoRestante: number;
 };
 
+const formatearPorcentaje = (valor: number) => {
+  // valor en fracción (0.12 => 12,00 %)
+  const pct = (valor * 100);
+  return pct.toLocaleString('es-CO', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }) + ' %';
+};
+
 const formatearMoneda = (valor: number) => {
   try {
     return valor
@@ -55,6 +64,21 @@ const usarFormatoMostrar = (valor: string) => {
   return digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 };
 
+const parsePorcentaje = (valor: string) => {
+  // Acepta "12", "12,5", "12.5", con o sin "%". Devuelve fracción: 0.125
+  const s = valor.replace(/[^0-9.,]/g, '');
+  if (!s) return 0;
+  let normalized = s;
+  if (s.includes(',') && s.includes('.')) {
+    normalized = s.replace(/\./g, '').replace(/,/g, '.');
+  } else if (s.includes(',')) {
+    normalized = s.replace(/,/g, '.');
+  }
+  const num = parseFloat(normalized);
+  if (isNaN(num)) return 0;
+  return num / 100;
+};
+
 const calcularCuota = (valorCredito: number, interesMensual: number, plazoMeses: number) => {
   if (valorCredito <= 0 || plazoMeses <= 0) return 0;
   return (valorCredito * interesMensual) / (1 - Math.pow(1 + interesMensual, -plazoMeses));
@@ -84,13 +108,17 @@ const SimuladorCredito: React.FC = () => {
   const [ingresosRaw, setIngresosRaw] = useState('');
   const [ciudad, setCiudad] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [tasaTipo, setTasaTipo] = useState<'EA' | 'TNA'>('TNA');
+  const [tasaAnualRaw, setTasaAnualRaw] = useState('12');
 
   const valorVehiculo = parseMoneda(valorVehiculoRaw);
   const cuotaInicialValor = parseMoneda(cuotaInicialRaw);
   const ingresosMensuales = parseMoneda(ingresosRaw);
 
-  const interesAnual = 0.12;
-  const interesMensual = interesAnual / 12;
+  const interesAnual = parsePorcentaje(tasaAnualRaw); // fracción
+  const interesMensual = tasaTipo === 'EA'
+    ? Math.pow(1 + interesAnual, 1 / 12) - 1
+    : interesAnual / 12;
 
   const valorCredito = Math.max(valorVehiculo - (cuotaInicialTiene === 'si' ? cuotaInicialValor : 0), 0);
 
@@ -114,6 +142,8 @@ const SimuladorCredito: React.FC = () => {
     tipoContrato,
     ingresosRaw,
     ciudad,
+    tasaTipo,
+    tasaAnualRaw,
   ]);
 
   return (
@@ -155,6 +185,17 @@ const SimuladorCredito: React.FC = () => {
                 <option key={m} value={m}>{m} meses</option>
               ))}
             </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Tipo de tasa</label>
+            <select value={tasaTipo} onChange={(e) => setTasaTipo(e.target.value as 'EA' | 'TNA')} className="w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100">
+              <option value="TNA">TNA (Nominal Anual)</option>
+              <option value="EA">EA (Efectiva Anual)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Tasa anual (%)</label>
+            <input value={tasaAnualRaw} onChange={(e) => setTasaAnualRaw(e.target.value.replace(/[^0-9.,]/g, ''))} placeholder="Ej: 12,5" className="w-full px-3 py-2 rounded border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-gray-100" />
           </div>
           <div>
             <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Edad del cliente</label>
@@ -211,6 +252,8 @@ const SimuladorCredito: React.FC = () => {
               <p>Cuota inicial (COP): {formatearMoneda(cuotaInicialTiene === 'si' ? cuotaInicialValor : 0)}</p>
               <p>Valor del crédito (COP): {formatearMoneda(valorCredito)}</p>
               <p>Plazo en meses: {plazoMeses}</p>
+              <p>Tasa anual ({tasaTipo}): {formatearPorcentaje(interesAnual)}</p>
+              <p>Tasa mensual equivalente: {formatearPorcentaje(interesMensual)}</p>
               <p className="font-bold">Cuota mensual (COP): {formatearMoneda(cuota)}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">El monto aprobado y la tasa dependerán de tu información financiera y nuestro análisis crediticio. El valor indicado no incluye seguros.</p>
             </div>
