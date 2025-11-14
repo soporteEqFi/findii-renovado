@@ -461,8 +461,14 @@ export const esquemaService = {
 
       // Agregar campos adicionales a la solicitud
       if (datosCompletos.solicitudes && datosCompletos.solicitudes[0]) {
-        datosCompletos.solicitudes[0].created_by_user_id = parseInt(localStorage.getItem('user_id') || '1');
-        datosCompletos.solicitudes[0].assigned_to_user_id = parseInt(localStorage.getItem('user_id') || '1');
+        const currentUserId = parseInt(localStorage.getItem('user_id') || '1', 10);
+        const assignedFromForm = formData.assigned_to_user_id;
+        const assignedUserId = assignedFromForm !== undefined && assignedFromForm !== null && assignedFromForm !== ''
+          ? Number(assignedFromForm)
+          : currentUserId;
+
+        datosCompletos.solicitudes[0].created_by_user_id = currentUserId;
+        datosCompletos.solicitudes[0].assigned_to_user_id = assignedUserId;
         datosCompletos.solicitudes[0].estado = 'Pendiente';
         datosCompletos.solicitudes[0].created_by_user_email = userEmail; // Agregar correo del usuario
 

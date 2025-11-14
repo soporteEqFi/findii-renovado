@@ -1309,6 +1309,9 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       datosPlanos.tipo_credito = solicitud.tipo_credito;
       datosPlanos.tipo_credito_id = solicitud.tipo_credito_id;
       datosPlanos.destino_credito = solicitud.destino_credito;
+      if (solicitud.assigned_to_user_id !== undefined && solicitud.assigned_to_user_id !== null) {
+        datosPlanos.assigned_to_user_id = solicitud.assigned_to_user_id;
+      }
 
       // Mapear TODOS los campos del detalle_credito dinámicamente
       if (solicitud.detalle_credito) {

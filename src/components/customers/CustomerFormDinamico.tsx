@@ -1,14 +1,14 @@
-import React, { useState, useRef } from 'react';
-import { Upload, File, X as XIcon, Save, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { File, X as XIcon, Save, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useEsquemasCompletos } from '../../hooks/useEsquemasCompletos';
 import { useEstados } from '../../hooks/useEstados';
 import { FormularioCompleto } from '../ui/FormularioCompleto';
 import { esquemaService } from '../../services/esquemaService';
-// Removed unused imports: useConfiguraciones, CampoDinamico
 import { documentService } from '../../services/documentService';
 import { referenciaService } from '../../services/referenciaService';
 import { userService } from '../../services/userService';
+import { User } from '../../types/user';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
 
 interface CustomerFormDinamicoProps {
@@ -37,7 +37,95 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const [aceptaTerminos, setAceptaTerminos] = useState(false);
   const [aceptaAcuerdoFirma, setAceptaAcuerdoFirma] = useState(false);
   const [referencias, setReferencias] = useState<Array<Record<string, any>>>([{}, {}]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [usersError, setUsersError] = useState<string | null>(null);
+
+  const empresaId = useMemo(() => parseInt(localStorage.getItem('empresa_id') || '1', 10), []);
+
+  const currentUserRole = useMemo(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        if (parsed?.rol) return String(parsed.rol).toLowerCase();
+      } catch (error) {
+        console.error('Error parsing user role from localStorage:', error);
+      }
+    }
+    const storedRole = localStorage.getItem('user_role');
+    return storedRole ? storedRole.toLowerCase() : 'user';
+  }, []);
+
+  const canAssignUsers = currentUserRole === 'admin' || currentUserRole === 'supervisor';
+
+  const formatUserLabel = useCallback((user: User) => {
+    const city = user.info_extra?.ciudad || (user.info_extra as any)?.ciudad_residencia || '';
+    const bank = user.info_extra?.banco_nombre || (user.info_extra as any)?.nombre_banco_usuario || '';
+    const details: string[] = [];
+    if (city) details.push(city);
+    if (bank) details.push(`Banco ${bank}`);
+    if (details.length === 0) {
+      return user.nombre;
+    }
+    return `${user.nombre} · ${details.join(' · ')}`;
+  }, []);
+
+  const currentUserId = useMemo(() => {
+    const storedId = localStorage.getItem('user_id');
+    return storedId ? parseInt(storedId, 10) : null;
+  }, []);
+
+  const currentUserName = useMemo(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        return parsed?.nombre || parsed?.name || 'Mi usuario';
+      } catch (error) {
+        console.error('Error parsing current user from localStorage:', error);
+      }
+    }
+    return 'Mi usuario';
+  }, []);
+
+  useEffect(() => {
+    if (!canAssignUsers) {
+      setAvailableUsers([]);
+      setLoadingUsers(false);
+      setUsersError(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const cargarUsuarios = async () => {
+      setLoadingUsers(true);
+      setUsersError(null);
+      try {
+        const usuarios = await userService.getUsers(empresaId, { includeIdentityHeaders: false });
+        if (isMounted) {
+          setAvailableUsers(usuarios);
+        }
+      } catch (error) {
+        console.error('Error cargando usuarios para asignación:', error);
+        if (isMounted) {
+          setUsersError('No se pudieron cargar los usuarios disponibles.');
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingUsers(false);
+        }
+      }
+    };
+
+    cargarUsuarios();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [empresaId, canAssignUsers]);
 
   // Configuración de esquemas completos - consultar campos fijos + dinámicos
   const esquemasConfig = [
@@ -52,7 +140,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
   const { esquemas, loading: esquemasLoading, error: esquemasError } = useEsquemasCompletos(esquemasConfig);
 
   // Hook para obtener estados dinámicos
-  const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
   const { estados, loading: loadingEstados } = useEstados(empresaId);
 
   // Manejo de archivos (legacy + slots)
@@ -182,6 +269,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       banco_nombre: 'Banco de Bogotá',
       estado: 'Pendiente',
       ciudad_solicitud: 'Bogotá',
+      assigned_to_user_id: currentUserId || null,
 
       // ===== CAMPOS ADICIONALES =====
       pago_impuestos_colombia: true,
@@ -290,6 +378,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       // ===== SOLICITUD =====
       'monto_solicitado', 'plazo_meses', 'tipo_credito_id',
       'destino_credito', 'cuota_inicial', 'valor_inmueble',
+      'assigned_to_user_id',
 
       // ===== CAMPOS ADICIONALES QUE PODRÍAN ACTIVAR CONDICIONES =====
       'tipo_actividad_economica', 'tipo_credito', 'estado', 'banco',
@@ -589,12 +678,13 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           nombre_asesor: datosFormulario.nombre_asesor,
           correo_asesor: datosFormulario.correo_asesor,
           nombre_banco_usuario: datosFormulario.nombre_banco_usuario,
-          correo_banco_usuario: datosFormulario.correo_banco_usuario
+          correo_banco_usuario: datosFormulario.correo_banco_usuario,
+          assigned_to_user_id: datosFormulario.assigned_to_user_id
         }
       };
 
       // Mostrar cada sección
-      Object.entries(datosPorSeccion).forEach(([seccion, datos]) => {
+      Object.values(datosPorSeccion).forEach((datos) => {
         Object.entries(datos).forEach(([campo, valor]) => {
           if (valor !== undefined && valor !== null && valor !== '') {
             console.log(`  ✅ ${campo}:`, valor);
@@ -721,7 +811,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
           });
 
           // Subir todos los documentos (en paralelo, pero esperamos a que todos terminen)
-          const uploadResults = await documentService.uploadMultipleDocuments(
+          await documentService.uploadMultipleDocuments(
             filesParaSubir,
             solicitanteId
           );
@@ -1113,6 +1203,48 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             <p className="text-yellow-700">⏳ Cargando campos de solicitud...</p>
           </div>
         )}
+
+        <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+          <h4 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3">Asignación de la solicitud</h4>
+          {canAssignUsers ? (
+            <>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2" htmlFor="assigned-to-user">
+                Asignar a
+              </label>
+              <select
+                id="assigned-to-user"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={datosFormulario.assigned_to_user_id !== null && datosFormulario.assigned_to_user_id !== undefined ? String(datosFormulario.assigned_to_user_id) : ''}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  handleFieldChange('assigned_to_user_id', value ? parseInt(value, 10) : null);
+                }}
+                disabled={loadingUsers}
+              >
+                <option value="">
+                  {currentUserId ? `Asignarme a mí (${currentUserName})` : 'Asignarme a mí'}
+                </option>
+                {availableUsers
+                  .filter((user) => (currentUserId ? user.id !== currentUserId : true))
+                  .map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {formatUserLabel(user)}
+                    </option>
+                  ))}
+              </select>
+              {loadingUsers && (
+                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Cargando usuarios...</p>
+              )}
+              {usersError && (
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{usersError}</p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              La solicitud se asignará automáticamente al usuario que la crea.
+            </p>
+          )}
+        </div>
 
         {/* Archivos Adjuntos - Condicional por tipo de actividad */}
         <div>
