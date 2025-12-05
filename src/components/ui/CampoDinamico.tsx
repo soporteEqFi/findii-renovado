@@ -26,10 +26,11 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 }) => {
 
   // Usar default_value si value es null/undefined/empty
-  // EXCEPCIÓN: para 'tipo_referencia' no aplicamos default del esquema para evitar seleccionar 'personal' implícitamente
+  // EXCEPCIONES: campos que NO deben usar default_value automáticamente
+  const camposSinDefault = ['tipo_referencia', 'nacionalidad'];
   const efectiveValue = (() => {
     if (value !== undefined && value !== null && value !== '') return value;
-    if (campo.key === 'tipo_referencia') return '';
+    if (camposSinDefault.includes(campo.key)) return '';
     return campo.default_value ?? '';
   })();
 
