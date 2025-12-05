@@ -25,7 +25,21 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   excludeKeys = [],
   estadosDisponibles = []
 }) => {
+  // 🔍 DEBUG: Log de campos renderizados
+  React.useEffect(() => {
+    if (titulo === 'Información del Solicitante') {
+      console.log('📋 ==============================================');
+      console.log('📋 CAMPOS EN ESQUEMA DE SOLICITANTE:');
+      console.log('📋 ==============================================');
+      console.log('📋 Campos fijos:', esquemaCompleto.campos_fijos?.map(c => c.key));
+      console.log('📋 Campos dinámicos:', esquemaCompleto.campos_dinamicos?.map(c => c.key));
+      console.log('📋 ==============================================');
+    }
+  }, [esquemaCompleto, titulo]);
+
   const handleFieldChange = (key: string, value: any) => {
+    // 🔍 DEBUG: Log de cambios
+    console.log(`🔍 FormularioCompleto - Campo modificado: ${key} =`, value);
 
     // Si es un campo activador (como tipo_actividad), limpiar campos condicionales
     if (key === 'tipo_actividad') {

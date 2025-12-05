@@ -293,53 +293,21 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
       numero_empleados_negocio: 0
     };
 
-    // Aplicar datos de prueba
+    // Aplicar datos de prueba SOLO si el campo está completamente vacío (undefined o null)
+    // NO sobrescribir valores que el usuario ya escribió (incluyendo '' o 0)
     Object.entries(datosPrueba).forEach(([key, value]) => {
-      if (nuevosValores[key] === undefined || nuevosValores[key] === '' || nuevosValores[key] === 0) {
+      // Solo llenar si NO existe el campo o es null/undefined
+      if (nuevosValores[key] === undefined || nuevosValores[key] === null) {
         nuevosValores[key] = value;
       }
     });
 
-    // También llenar campos del esquema que tengan default_value
-    Object.entries(esquemas).forEach(([_, esquemaData]) => {
-      if (esquemaData?.esquema) {
-        // Campos fijos con default_value
-        esquemaData.esquema.campos_fijos?.forEach(campo => {
-          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
-            nuevosValores[campo.key] = campo.default_value;
-          }
-        });
+    // NO aplicar default_value automáticamente
+    // Los default_value solo se muestran en la UI pero NO se guardan en el estado
+    // El usuario debe interactuar con el campo para que se guarde
 
-        // Campos dinámicos con default_value
-        esquemaData.esquema.campos_dinamicos?.forEach(campo => {
-          if (campo.default_value !== undefined && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
-            nuevosValores[campo.key] = campo.default_value;
-          }
-
-          // Manejar campos de objeto con estructura interna
-          if (campo.type === 'object' && campo.list_values && typeof campo.list_values === 'object' && 'object_structure' in campo.list_values) {
-            const objetoDefault: Record<string, any> = {};
-            const estructura = (campo.list_values as { object_structure: any[] }).object_structure;
-            estructura.forEach((subcampo: any) => {
-              if (subcampo.default_value !== undefined) {
-                objetoDefault[subcampo.key] = subcampo.default_value;
-              }
-            });
-            if (Object.keys(objetoDefault).length > 0 && (nuevosValores[campo.key] === undefined || nuevosValores[campo.key] === '')) {
-              nuevosValores[campo.key] = objetoDefault;
-            }
-          }
-        });
-      }
-    });
-
-    // Solo actualizar si realmente hay cambios
-    const camposOriginales = Object.keys(datosFormulario).length;
-    const camposNuevos = Object.keys(nuevosValores).length;
-
-    if (camposNuevos > camposOriginales) {
-      setDatosFormulario(nuevosValores);
-    }
+    // Actualizar el formulario con los nuevos valores
+    setDatosFormulario(nuevosValores);
   };
 
   // ✅ VALIDACIÓN COMPLETA DE ESQUEMAS CARGADOS (debe ir ANTES del useEffect)
@@ -351,71 +319,10 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Función para limpiar el formulario
   const limpiarFormulario = () => {
-
     // Crear un objeto completamente vacío
-    const formularioLimpio: Record<string, any> = {};
-
-    // Limpiar todos los campos conocidos
-    const camposConocidos = [
-      // ===== SOLICITANTE =====
-      'nombres', 'primer_apellido', 'segundo_apellido', 'tipo_identificacion',
-      'numero_documento', 'genero', 'correo', 'telefono', 'estado_civil',
-      'personas_a_cargo', 'fecha_nacimiento',
-
-      // ===== UBICACIÓN =====
-      'direccion', 'ciudad_residencia', 'departamento_residencia',
-      'direccion_residencia', 'tipo_direccion', 'barrio', 'estrato',
-
-      // ===== INFORMACIÓN FINANCIERA =====
-      'ingresos_mensuales_base', 'gastos_mensuales', 'otros_ingresos',
-      'total_ingresos_mensuales', 'total_egresos_mensuales', 'total_activos',
-      'total_pasivos', 'gastos_vivienda', 'gastos_alimentacion', 'gastos_transporte',
-
-      // ===== REFERENCIAS =====
-      'nombre_completo', 'telefono_referencia', 'tipo_referencia',
-      'parentesco', 'nombre_referencia',
-
-      // ===== SOLICITUD =====
-      'monto_solicitado', 'plazo_meses', 'tipo_credito_id',
-      'destino_credito', 'cuota_inicial', 'valor_inmueble',
-      'assigned_to_user_id',
-
-      // ===== CAMPOS ADICIONALES QUE PODRÍAN ACTIVAR CONDICIONES =====
-      'tipo_actividad_economica', 'tipo_credito', 'estado', 'banco',
-      'empresa', 'cargo', 'tipo_contrato', 'salario_base', 'tipo_actividad',
-      'sector_economico', 'codigo_ciuu', 'departamento_empresa', 'ciudad_empresa',
-      'telefono_empresa', 'correo_empresa', 'nit_empresa', 'direccion_empresa',
-      'nombre_negocio', 'direccion_negocio', 'departamento_negocio', 'ciudad_negocio',
-      'numero_empleados_negocio', 'antiguedad_actividad', 'antiguedad_actividad_texto',
-      'entidad_pagadora_pension', 'pago_impuestos_colombia', 'codigo_ciiu',
-      'departamento_de_la_empresa', 'ciudad_de_la_empresa', 'telefono_de_la_empresa',
-      'correo_electronico_de_la_empresa', 'nit_de_la_empresa', 'direccion_de_la_empresa',
-      'nombre_del_negocio', 'direccion_del_negocio', 'departamento_del_negocio',
-      'ciudad_del_negocio', 'numero_de_empleados_del_negocio', 'antiguedad_en_la_actividad',
-      'pago_de_impuestos_fuera_de_colombia'
-    ];
-
-    // Inicializar todos los campos como vacíos
-    camposConocidos.forEach(campo => {
-      formularioLimpio[campo] = '';
-    });
-
-    // Campos numéricos específicos
-    const camposNumericos = ['personas_a_cargo', 'estrato', 'ingresos_mensuales_base',
-      'gastos_mensuales', 'otros_ingresos', 'total_ingresos_mensuales',
-      'total_egresos_mensuales', 'total_activos', 'total_pasivos',
-      'gastos_vivienda', 'gastos_alimentacion', 'gastos_transporte',
-      'monto_solicitado', 'plazo_meses', 'tipo_credito_id', 'cuota_inicial',
-      'valor_inmueble', 'numero_empleados_negocio', 'numero_de_empleados_del_negocio'];
-
-    camposNumericos.forEach(campo => {
-      formularioLimpio[campo] = 0;
-    });
-
-    // Campos booleanos específicos
-    formularioLimpio.pago_impuestos_colombia = false;
-    formularioLimpio.pago_de_impuestos_fuera_de_colombia = false;
-    setDatosFormulario(formularioLimpio);
+    // NO inicializar campos con valores por defecto
+    // Solo agregar valores cuando el usuario interactúe con el formulario
+    setDatosFormulario({});
     setErrores({});
     setSelectedFiles([]);
     setFileCC(null);
@@ -507,7 +414,13 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Manejar cambios en todos los campos
   const handleFieldChange = (key: string, value: any) => {
+    // 🔍 DEBUG: Log específico para nacionalidad
+    if (key === 'nacionalidad') {
+      console.log('🔍 CustomerFormDinamico - nacionalidad recibida:', value);
+    }
+
     setDatosFormulario(prev => ({ ...prev, [key]: value }));
+
     // Limpiar error del campo
     if (errores[key]) {
       setErrores(prev => ({ ...prev, [key]: '' }));
@@ -613,95 +526,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     setIsSubmitting(true);
     try {
 
-      // 📋 RESUMEN DE DATOS A ENVIAR
-
-      // Organizar datos por sección para mejor visualización
-      const datosPorSeccion = {
-        'SOLICITANTE (Campos fijos)': {
-          nombres: datosFormulario.nombres,
-          primer_apellido: datosFormulario.primer_apellido,
-          segundo_apellido: datosFormulario.segundo_apellido,
-          tipo_identificacion: datosFormulario.tipo_identificacion,
-          numero_documento: datosFormulario.numero_documento,
-          fecha_nacimiento: datosFormulario.fecha_nacimiento,
-          genero: datosFormulario.genero,
-          correo: datosFormulario.correo,
-          telefono: datosFormulario.telefono,
-          estado_civil: datosFormulario.estado_civil,
-          personas_a_cargo: datosFormulario.personas_a_cargo
-        },
-        'UBICACIÓN': {
-          direccion: datosFormulario.direccion,
-          ciudad: datosFormulario.ciudad,
-          departamento: datosFormulario.departamento,
-          tipo_direccion: datosFormulario.tipo_direccion,
-          barrio: datosFormulario.barrio,
-          estrato: datosFormulario.estrato
-        },
-        'ACTIVIDAD ECONÓMICA': {
-          empresa: datosFormulario.empresa,
-          cargo: datosFormulario.cargo,
-          tipo_contrato: datosFormulario.tipo_contrato,
-          salario_base: datosFormulario.salario_base,
-          tipo_actividad: datosFormulario.tipo_actividad,
-          sector_economico: datosFormulario.sector_economico,
-          codigo_ciuu: datosFormulario.codigo_ciuu,
-          departamento_empresa: datosFormulario.departamento_empresa,
-          ciudad_empresa: datosFormulario.ciudad_empresa,
-          telefono_empresa: datosFormulario.telefono_empresa,
-          correo_empresa: datosFormulario.correo_empresa,
-          nit_empresa: datosFormulario.nit_empresa
-        },
-        'INFORMACIÓN FINANCIERA': {
-          ingresos_mensuales: datosFormulario.ingresos_mensuales,
-          gastos_mensuales: datosFormulario.gastos_mensuales,
-          otros_ingresos: datosFormulario.otros_ingresos,
-          total_ingresos_mensuales: datosFormulario.total_ingresos_mensuales,
-          total_egresos_mensuales: datosFormulario.total_egresos_mensuales,
-          total_activos: datosFormulario.total_activos,
-          total_pasivos: datosFormulario.total_pasivos
-        },
-        'REFERENCIAS': referencias.map(ref => ({
-          nombre_completo: ref.nombre_completo || '',
-          telefono_referencia: ref.telefono_referencia || '',
-          tipo_referencia: ref.tipo_referencia || 'personal',
-          parentesco: ref.parentesco || ''
-        })),
-        'SOLICITUD': {
-          monto_solicitado: datosFormulario.monto_solicitado,
-          plazo_meses: datosFormulario.plazo_meses,
-          tipo_credito_id: datosFormulario.tipo_credito_id,
-          destino_credito: datosFormulario.destino_credito,
-          cuota_inicial: datosFormulario.cuota_inicial,
-          ciudad_solicitud: datosFormulario.ciudad_solicitud,
-          banco_nombre: datosFormulario.banco_nombre,
-          nombre_asesor: datosFormulario.nombre_asesor,
-          correo_asesor: datosFormulario.correo_asesor,
-          nombre_banco_usuario: datosFormulario.nombre_banco_usuario,
-          correo_banco_usuario: datosFormulario.correo_banco_usuario,
-          assigned_to_user_id: datosFormulario.assigned_to_user_id
-        }
-      };
-
-      // Mostrar cada sección
-      Object.values(datosPorSeccion).forEach((datos) => {
-        Object.entries(datos).forEach(([campo, valor]) => {
-          if (valor !== undefined && valor !== null && valor !== '') {
-            console.log(`  ✅ ${campo}:`, valor);
-          } else {
-            console.log(`  ❌ ${campo}:`, valor, '(VACÍO)');
-          }
-        });
-      });
-
-      // Mostrar TODOS los datos tal como están
-      console.log(JSON.stringify(datosFormulario, null, 2));
-
-
-      // Crear registro completo usando endpoint unificado
-
       // No incluir referencias en el payload unificado. Se gestionan con endpoints dedicados.
       const datosParaEnviar = { ...datosFormulario };
+
+      // 📤 Log de datos que se enviarán
+      console.log('📤 DATOS QUE SE ENVIARÁN AL BACKEND:', datosParaEnviar);
 
       const empresaId = parseInt(localStorage.getItem('empresa_id') || '1', 10);
       const resultado = await esquemaService.crearRegistroCompletoUnificado(
@@ -1013,11 +842,11 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* ✅ BOTÓN AUTO-LLENAR MEJORADO */}
-      <div className="flex justify-between items-center bg-blue-50 p-4 rounded-lg">
+      {/* ✅ BOTÓN AUTO-LLENAR PARA PRUEBAS */}
+      <div className="flex justify-between items-center bg-blue-50 dark:bg-gray-800 p-4 rounded-lg">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">Formulario de Registro</h2>
-          <p className="text-sm text-gray-600">Llena automáticamente todos los campos con datos de prueba para acelerar el desarrollo</p>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Formulario de Registro</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Llena automáticamente todos los campos con datos de prueba para acelerar el desarrollo</p>
         </div>
         <div className="flex gap-2">
           <button

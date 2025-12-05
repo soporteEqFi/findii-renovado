@@ -58,6 +58,11 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
 
   const handleChange = (newValue: any) => {
+    // 🔍 DEBUG: Log específico para nacionalidad
+    if (campo.key === 'nacionalidad') {
+      console.log('🔍 CampoDinamico - nacionalidad onChange llamado:', newValue);
+    }
+
     // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
     if (campo.key === 'tipo_actividad') {
       limpiarCamposCondicionales();
