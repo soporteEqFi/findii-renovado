@@ -25,6 +25,8 @@ export interface FieldDefinition {
   description?: string;
   default_value?: any;
   order_index?: number; // Orden de aparición del campo (1, 2, 3, etc.)
+  min_value?: number; // Valor mínimo permitido para campos numéricos
+  max_value?: number; // Valor máximo permitido para campos numéricos
   // list_values holds enum for arrays or object structure for objects
   list_values?:
     | { enum: string[] }  // Para arrays

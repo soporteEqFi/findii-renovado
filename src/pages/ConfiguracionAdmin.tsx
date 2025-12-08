@@ -300,6 +300,8 @@ const ConfiguracionAdmin: React.FC = () => {
             description: data.description,
             default_value: data.default_value,
             order_index: data.order_index,
+            min_value: data.min_value,
+            max_value: data.max_value,
             list_values: data.list_values
           };
 
@@ -320,11 +322,16 @@ const ConfiguracionAdmin: React.FC = () => {
             description: data.description,
             default_value: data.default_value,
             order_index: data.order_index,
+            min_value: data.min_value,
+            max_value: data.max_value,
             list_values: data.list_values
           };
 
           console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API (UPDATE - NORMAL):');
           console.log('Campo individual:', updates);
+          console.log('📋 VALIDACIONES NUMÉRICAS:');
+          console.log('  - min_value:', data.min_value);
+          console.log('  - max_value:', data.max_value);
           await fieldConfigService.updateField(editing.id, updates);
         }
 

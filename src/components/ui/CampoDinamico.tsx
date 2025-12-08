@@ -67,6 +67,43 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
       limpiarCamposCondicionales();
     }
 
+    // Validar campos numéricos con min_value y max_value
+    if ((campo.type === 'number' || campo.type === 'integer') && newValue !== '' && newValue !== null && newValue !== undefined) {
+      const numValue = parseFloat(newValue);
+
+      // 🔍 DEBUG: Log para CUALQUIER campo numérico que tenga validaciones configuradas
+      const tieneValidaciones = campo.min_value !== undefined || campo.max_value !== undefined;
+      if (tieneValidaciones) {
+        console.log(`🔍 Validando ${campo.description || campo.key}:`, {
+          campo: campo.key,
+          valorIngresado: newValue,
+          valorNumerico: numValue,
+          min_value: campo.min_value,
+          max_value: campo.max_value,
+          tieneOnError: !!onError
+        });
+      }
+
+      if (!isNaN(numValue)) {
+        // Validar mínimo
+        if (campo.min_value !== undefined && campo.min_value !== null && numValue < campo.min_value) {
+          if (onError) {
+            onError(campo.key, `El valor debe ser mayor o igual a ${campo.min_value}`);
+          }
+        }
+        // Validar máximo
+        else if (campo.max_value !== undefined && campo.max_value !== null && numValue > campo.max_value) {
+          if (onError) {
+            onError(campo.key, `El valor debe ser menor o igual a ${campo.max_value}`);
+          }
+        }
+        // Limpiar error si el valor es válido
+        else if (onError) {
+          onError(campo.key, '');
+        }
+      }
+    }
+
     onChange(campo.key, newValue);
   };
 
@@ -82,6 +119,23 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
         } else {
           // Limpiar el error si el correo es válido
           onError(campo.key, '');
+        }
+      }
+    }
+
+    // Validar campos numéricos al perder el foco
+    if ((campo.type === 'number' || campo.type === 'integer') && value !== '' && value !== null && value !== undefined) {
+      const numValue = parseFloat(value);
+
+      if (!isNaN(numValue)) {
+        if (campo.min_value !== undefined && campo.min_value !== null && numValue < campo.min_value) {
+          if (onError) {
+            onError(campo.key, `El valor debe ser mayor o igual a ${campo.min_value}`);
+          }
+        } else if (campo.max_value !== undefined && campo.max_value !== null && numValue > campo.max_value) {
+          if (onError) {
+            onError(campo.key, `El valor debe ser menor o igual a ${campo.max_value}`);
+          }
         }
       }
     }
@@ -245,6 +299,17 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
                     disabled={disabled}
                     className="border border-gray-300 dark:border-gray-600 text-sm rounded-lg focus:ring-blue-500 block w-full p-2.5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     step={subcampo.type === 'integer' ? '1' : '0.01'}
+                    min={subcampo.min_value !== undefined && subcampo.min_value !== null ? subcampo.min_value : undefined}
+                    max={subcampo.max_value !== undefined && subcampo.max_value !== null ? subcampo.max_value : undefined}
+                    title={
+                      subcampo.min_value !== undefined && subcampo.max_value !== undefined
+                        ? `Valor permitido: ${subcampo.min_value} - ${subcampo.max_value}`
+                        : subcampo.min_value !== undefined
+                        ? `Valor mínimo: ${subcampo.min_value}`
+                        : subcampo.max_value !== undefined
+                        ? `Valor máximo: ${subcampo.max_value}`
+                        : undefined
+                    }
                   />
                 );
               })()}
@@ -787,11 +852,23 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
             type="number"
             value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
+            onBlur={handleBlur}
             className={baseClasses}
             required={campo.required}
             placeholder={campo.description}
             disabled={disabled}
             step={campo.type === 'integer' ? '1' : '0.01'}
+            min={campo.min_value !== undefined && campo.min_value !== null ? campo.min_value : undefined}
+            max={campo.max_value !== undefined && campo.max_value !== null ? campo.max_value : undefined}
+            title={
+              campo.min_value !== undefined && campo.max_value !== undefined
+                ? `Valor permitido: ${campo.min_value} - ${campo.max_value}`
+                : campo.min_value !== undefined
+                ? `Valor mínimo: ${campo.min_value}`
+                : campo.max_value !== undefined
+                ? `Valor máximo: ${campo.max_value}`
+                : undefined
+            }
           />
         );
 

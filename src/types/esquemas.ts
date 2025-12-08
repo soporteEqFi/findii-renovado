@@ -12,6 +12,8 @@ export interface EsquemaCampo {
   description?: string;
   default_value?: any;
   order_index?: number; // Orden de aparición del campo (1, 2, 3, etc.)
+  min_value?: number; // Valor mínimo permitido para campos numéricos
+  max_value?: number; // Valor máximo permitido para campos numéricos
   conditional_on?: {
     field: string; // Nombre del campo que actúa como trigger
     value: string; // Valor que debe tener para mostrar este campo

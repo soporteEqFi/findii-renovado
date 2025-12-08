@@ -131,6 +131,16 @@ export const esquemasTemporales: Record<string, EsquemaCampo[]> = {
       default_value: 'Calle 123 #45-67',
       order_index: 3
     },
+    {
+      key: 'estrato_vivienda',
+      type: 'integer',
+      required: false,
+      description: 'Estrato socioeconómico',
+      default_value: 3,
+      min_value: 1,
+      max_value: 6,
+      order_index: 4
+    },
   ],
 
   // Esquema para detalles de actividad económica

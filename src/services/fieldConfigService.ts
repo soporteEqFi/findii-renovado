@@ -51,13 +51,15 @@ export const fieldConfigService = {
 
     // ✅ FORMATO SEGÚN GUÍA: { "definitions": [...] }
     // Eliminar campos que la API no reconoce (como isActive, arrayOptions)
-    const bodyItems = items.map(({ key, type, required, description, default_value, order_index, list_values }) => ({
+    const bodyItems = items.map(({ key, type, required, description, default_value, order_index, min_value, max_value, list_values }) => ({
       key,
       type,
       required: required ?? false,
       description,
       default_value,
       order_index,
+      min_value,
+      max_value,
       list_values
     }));
 
@@ -66,7 +68,7 @@ export const fieldConfigService = {
       definitions: bodyItems // ✅ Formato según guía
     };
 
-    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API:');
+    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API (UPSERT):');
     console.log('URL:', fullUrl);
     console.log('MÉTODO:', 'POST');
     console.log('HEADERS:', authHeaders(empresaId));
@@ -80,7 +82,6 @@ export const fieldConfigService = {
         definitions: bodyItems // ✅ Formato según guía
       })
     });
-
 
     if (!res.ok) {
       const error = await res.text().catch(() => 'Error desconocido');
@@ -120,7 +121,7 @@ export const fieldConfigService = {
       }
     });
 
-    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API:');
+    console.log('📤 EXACTAMENTE LO QUE SE ENVÍA A LA API (UPDATE FIELD):');
     console.log('URL:', fullUrl);
     console.log('MÉTODO:', 'PATCH');
     console.log('HEADERS:', authHeaders(empresaId));

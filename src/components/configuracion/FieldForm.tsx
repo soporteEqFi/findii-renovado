@@ -777,6 +777,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
     required: false,
     isActive: true, // Por defecto los campos están activos
     order_index: undefined as number | undefined,
+    min_value: undefined as number | undefined,
+    max_value: undefined as number | undefined,
     arrayOptions: [] as string[],
     objectStructure: [] as {
       key: string;
@@ -968,17 +970,30 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        return;
      }
 
-     const newField: FieldDefinition = {
-       empresa_id: 1,
-       entity: selectedGroup?.entity || 'solicitante',
-       json_column: selectedGroup?.jsonColumn || 'info_extra',
-       key: newFieldForm.key,
-       type: newFieldForm.type as any,
-       required: newFieldForm.required,
-       description: newFieldForm.displayName,
-       default_value: '',
-       order_index: newFieldForm.order_index,
-     };
+     // Validar que min_value no sea mayor que max_value
+     if (
+       (newFieldForm.type === 'number' || newFieldForm.type === 'integer') &&
+       newFieldForm.min_value !== undefined &&
+       newFieldForm.max_value !== undefined &&
+       newFieldForm.min_value > newFieldForm.max_value
+     ) {
+       alert('El valor mínimo no puede ser mayor que el valor máximo.');
+       return;
+     }
+
+    const newField: FieldDefinition = {
+      empresa_id: 1,
+      entity: selectedGroup?.entity || 'solicitante',
+      json_column: selectedGroup?.jsonColumn || 'info_extra',
+      key: newFieldForm.key,
+      type: newFieldForm.type as any,
+      required: newFieldForm.required,
+      description: newFieldForm.displayName,
+      default_value: '',
+      order_index: newFieldForm.order_index,
+      min_value: newFieldForm.min_value,
+      max_value: newFieldForm.max_value,
+    };
 
       // Add list_values for array and object types
       if (newFieldForm.type === 'array' && newFieldForm.arrayOptions.length > 0) {
@@ -1015,6 +1030,8 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
        required: false,
        isActive: true,
        order_index: undefined,
+       min_value: undefined,
+       max_value: undefined,
        arrayOptions: [],
        objectStructure: [],
        fileConfig: {
@@ -1246,6 +1263,36 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
             placeholder="Radicación multibanco para créditos de vivienda a nivel nacional."
           />
         </div>
+
+        {/* Validaciones numéricas - Solo para campos number e integer */}
+        {(form.type === 'number' || form.type === 'integer') && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor Mínimo</label>
+              <input
+                type="number"
+                name="min_value"
+                value={form.min_value ?? ''}
+                onChange={(e) => setForm(prev => ({ ...prev, min_value: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                placeholder="Ej: 0"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor mínimo permitido para este campo numérico</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor Máximo</label>
+              <input
+                type="number"
+                name="max_value"
+                value={form.max_value ?? ''}
+                onChange={(e) => setForm(prev => ({ ...prev, max_value: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                placeholder="Ej: 5"
+              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor máximo permitido para este campo numérico</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-6">
           <div className="flex items-center">
@@ -1619,6 +1666,37 @@ const FieldForm: React.FC<Props> = ({ initial, selectedGroup, onSubmit, onCancel
                 </div>
               </div>
             </div>
+
+            {/* Validaciones numéricas - Solo para campos number e integer */}
+            {(newFieldForm.type === 'number' || newFieldForm.type === 'integer') && (
+              <div className="mt-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900/40">
+                <h5 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Validaciones Numéricas</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">Valor Mínimo</label>
+                    <input
+                      type="number"
+                      value={newFieldForm.min_value ?? ''}
+                      onChange={(e) => setNewFieldForm(prev => ({ ...prev, min_value: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      placeholder="Ej: 0"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor mínimo permitido para este campo numérico</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-600 dark:text-gray-300 mb-2">Valor Máximo</label>
+                    <input
+                      type="number"
+                      value={newFieldForm.max_value ?? ''}
+                      onChange={(e) => setNewFieldForm(prev => ({ ...prev, max_value: e.target.value ? parseFloat(e.target.value) : undefined }))}
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      placeholder="Ej: 5"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Valor máximo permitido para este campo numérico</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Array Configuration */}
             {newFieldForm.type === 'array' && (
