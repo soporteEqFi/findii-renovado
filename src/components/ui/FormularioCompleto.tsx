@@ -6,6 +6,7 @@ interface FormularioCompletoProps {
   esquemaCompleto: EsquemaCompleto;
   valores: Record<string, any>;
   onChange: (key: string, value: any) => void;
+  onError?: (key: string, error: string) => void;
   errores?: Record<string, string>;
   titulo?: string;
   disabled?: boolean;
@@ -19,28 +20,14 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
   esquemaCompleto,
   valores,
   onChange,
+  onError,
   errores = {},
   titulo,
   disabled = false,
   excludeKeys = [],
   estadosDisponibles = []
 }) => {
-  // 🔍 DEBUG: Log de campos renderizados
-  React.useEffect(() => {
-    if (titulo === 'Información del Solicitante') {
-      console.log('📋 ==============================================');
-      console.log('📋 CAMPOS EN ESQUEMA DE SOLICITANTE:');
-      console.log('📋 ==============================================');
-      console.log('📋 Campos fijos:', esquemaCompleto.campos_fijos?.map(c => c.key));
-      console.log('📋 Campos dinámicos:', esquemaCompleto.campos_dinamicos?.map(c => c.key));
-      console.log('📋 ==============================================');
-    }
-  }, [esquemaCompleto, titulo]);
-
   const handleFieldChange = (key: string, value: any) => {
-    // 🔍 DEBUG: Log de cambios
-    console.log(`🔍 FormularioCompleto - Campo modificado: ${key} =`, value);
-
     // Si es un campo activador (como tipo_actividad), limpiar campos condicionales
     if (key === 'tipo_actividad') {
       limpiarCamposCondicionales(key, value);
@@ -315,6 +302,7 @@ export const FormularioCompleto: React.FC<FormularioCompletoProps> = ({
                 campo={campo}
                 value={valorCampo}
                 onChange={handleFieldChange}
+                onError={onError}
                 error={errores[campo.key]}
                 disabled={disabled}
                 getValue={getNestedValue}

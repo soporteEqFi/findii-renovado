@@ -10,6 +10,7 @@ import { referenciaService } from '../../services/referenciaService';
 import { userService } from '../../services/userService';
 import { User } from '../../types/user';
 import { buildApiUrl, API_CONFIG } from '../../config/constants';
+import { validarCorreo, esCampoCorreo } from '../../utils/validaciones';
 
 interface CustomerFormDinamicoProps {
   onSubmit: () => Promise<void>;
@@ -414,11 +415,6 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
 
   // Manejar cambios en todos los campos
   const handleFieldChange = (key: string, value: any) => {
-    // 🔍 DEBUG: Log específico para nacionalidad
-    if (key === 'nacionalidad') {
-      console.log('🔍 CustomerFormDinamico - nacionalidad recibida:', value);
-    }
-
     setDatosFormulario(prev => ({ ...prev, [key]: value }));
 
     // Limpiar error del campo
@@ -438,9 +434,41 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
     }
   };
 
+  // Manejar errores de validación de campos
+  const handleFieldError = (key: string, error: string) => {
+    setErrores(prev => {
+      if (error) {
+        // Agregar o actualizar el error
+        return { ...prev, [key]: error };
+      } else {
+        // Limpiar el error
+        const newErrors = { ...prev };
+        delete newErrors[key];
+        return newErrors;
+      }
+    });
+  };
+
   // Envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validar campos de correo electrónico
+    const erroresValidacion: Record<string, string> = {};
+    Object.keys(datosFormulario).forEach(key => {
+      const valor = datosFormulario[key];
+      if (esCampoCorreo(key) && valor && valor.toString().trim() !== '') {
+        if (!validarCorreo(valor.toString())) {
+          erroresValidacion[key] = 'Formato de correo electrónico inválido';
+        }
+      }
+    });
+
+    if (Object.keys(erroresValidacion).length > 0) {
+      setErrores(prev => ({ ...prev, ...erroresValidacion }));
+      toast.error('Por favor, corrige los errores en los campos de correo electrónico');
+      return;
+    }
 
     // Validar checkboxes
     if (!aceptaTerminos) {
@@ -875,6 +903,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             esquemaCompleto={esquemas.solicitante.esquema}
             valores={datosFormulario}
             onChange={handleFieldChange}
+            onError={handleFieldError}
             errores={errores}
             titulo="Información del Solicitante"
             estadosDisponibles={estados}
@@ -891,6 +920,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             esquemaCompleto={esquemas.ubicacion.esquema}
             valores={datosFormulario}
             onChange={handleFieldChange}
+            onError={handleFieldError}
             errores={errores}
             titulo="Información de Ubicación"
             estadosDisponibles={estados}
@@ -907,6 +937,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             esquemaCompleto={esquemas.actividad_economica.esquema}
             valores={datosFormulario}
             onChange={handleFieldChange}
+            onError={handleFieldError}
             errores={errores}
             titulo="Información Laboral"
             estadosDisponibles={estados}
@@ -923,6 +954,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             esquemaCompleto={esquemas.informacion_financiera.esquema}
             valores={datosFormulario}
             onChange={handleFieldChange}
+            onError={handleFieldError}
             errores={errores}
             titulo="Información Financiera"
             estadosDisponibles={estados}
@@ -993,6 +1025,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
                     nuevasReferencias[index] = actual;
                     setReferencias(nuevasReferencias);
                   }}
+                  onError={handleFieldError}
                   errores={errores}
                   estadosDisponibles={estados}
                 />
@@ -1022,6 +1055,7 @@ export const CustomerFormDinamico: React.FC<CustomerFormDinamicoProps> = ({
             esquemaCompleto={esquemas.solicitud.esquema}
             valores={datosFormulario}
             onChange={handleFieldChange}
+            onError={handleFieldError}
             errores={errores}
             titulo="Información del Crédito"
             excludeKeys={["estado"]}

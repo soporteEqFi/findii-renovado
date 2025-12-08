@@ -2,11 +2,13 @@ import React from 'react';
 import { EsquemaCampo } from '../../types/esquemas';
 import { useConfiguraciones } from '../../hooks/useConfiguraciones';
 import { departments, getCitiesByDepartment } from '../../data/colombianCities';
+import { validarCorreo, esCampoCorreo } from '../../utils/validaciones';
 
 interface CampoDinamicoProps {
   campo: EsquemaCampo;
   value: any;
   onChange: (key: string, value: any) => void;
+  onError?: (key: string, error: string) => void;
   error?: string;
   disabled?: boolean;
   // Permite consultar otros valores del formulario (p.ej. departamento para filtrar ciudades)
@@ -19,6 +21,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
   campo,
   value,
   onChange,
+  onError,
   error,
   disabled = false,
   getValue,
@@ -59,17 +62,29 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
 
 
   const handleChange = (newValue: any) => {
-    // 🔍 DEBUG: Log específico para nacionalidad
-    if (campo.key === 'nacionalidad') {
-      console.log('🔍 CampoDinamico - nacionalidad onChange llamado:', newValue);
-    }
-
     // Si es el campo tipo_actividad, limpiar campos condicionales relacionados
     if (campo.key === 'tipo_actividad') {
       limpiarCamposCondicionales();
     }
 
     onChange(campo.key, newValue);
+  };
+
+  // Validar campos de correo al salir del campo (onBlur)
+  const handleBlur = () => {
+    // Solo validar si es un campo de correo y tiene valor
+    if (esCampoCorreo(campo.key) && value && value.toString().trim() !== '') {
+      const esValido = validarCorreo(value.toString());
+
+      if (onError) {
+        if (!esValido) {
+          onError(campo.key, 'Formato de correo electrónico inválido');
+        } else {
+          // Limpiar el error si el correo es válido
+          onError(campo.key, '');
+        }
+      }
+    }
   };
 
   // Función para limpiar campos condicionales cuando cambia tipo_actividad
@@ -757,6 +772,7 @@ export const CampoDinamico: React.FC<CampoDinamicoProps> = ({
             type="text"
             value={efectiveValue || ''}
             onChange={(e) => handleChange(e.target.value)}
+            onBlur={handleBlur}
             className={baseClasses}
             required={campo.required}
             placeholder={campo.description}

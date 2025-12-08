@@ -564,27 +564,12 @@ export const esquemaService = {
       esquema.campos_dinamicos.forEach((campo: any) => {
         const valor = formData[campo.key];
 
-        // 🔍 DEBUG: Log para nacionalidad
-        if (campo.key === 'nacionalidad') {
-          console.log('🔍 esquemaService.extraerDatosEntidad - nacionalidad:', {
-            entidad,
-            valor,
-            valorEsValido: valor !== undefined && valor !== null && valor !== '',
-            jsonObjectName
-          });
-        }
-
         if (valor !== undefined && valor !== null && valor !== '') {
           // Procesar según el tipo de campo
           const valorProcesado = this.procesarValorCampo(campo, valor, formData);
           if (valorProcesado !== undefined) {
             datos[jsonObjectName][campo.key] = valorProcesado;
             // Campo dinámico agregado
-
-            // 🔍 DEBUG: Confirmar que nacionalidad se agregó
-            if (campo.key === 'nacionalidad') {
-              console.log('✅ nacionalidad agregado a', jsonObjectName, ':', valorProcesado);
-            }
           }
         }
       });
