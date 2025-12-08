@@ -576,10 +576,13 @@ export const esquemaService = {
 
       // 🔧 CASO ESPECIAL: Para solicitud, procesar objetos anidados de crédito
       if (entidad === 'solicitud') {
-        // Buscar objetos de crédito específicos en formData (credito_vehicular, credito_hipotecario, etc.)
-        const creditoKeys = ['credito_vehicular', 'credito_hipotecario', 'credito_libre_inversion', 'credito_consumo'];
-        creditoKeys.forEach(creditoKey => {
-          if (formData[creditoKey] && typeof formData[creditoKey] === 'object' && !Array.isArray(formData[creditoKey])) {
+        // ✅ SOLUCIÓN DINÁMICA: Detectar automáticamente campos de tipo 'object' del esquema
+        const camposObjetoDelEsquema = esquema.campos_dinamicos
+          .filter((campo: any) => campo.type === 'object')
+          .map((campo: any) => campo.key);
+
+        camposObjetoDelEsquema.forEach((campoKey: string) => {
+          if (formData[campoKey] && typeof formData[campoKey] === 'object' && !Array.isArray(formData[campoKey])) {
             // Asegurar que datos[jsonObjectName] existe
             if (!datos[jsonObjectName]) {
               datos[jsonObjectName] = {};
@@ -587,18 +590,19 @@ export const esquemaService = {
 
             // Mantener la estructura anidada: detalle_credito.credito_hipotecario = { ... }
             // NO aplanar los campos al nivel de detalle_credito
-            const creditoObjeto: Record<string, any> = {};
-            Object.keys(formData[creditoKey]).forEach(subKey => {
-              const subValor = formData[creditoKey][subKey];
-              // Solo copiar valores que realmente tienen contenido
-              if (subValor !== undefined && subValor !== null && subValor !== '' && subValor !== 0) {
-                creditoObjeto[subKey] = subValor;
+            const objetoLimpio: Record<string, any> = {};
+            Object.keys(formData[campoKey]).forEach(subKey => {
+              const subValor = formData[campoKey][subKey];
+              // ✅ VERIFICAR que subKey sea una propiedad válida (no un índice numérico de string)
+              // Esto previene que strings sean tratados como objetos iterables
+              if (isNaN(Number(subKey)) && subValor !== undefined && subValor !== null && subValor !== '' && subValor !== 0) {
+                objetoLimpio[subKey] = subValor;
               }
             });
 
             // Solo agregar el objeto si tiene contenido
-            if (Object.keys(creditoObjeto).length > 0) {
-              datos[jsonObjectName][creditoKey] = creditoObjeto;
+            if (Object.keys(objetoLimpio).length > 0) {
+              datos[jsonObjectName][campoKey] = objetoLimpio;
             }
           }
         });
