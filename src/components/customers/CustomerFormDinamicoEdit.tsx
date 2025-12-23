@@ -244,7 +244,7 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
 
   // 7) Actualizar datos anidados (copiado y adaptado de CustomerDetails.tsx)
   const updateNestedData = (path: string, value: any) => {
-    if (!editedData) return;
+    if (!editedData) return null;
     const pathArray = path.split('.');
     const newData = JSON.parse(JSON.stringify(editedData));
 
@@ -287,19 +287,34 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
     }
 
+    // 🔍 DEBUG temporal: Verificar si se actualizó correctamente
+    if (path.includes('banco_nombre')) {
+      console.log('🔍 [DEBUG updateNestedData] Path:', path);
+      console.log('🔍 [DEBUG updateNestedData] Valor a asignar:', value);
+      console.log('🔍 [DEBUG updateNestedData] newData ANTES de setEditedData:', {
+        banco_nombre_solicitud: newData?.solicitudes?.[0]?.banco_nombre,
+        banco_nombre_raiz: newData?.banco_nombre
+      });
+    }
+
     setEditedData(newData);
     if (validationErrors[path]) {
       const newErrors = { ...validationErrors };
       delete newErrors[path];
       setValidationErrors(newErrors);
     }
+
+    // Retornar el nuevo estado para que pueda ser usado inmediatamente
+    return newData;
   };
 
   // 8) Adaptador de onChange plano desde FormularioCompleto (que usa claves del esquema)
   // Encuentra un path para un key buscando en estructuras conocidas
   const findPathForKey = React.useCallback((data: any, key: string): string | null => {
     if (!data) return null;
-    if (Object.prototype.hasOwnProperty.call(data, key)) return key;
+
+    // 🔧 FIX: Buscar en ubicaciones ESPECÍFICAS primero, antes de buscar en nivel raíz
+    // Esto asegura que campos se actualicen en su ubicación correcta
 
     // solicitante e info_extra
     if (data.solicitante && Object.prototype.hasOwnProperty.call(data.solicitante, key)) return `solicitante.${key}`;
@@ -350,6 +365,9 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       return `solicitudes.0.detalle_credito.${key}`;
     }
 
+    // ÚLTIMO RECURSO: Buscar en nivel raíz (solo si no se encontró en ninguna ubicación específica)
+    if (Object.prototype.hasOwnProperty.call(data, key)) return key;
+
     return null;
   }, []);
 
@@ -371,7 +389,8 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
   };
 
   // Función para obtener información del asesor y banquero
-  const obtenerInformacionAsesorYBanquero = async (bancoNombre: string, ciudadSolicitud: string) => {
+  // Recibe el estado actualizado como parámetro opcional para evitar sobrescribir cambios recientes
+  const obtenerInformacionAsesorYBanquero = async (bancoNombre: string, ciudadSolicitud: string, currentUpdatedData?: any) => {
     try {
       // Obtener información del usuario logueado (asesor)
       const currentUser = await userService.getCurrentUserInfo();
@@ -380,8 +399,18 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       const banker = await userService.findBankerByCriteria(bancoNombre, ciudadSolicitud);
 
       // Actualizar formulario con la información obtenida
-      if (!editedData) return;
-      const newData = JSON.parse(JSON.stringify(editedData));
+      // Usar el estado actualizado si está disponible, de lo contrario usar editedData
+      const dataToUpdate = currentUpdatedData || editedData;
+      if (!dataToUpdate) return;
+      const newData = JSON.parse(JSON.stringify(dataToUpdate));
+
+      // Asegurar que banco_nombre y ciudad_solicitud se mantengan con los valores actualizados
+      if (!newData.solicitudes) newData.solicitudes = [{}];
+      if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+
+      // Preservar los valores actualizados que se pasaron como parámetros
+      newData.solicitudes[0].banco_nombre = bancoNombre;
+      newData.solicitudes[0].ciudad_solicitud = ciudadSolicitud;
 
       // Asegurar estructura de solicitudes
       if (!newData.solicitudes) newData.solicitudes = [{}];
@@ -401,8 +430,15 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       // En caso de error, solo obtener información del asesor
       try {
         const currentUser = await userService.getCurrentUserInfo();
-        if (!editedData) return;
-        const newData = JSON.parse(JSON.stringify(editedData));
+        const dataToUpdate = currentUpdatedData || editedData;
+        if (!dataToUpdate) return;
+        const newData = JSON.parse(JSON.stringify(dataToUpdate));
+
+        // Preservar los valores actualizados
+        if (!newData.solicitudes) newData.solicitudes = [{}];
+        if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
+        newData.solicitudes[0].banco_nombre = bancoNombre;
+        newData.solicitudes[0].ciudad_solicitud = ciudadSolicitud;
 
         if (!newData.solicitudes) newData.solicitudes = [{}];
         if (!newData.solicitudes[0]) newData.solicitudes[0] = {};
@@ -506,25 +542,44 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
     }
 
     const path = findPathForKey(editedData, key) || key;
-    updateNestedData(path, value);
+
+    // 🔍 DEBUG temporal: Ver qué path se encuentra para banco_nombre
+    if (key === 'banco_nombre') {
+      console.log('🔍 [DEBUG banco_nombre] Path encontrado:', path);
+      console.log('🔍 [DEBUG banco_nombre] Valor nuevo:', value);
+      console.log('🔍 [DEBUG banco_nombre] editedData.solicitudes[0]?.banco_nombre ANTES:', editedData?.solicitudes?.[0]?.banco_nombre);
+      console.log('🔍 [DEBUG banco_nombre] editedData.banco_nombre (nivel raíz) ANTES:', editedData?.banco_nombre);
+    }
+
+    // Capturar el nuevo estado actualizado
+    const updatedData = updateNestedData(path, value);
+
+    // 🔍 DEBUG temporal: Ver qué pasó después de actualizar
+    if (key === 'banco_nombre' && updatedData) {
+      console.log('🔍 [DEBUG banco_nombre] updatedData.solicitudes[0]?.banco_nombre DESPUÉS:', updatedData?.solicitudes?.[0]?.banco_nombre);
+    }
 
     // Si cambia el banco o la ciudad, obtener información del banquero
     if (key === 'banco_nombre' || key === 'ciudad_solicitud') {
+      // Usar el estado actualizado en lugar de editedData (que aún no se ha actualizado)
+      const dataToUse = updatedData || editedData;
+
       // Obtener valores actuales considerando el cambio
       let bancoNombre = '';
       let ciudadSolicitud = '';
 
       if (key === 'banco_nombre') {
-        bancoNombre = value;
-        ciudadSolicitud = editedData?.solicitudes?.[0]?.ciudad_solicitud || '';
+        bancoNombre = value; // Usar el valor nuevo directamente
+        ciudadSolicitud = dataToUse?.solicitudes?.[0]?.ciudad_solicitud || '';
       } else if (key === 'ciudad_solicitud') {
-        bancoNombre = editedData?.solicitudes?.[0]?.banco_nombre || '';
-        ciudadSolicitud = value;
+        bancoNombre = dataToUse?.solicitudes?.[0]?.banco_nombre || '';
+        ciudadSolicitud = value; // Usar el valor nuevo directamente
       }
 
       // Solo ejecutar si ambos campos tienen valor
       if (bancoNombre && ciudadSolicitud) {
-        obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud);
+        // Pasar el estado actualizado para que no sobrescriba el cambio
+        obtenerInformacionAsesorYBanquero(bancoNombre, ciudadSolicitud, updatedData);
       }
     }
   };
@@ -979,7 +1034,18 @@ export const CustomerFormDinamicoEdit: React.FC<CustomerFormDinamicoEditProps> =
       }
 
       // 2. Convertir datos estructurados a formato plano (como en CustomerFormDinamico)
+      console.log('🔍 [DEBUG handleSaveAsNew] editedData ANTES de convertir:', {
+        banco_nombre_raiz: editedData?.banco_nombre,
+        banco_nombre_solicitud: editedData?.solicitudes?.[0]?.banco_nombre,
+        ciudad_solicitud: editedData?.solicitudes?.[0]?.ciudad_solicitud
+      });
+
       const datosPlanos = convertirDatosAFormatoPlano(editedData);
+
+      console.log('🔍 [DEBUG handleSaveAsNew] datosPlanos DESPUÉS de convertir:', {
+        banco_nombre: datosPlanos.banco_nombre,
+        ciudad_solicitud: datosPlanos.ciudad_solicitud
+      });
 
       // Extraer referencias para enviar por separado (como en CustomerFormDinamico)
       const referenciasParaEnviar = datosPlanos.referencias || [];
