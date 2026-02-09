@@ -1,0 +1,13 @@
+# Solo cuando acceden vía netlify.app
+[[redirects]]
+  from = "https://updated-crm.netlify.app/"
+  to = "https://oneplatform.findii.co/"
+  status = 301
+  force = true
+
+# Rutas internas cuando ya están en el dominio principal
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+ 
